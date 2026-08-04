@@ -167,11 +167,6 @@ export const translations = {
           "Effiziente Systeme durch Automatisierung",
           "Strategische Beratung und Marktanalyse",
           "Erfolgreiche Templates als Grundlage"
-        ],
-        stats: [
-          { value: "5+", label: "Jahre Growth Operating" },
-          { value: "10+", label: "Creator-Projekte" },
-          { value: "7x", label: "durchschnittliches Listenwachstum" }
         ]
       }
     },
@@ -491,11 +486,6 @@ export const translations = {
           "Efficient systems through automation",
           "Strategic consulting and market analysis",
           "Proven templates as the foundation"
-        ],
-        stats: [
-          { value: "5+", label: "Years Growth Operating" },
-          { value: "10+", label: "Creator projects" },
-          { value: "7x", label: "average list growth" }
         ]
       }
     },
