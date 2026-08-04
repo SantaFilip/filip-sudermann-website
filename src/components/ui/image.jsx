@@ -142,6 +142,7 @@ const Image = React.forwardRef(
       focalPointX,
       focalPointY,
       quality = 90,
+      className,
       ...props
     },
     ref
@@ -157,8 +158,23 @@ const Image = React.forwardRef(
       onError: () => setImgSrc(FALLBACK_IMAGE_URL),
     }
 
+    // Plain <img> paths get no srcSet/transform, so object-fit has to be set
+    // here or the image stretches to whatever box the className defines.
+    const plainClassName = cn(
+      fittingType === "fit" ? "object-contain" : "object-cover",
+      className
+    )
+
     if (!src) {
-      return <img ref={ref} src={FALLBACK_IMAGE_URL} {...imageProps} data-empty-image />
+      return (
+        <img
+          ref={ref}
+          src={FALLBACK_IMAGE_URL}
+          {...imageProps}
+          className={plainClassName}
+          data-empty-image
+        />
+      )
     }
 
     const parsed = imgSrc === FALLBACK_IMAGE_URL ? null : parseWixMediaUrl(imgSrc)
@@ -166,7 +182,13 @@ const Image = React.forwardRef(
     if (!parsed) {
       const isErrorUrl = imgSrc === FALLBACK_IMAGE_URL
       return (
-        <img ref={ref} src={imgSrc} {...imageProps} data-error-image={isErrorUrl || undefined} />
+        <img
+          ref={ref}
+          src={imgSrc}
+          {...imageProps}
+          className={plainClassName}
+          data-error-image={isErrorUrl || undefined}
+        />
       )
     }
 
@@ -185,6 +207,7 @@ const Image = React.forwardRef(
         focalPoint={focalPoint}
         quality={quality}
         aspectRatio={aspectRatio}
+        className={className}
         {...imageProps}
       />
     )
