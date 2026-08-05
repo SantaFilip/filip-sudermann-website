@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { scrollToSection } from "@/lib/scrollToSection";
+import { getLenis } from "@/lib/lenisInstance";
 
 const getHashId = (hash) => {
   const rawId = hash.slice(1);
@@ -24,6 +25,13 @@ export default function ScrollToTop() {
         scrollToSection(id);
       }, 50);
       return () => window.clearTimeout(timer);
+    }
+
+    const lenis = getLenis();
+    if (lenis) {
+      // immediate, damit der Seitenwechsel nicht als Scroll-Animation laeuft
+      lenis.scrollTo(0, { immediate: true });
+      return;
     }
 
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
