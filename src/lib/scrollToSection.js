@@ -8,9 +8,15 @@ export function scrollToSection(id) {
   if (lenis) {
     // Ueber Lenis scrollen, sonst kennt es die neue Position nicht und
     // zieht die Seite beim naechsten Frame wieder zurueck.
-    // Ohne eigenen Offset: Lenis wertet scroll-padding-top (5rem, index.css)
-    // selbst aus - ein zusaetzliches -80 wuerde den Abstand verdoppeln.
-    lenis.scrollTo(el);
+    //
+    // Bewusst die offsetTop-Kette statt getBoundingClientRect: Sections, die
+    // noch nicht eingeblendet sind, tragen den translateY des Fade-ins. Der
+    // steckt in getBoundingClientRect mit drin, und das Ziel laege dann um
+    // genau diesen Versatz daneben. offsetTop kennt nur die Layout-Position
+    // und ist von Transforms unabhaengig.
+    let y = 0;
+    for (let node = el; node; node = node.offsetParent) y += node.offsetTop;
+    lenis.scrollTo(y - 80);
     return;
   }
 
