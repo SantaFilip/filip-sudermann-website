@@ -12,6 +12,7 @@ import ArbeitsweiseSection from '@/components/sections/ArbeitsweiseSection';
 import GlobalReach from '@/components/sections/GlobalReach';
 import ConsultationBooking from '@/components/sections/ConsultationBooking';
 import FAQ from '@/components/sections/FAQ';
+import FadeIn from '@/components/FadeIn';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function Home() {
@@ -22,34 +23,39 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
+        {/* Hero bleibt bewusst ohne Fade: er ist beim Laden sofort sichtbar. */}
         <Hero />
-        <TrustBar />
-        <CreatorEconomy />
-        <InteractiveFolder
-          id="services"
-          tab={f.services.tab}
-          title={f.services.title}
-          subtitle={f.services.subtitle}
-          openLabel={f.services.openLabel}
-          closeLabel={f.services.closeLabel}
-        >
-          <ServicesContent />
-        </InteractiveFolder>
-        <CreatorComparison />
-        <ArbeitsweiseSection />
-        <InteractiveFolder
-          id="about"
-          tab={f.about.tab}
-          title={f.about.title}
-          subtitle={f.about.subtitle}
-          openLabel={f.about.openLabel}
-          closeLabel={f.about.closeLabel}
-        >
-          <AboutContent />
-        </InteractiveFolder>
-        <GlobalReach />
-        <ConsultationBooking />
-        <FAQ />
+        <FadeIn><TrustBar /></FadeIn>
+        <FadeIn><CreatorEconomy /></FadeIn>
+        <FadeIn>
+          <InteractiveFolder
+            id="services"
+            tab={f.services.tab}
+            title={f.services.title}
+            subtitle={f.services.subtitle}
+            openLabel={f.services.openLabel}
+            closeLabel={f.services.closeLabel}
+          >
+            <ServicesContent />
+          </InteractiveFolder>
+        </FadeIn>
+        <FadeIn><CreatorComparison /></FadeIn>
+        <FadeIn><ArbeitsweiseSection /></FadeIn>
+        <FadeIn>
+          <InteractiveFolder
+            id="about"
+            tab={f.about.tab}
+            title={f.about.title}
+            subtitle={f.about.subtitle}
+            openLabel={f.about.openLabel}
+            closeLabel={f.about.closeLabel}
+          >
+            <AboutContent />
+          </InteractiveFolder>
+        </FadeIn>
+        <FadeIn><GlobalReach /></FadeIn>
+        <FadeIn><ConsultationBooking /></FadeIn>
+        <FadeIn><FAQ /></FadeIn>
       </main>
       <Footer />
     </div>
