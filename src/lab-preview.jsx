@@ -42,7 +42,7 @@ function Placeholder({ title, reason }) {
 
 function LabPreview() {
   const [preset, setPreset] = useState('wuerfel');
-  const { axis, sides, fill } = STAGE_PRESETS[preset];
+  const stage = STAGE_PRESETS[preset];
 
   return (
     <SmoothScroll>
@@ -55,7 +55,7 @@ function LabPreview() {
               <AxisSwitch preset={preset} onChange={setPreset} />
 
               <main>
-                <RotaryStage key={preset} axis={axis} sides={sides} fill={fill}>
+                <RotaryStage key={preset} {...stage}>
                   <Hero />
                   <TrustBar />
                   <CreatorEconomy />

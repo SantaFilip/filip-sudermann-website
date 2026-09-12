@@ -23,7 +23,7 @@ import AxisSwitch, { STAGE_PRESETS } from '@/components/lab/AxisSwitch';
  */
 export default function RotateLab() {
   const [preset, setPreset] = useState('wuerfel');
-  const { axis, sides, fill } = STAGE_PRESETS[preset];
+  const stage = STAGE_PRESETS[preset];
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,7 +32,7 @@ export default function RotateLab() {
       <AxisSwitch preset={preset} onChange={setPreset} />
 
       <main>
-        <RotaryStage key={preset} axis={axis} sides={sides} fill={fill}>
+        <RotaryStage key={preset} {...stage}>
           <Hero />
           <TrustBar />
           <CreatorEconomy />

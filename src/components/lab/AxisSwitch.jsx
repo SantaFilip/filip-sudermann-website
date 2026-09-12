@@ -11,7 +11,17 @@ export const STAGE_PRESETS = {
   // ganzen Bildschirm, liegt die naechste bei 30 Grad schon ausserhalb des
   // Sichtfelds und von der Kruemmung ist nichts zu sehen. Erst mehrere
   // Facetten gleichzeitig im Bild lesen als Rolle.
-  rolle: { label: 'Rolle', axis: 'y', sides: 12, fill: 0.42 },
+  // Auf dem Handy kippt die Rolle auf die Waagerechte: seitlich teilt sie die
+  // Breite auf, und davon hat ein Telefon zu wenig. Ueber die Waagerechte
+  // teilt sie die Hoehe, und die ist reichlich da.
+  rolle: {
+    label: 'Rolle',
+    axis: 'y',
+    sides: 12,
+    fill: 0.42,
+    mobileAxis: 'x',
+    mobileFill: 0.5,
+  },
 };
 
 export default function AxisSwitch({ preset, onChange }) {

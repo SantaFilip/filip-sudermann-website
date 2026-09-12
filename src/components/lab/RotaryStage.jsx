@@ -119,8 +119,17 @@ function FitToFace({ children }) {
  * Flaeche laesst den Hintergrund durchscheinen und zerstoert den Eindruck
  * eines massiven Koerpers. Tiefe kommt ueber Helligkeit, nicht ueber Opazitaet.
  */
-export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
-  const lateral = axis === 'y';
+export default function RotaryStage({
+  children,
+  axis = 'x',
+  sides = 4,
+  fill,
+  // Achse und Fuellgrad duerfen auf dem Handy abweichen. Seitliche Drehung
+  // teilt die Breite auf mehrere Facetten auf - auf einem Geraet, das nur
+  // 390px breit ist, bleibt davon nichts Lesbares uebrig.
+  mobileAxis,
+  mobileFill,
+} = {}) {
   // Winkel zwischen zwei benachbarten Flaechen. Vier Seiten geben die harte
   // Wuerfelkante, viele Seiten eine Rolle, die als Zylinder liest.
   const step = 360 / sides;
@@ -136,6 +145,11 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
   const [cube, setCube] = useState({ w: 0, h: 0 });
   const [reduced, setReduced] = useState(false);
   const [mobile, setMobile] = useState(false);
+
+  // Erst wenn die Breitenklasse feststeht, ist entschieden, welche Achse und
+  // welcher Fuellgrad gelten.
+  const lateral = (mobile && mobileAxis ? mobileAxis : axis) === 'y';
+  const fuellung = mobile && mobileFill != null ? mobileFill : fill;
 
   useEffect(() => {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -185,7 +199,7 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
       // wird sie verkleinert. Sonst fuellt eine Facette die Drehrichtung
       // allein aus, die naechste liegt ausserhalb des Sichtfelds und von der
       // Rundung ist nichts zu sehen.
-      const laengs = fill ?? vorgabe;
+      const laengs = fuellung ?? vorgabe;
       const w = lateral ? Math.round(sticky.clientWidth * laengs) : sticky.clientWidth;
       const h = Math.round(sticky.clientHeight * (lateral ? vorgabe : laengs));
 
@@ -327,7 +341,7 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
       gsap.ticker.remove(tick);
       st.kill();
     };
-  }, [reduced, panels.length, mobile, lateral, sides, step, fill]);
+  }, [reduced, panels.length, mobile, lateral, sides, step, fuellung]);
 
   if (reduced) {
     return <div>{panels.map((p, i) => <div key={i}>{p}</div>)}</div>;

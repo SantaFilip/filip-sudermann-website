@@ -118,7 +118,10 @@
    * trotzdem ihr vierspaltiges Desktop-Raster auf.
    */
   .rotary-face {
-    container-type: inline-size;
+    /* size statt inline-size: so laesst sich auch die Hoehe der Facette
+       abfragen. Zulaessig, weil die Flaeche eine feste Hoehe bekommt und
+       nicht von ihrem Inhalt abhaengt. */
+    container-type: size;
     container-name: facet;
   }
 
@@ -175,6 +178,47 @@
 
     .rotary-face p {
       font-size: clamp(0.9rem, 2.6cqw, 1.05rem);
+    }
+  }
+
+  /*
+   * Flache Facetten. Eine Rolle teilt die Hoehe auf mehrere Seiten auf, auf
+   * dem Handy bleiben pro Facette gut 340px. Was der Inhalt darueber hinaus
+   * braucht, wird mit Stauchung bezahlt - und die nimmt die Breite mit.
+   */
+  @container facet (max-height: 520px) {
+    .rotary-face section > div > img {
+      max-height: 11cqh;
+    }
+
+    .rotary-face [class*="aspect-"] {
+      max-height: 30cqh;
+      width: 100%;
+    }
+
+    .rotary-face [class*="gap-"] {
+      gap: 0.6rem;
+    }
+
+    .rotary-face [class*="mt-"],
+    .rotary-face [class*="mb-"] {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .rotary-face h1 {
+      font-size: clamp(1.2rem, 5cqw, 1.9rem);
+      line-height: 1.08;
+    }
+
+    .rotary-face h2 {
+      font-size: clamp(1.05rem, 4cqw, 1.5rem);
+      line-height: 1.1;
+    }
+
+    .rotary-face p {
+      font-size: clamp(0.78rem, 2.2cqw, 0.95rem);
+      line-height: 1.35;
     }
   }
 
