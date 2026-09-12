@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
+import { getLenis } from '@/lib/lenisInstance';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,6 +24,19 @@ const MOBILE_MAX = 767;
 // ueber die CSS-Regeln in index.css gefuellt, die dem Inhalt die ueberfluessige
 // Hoehe nehmen.
 const MAX_SCALE = 1;
+
+// Einrasten. Nach der letzten Eingabe wird auf die naechste ganze Flaeche
+// gefahren, damit der Wuerfel nie schraeg zwischen zwei Seiten stehen bleibt.
+const SNAP_IDLE_MS = 120;
+const SNAP_DURATION = 0.5;
+// Unterhalb dieses Abstands zur ganzen Flaeche steht der Wuerfel bereits
+// gerade - ein Schnappen waere nur ein sichtbares Zucken.
+const SNAP_EPSILON = 0.004;
+// Anteil einer Flaeche, den man in Scrollrichtung zuruecklegen muss, damit
+// weitergeschaltet wird. Ohne diese Schwelle wuerde jeder versehentliche
+// Radstups eine ganze Section ueberspringen; ohne Richtungsbias dagegen
+// zoege es einen auf die Ausgangsseite zurueck, obwohl man weiterwollte.
+const SNAP_THRESHOLD = 0.12;
 // Vier Seiten bilden den geschlossenen Koerper. Jede Seite steht 90 Grad zur
 // naechsten, die Tiefe entspricht damit exakt der Hoehe.
 const SIDES = 4;
@@ -184,17 +198,74 @@ export default function RotaryStage({ children }) {
 
     layout();
 
+    let snapTimer = null;
+    let snapping = false;
+
+    // Zuletzt beobachtete Scrollrichtung: 1 nach unten, -1 nach oben.
+    let dir = 1;
+
+    const snapTarget = (pos) => {
+      const unten = Math.floor(pos);
+      const rest = pos - unten;
+      if (dir > 0) return rest > SNAP_THRESHOLD ? unten + 1 : unten;
+      return rest < 1 - SNAP_THRESHOLD ? unten : unten + 1;
+    };
+
+    const snapToNearest = () => {
+      if (snapping || !st.isActive) return;
+      const pos = st.progress * steps;
+      const target = Math.min(steps, Math.max(0, snapTarget(pos)));
+      if (Math.abs(pos - target) < SNAP_EPSILON) return;
+
+      const y = st.start + ((st.end - st.start) * target) / steps;
+      snapping = true;
+      const done = () => { snapping = false; };
+
+      const lenis = getLenis();
+      if (lenis) {
+        // lock verhindert, dass Lenis' eigener Nachlauf gegen das Einrasten
+        // arbeitet und der Wuerfel wieder aus der Geraden gezogen wird.
+        lenis.scrollTo(y, { duration: SNAP_DURATION, lock: true, onComplete: done });
+      } else {
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        setTimeout(done, SNAP_DURATION * 1000);
+      }
+    };
+
+    const scheduleSnap = () => {
+      if (snapping) return;
+      clearTimeout(snapTimer);
+      snapTimer = setTimeout(snapToNearest, SNAP_IDLE_MS);
+    };
+
     const st = ScrollTrigger.create({
       trigger: root,
       start: 'top top',
       end: 'bottom bottom',
       scrub: true,
-      onUpdate: (self) => apply(self.progress * steps),
+      onUpdate: (self) => {
+        apply(self.progress * steps);
+        // Waehrend des Einrastens nicht mitschreiben: die Schnappfahrt laeuft
+        // sonst als Gegenrichtung ein und kippt das Ziel der naechsten Geste.
+        if (!snapping && self.direction) dir = self.direction;
+        // Faengt Ziehen am Scrollbalken und alles, was kein Rad-Ereignis
+        // ausloest. Waehrend des Einrastens laeuft es ins Leere, weil
+        // scheduleSnap dann sofort zurueckkehrt.
+        scheduleSnap();
+      },
       onRefresh: (self) => {
         layout();
         apply(self.progress * steps);
       },
     });
+
+    // Direkt an der Eingabe haengen, nicht nur am Scroll-Ereignis: Lenis
+    // laesst die Seite nach dem Loslassen noch ausrollen. Wer bis zum Ende
+    // dieses Nachlaufs wartet, rastet spuerbar zu spaet ein.
+    const onInput = () => scheduleSnap();
+    window.addEventListener('wheel', onInput, { passive: true });
+    window.addEventListener('touchend', onInput, { passive: true });
+    window.addEventListener('keyup', onInput);
 
     const tick = () => {
       drift += 0.035;
@@ -209,6 +280,10 @@ export default function RotaryStage({ children }) {
     ScrollTrigger.refresh();
 
     return () => {
+      clearTimeout(snapTimer);
+      window.removeEventListener('wheel', onInput);
+      window.removeEventListener('touchend', onInput);
+      window.removeEventListener('keyup', onInput);
       gsap.ticker.remove(tick);
       st.kill();
     };
