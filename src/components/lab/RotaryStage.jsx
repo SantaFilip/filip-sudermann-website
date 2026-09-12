@@ -81,26 +81,70 @@ function shade(deg) {
 }
 
 /**
+ * Setzt brightness() nur, wenn sie wirklich etwas veraendert.
+ *
+ * Ein CSS-filter erzwingt einen eigenen Compositing-Layer, der Inhalt
+ * separat gerastert - selbst brightness(1), das visuell ein No-Op ist.
+ * Kombiniert mit dem 3D-Kontext der Buehne (preserve-3d, translateZ) liest
+ * dieser zusaetzliche Raster-Schritt als leichte Unschaerfe auf Text, exakt
+ * auf der Flaeche, die gerade vorne steht und am meisten gelesen wird.
+ */
+function applyShade(el, deg) {
+  const v = shade(deg);
+  if (v > 0.995) {
+    el.style.filter = '';
+  } else {
+    el.style.filter = `brightness(${v})`;
+  }
+}
+
+/**
  * Skaliert seinen Inhalt auf eine Wuerfelseite. Eine Seite kann nicht
  * scrollen - passt der Inhalt nicht, muss er kleiner werden.
  */
 function FitToFace({ children }) {
   const outerRef = useRef(null);
   const innerRef = useRef(null);
-  const [scale, setScale] = useState(1);
 
   useLayoutEffect(() => {
     const outer = outerRef.current;
     const inner = innerRef.current;
     if (!outer || !inner) return;
 
+    // zoom statt transform: scale(). transform rendert den Inhalt in voller
+    // Groesse und staucht das Ergebnis danach als Bitmap - kombiniert mit dem
+    // 3D-Kontext der Buehne (preserve-3d, translateZ) liest das als
+    // unscharfer Text, selbst bei einem Faktor nahe 1. zoom aendert
+    // stattdessen die tatsaechliche Layout-Groesse: Text wird direkt in der
+    // Zielgroesse gesetzt und bleibt scharf.
+    //
+    // Zoom veraendert dabei - anders als transform - die echte Layout-Groesse
+    // von inner. Der naheliegende Ansatz, scrollHeight durch den zuletzt
+    // gesetzten Zoom zurueckzurechnen, ist ein Wettlauf: zwischen "Zoom
+    // setzen" und "scrollHeight spiegelt ihn wider" liegt ein Layout-Zyklus.
+    // Eine Messung, die den neuen Zoom schon kennt, aber noch die alte
+    // scrollHeight sieht, verzerrt das Ergebnis um genau das Verhaeltnis aus
+    // Ziel- und vorherigem Zoom - bei jedem weiteren Aufruf erneut, sodass der
+    // Wert geometrisch gegen null lief (in der Praxis bis auf 0,01).
+    //
+    // Robuster: bei jeder Messung Zoom auf 1 zuruecksetzen und einen
+    // SYNCHRONEN Reflow erzwingen (offsetHeight lesen), bevor scrollHeight
+    // gelesen wird. So ist die natuerliche Hoehe immer frisch und unabhaengig
+    // vom zuvor gesetzten Wert - kein Wettlauf mehr moeglich. Zwischen den
+    // beiden Style-Schreibvorgaengen findet kein Paint statt, es blitzt also
+    // nichts sichtbar auf.
     const measure = () => {
       const cs = getComputedStyle(outer);
       const available =
         outer.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-      const needed = inner.scrollHeight;
-      if (available <= 0 || !needed) return;
-      setScale(Math.min(MAX_SCALE, available / needed));
+      if (available <= 0) return;
+
+      inner.style.zoom = '1';
+      void inner.offsetHeight;
+      const natural = inner.scrollHeight;
+      if (!natural) return;
+
+      inner.style.zoom = String(Math.min(MAX_SCALE, available / natural));
     };
 
     measure();
@@ -117,11 +161,7 @@ function FitToFace({ children }) {
       ref={outerRef}
       className="rotary-face flex h-full w-full items-center justify-center overflow-hidden p-10"
     >
-      <div
-        ref={innerRef}
-        className="w-full"
-        style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}
-      >
+      <div ref={innerRef} className="w-full">
         {children}
       </div>
     </div>
@@ -279,7 +319,7 @@ export default function RotaryStage({
         const deg = (pos - s) * step;
         shell.style.visibility = offen && Math.abs(deg) > 1 ? 'hidden' : 'visible';
         shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
-        shell.style.filter = `brightness(${shade(deg)})`;
+        applyShade(shell, deg);
       });
 
       // Inhaltsseiten darueber.
@@ -297,7 +337,7 @@ export default function RotaryStage({
         }
         face.style.visibility = 'visible';
         face.style.transform = `${turn(deg)} translateZ(${radius}px)`;
-        face.style.filter = `brightness(${shade(deg)})`;
+        applyShade(face, deg);
 
         if (breit) {
           // Nur die Facette, die frontal steht, und nur im Stillstand.
