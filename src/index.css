@@ -182,6 +182,80 @@
   }
 
   /*
+   * Hohe Facetten. Zwei Sections sind im Seitenfluss bewusst flach gehalten
+   * und lassen auf einer bildschirmhohen Folie den Grossteil leer stehen -
+   * gemessen 18% bei der TrustBar und 58% beim FAQ. Auf einer Folie ist das
+   * kein Luftholen mehr, sondern eine halbleere Seite.
+   */
+  @container facet (min-height: 640px) {
+    /*
+     * TrustBar: aus der Leiste werden vier Kacheln. Sie hat keine id, aber
+     * ihr Raster ist eindeutig - sonst gibt es auf der Seite kein
+     * zweispaltiges Raster, das auf vier Spalten aufmacht.
+     */
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 {
+      gap: 1.25rem;
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 > div {
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.1rem;
+      min-height: 68cqh;
+      padding: 2.25rem 1.75rem;
+      background: hsl(var(--card));
+      border-left: 2px solid hsl(var(--accent) / 0.55);
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 svg {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 > div p:first-child {
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 > div p + p {
+      font-size: 0.95rem;
+    }
+
+    /*
+     * Arbeitsweise stapelt zwei vollstaendige Bloecke uebereinander -
+     * Prozess-Schritte und Gewinnbeteiligung, getrennt durch mt-24. Als Folie
+     * wird sie dadurch doppelt so hoch wie noetig und muss auf 53% gestaucht
+     * werden, waehrend die Breite leer bleibt. Nebeneinander passt beides in
+     * eine Folienhoehe.
+     */
+    .rotary-face #process > div {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem 3rem;
+      align-items: start;
+    }
+
+    /* Der Kopf mit Nummer, Titel und Untertitel laeuft ueber beide Spalten. */
+    .rotary-face #process > div > div:first-child {
+      grid-column: 1 / -1;
+      margin-bottom: 0;
+    }
+
+    /* Der Abstand trennte die Bloecke vertikal - das erledigt jetzt die
+       Spalte daneben. */
+    .rotary-face #process > div > .mt-24 {
+      margin-top: 0;
+    }
+
+    /* FAQ: die Fragen bekommen Hoehe, statt oben zusammenzukleben. */
+    .rotary-face #faq button {
+      padding-top: 2.4rem;
+      padding-bottom: 2.4rem;
+      font-size: 1.35rem;
+    }
+  }
+
+  /*
    * Flache Facetten. Eine Rolle teilt die Hoehe auf mehrere Seiten auf, auf
    * dem Handy bleiben pro Facette gut 340px. Was der Inhalt darueber hinaus
    * braucht, wird mit Stauchung bezahlt - und die nimmt die Breite mit.

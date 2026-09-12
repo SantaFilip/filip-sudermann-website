@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
+import FaceOrnament from '@/components/lab/FaceOrnament';
 import FadeIn from '@/components/FadeIn';
 import { getLenis } from '@/lib/lenisInstance';
 
@@ -16,7 +17,13 @@ gsap.registerPlugin(ScrollTrigger);
 // Desktop: knapp darunter, damit die Kanten des Koerpers sichtbar bleiben -
 // fuellt er den Viewport exakt aus, wirkt er wieder wie eine flache Seite.
 const CUBE_FILL_MOBILE = 1;
-const CUBE_FILL_DESKTOP = 0.94;
+// Bewusst Luft lassen: der Teich soll als Rand um den Koerper sichtbar sein
+// und die Eckverzierungen duerfen nicht am Bildschirmrand kleben. Voll
+// ausgefuellt waere beides unsichtbar.
+const CUBE_FILL_DESKTOP = 0.86;
+// Seitlicher Rand auf dem Desktop, damit der Koerper wie ein Buch auf dem
+// Wasser liegt statt bildschirmbreit anzustossen.
+const CUBE_WIDTH_DESKTOP = 0.93;
 const MOBILE_MAX = 767;
 
 // Hochskalieren ist keine Option: der Inhalt liegt bereits auf voller
@@ -42,6 +49,10 @@ const SNAP_THRESHOLD = 0.12;
 // wird nicht mehr gezeichnet. Knapp ueber 90 Grad, damit sie nicht schon
 // verschwindet, waehrend ihre Kante noch sichtbar ist.
 const CULL_DEG = 92;
+
+// Bis zu diesem Anteil des Scrollwegs bleibt der Teich unveraendert stehen,
+// danach laeuft er in den Grundton der Webseite ueber.
+const TEICH_HAELT = 0.6;
 
 /**
  * Radius eines regelmaessigen Koerpers mit n Seiten der Kantenlaenge a.
@@ -90,11 +101,11 @@ function FitToFace({ children }) {
   }, []);
 
   return (
-    // pt haelt den fixierten Header frei (h-16 mobil, h-20 ab lg), der Rest
-    // ist bewusst knapp - die Section bringt ihre eigenen Seitenabstaende mit.
+    // Gleichmaessiger Rand: der Header liegt nicht mehr ueber der Flaeche,
+    // dafuer brauchen die Eckverzierungen ringsum Platz.
     <div
       ref={outerRef}
-      className="rotary-face flex h-full w-full items-center justify-center overflow-hidden pb-4 pt-16 lg:pt-20"
+      className="rotary-face flex h-full w-full items-center justify-center overflow-hidden p-10"
     >
       <div
         ref={innerRef}
@@ -202,7 +213,10 @@ export default function RotaryStage({
       // allein aus, die naechste liegt ausserhalb des Sichtfelds und von der
       // Rundung ist nichts zu sehen.
       const laengs = fuellung ?? vorgabe;
-      const w = lateral ? Math.round(sticky.clientWidth * laengs) : sticky.clientWidth;
+      const quer = mobile ? 1 : CUBE_WIDTH_DESKTOP;
+      const w = lateral
+        ? Math.round(sticky.clientWidth * laengs)
+        : Math.round(sticky.clientWidth * quer);
       const h = Math.round(sticky.clientHeight * (lateral ? vorgabe : laengs));
 
       // Die Tiefe des Koerpers spannt die Kante in Drehrichtung auf: bei
@@ -248,7 +262,11 @@ export default function RotaryStage({
       const backdrop = backdropRef.current;
       if (backdrop) {
         backdrop.style.setProperty('--spin', `${pos * 42 + drift}deg`);
-        backdrop.style.setProperty('--tint', String(pos / steps));
+        // Der Teich soll bis kurz vor Schluss stehen bleiben und erst dann in
+        // den Grundton der Seite laufen. Linear ueber den ganzen Scroll waere
+        // er schon zur Haelfte verblasst, bevor man die Mitte erreicht.
+        const rest = (pos / steps - TEICH_HAELT) / (1 - TEICH_HAELT);
+        backdrop.style.setProperty('--tint', String(Math.min(1, Math.max(0, rest))));
       }
     };
 
@@ -376,7 +394,10 @@ export default function RotaryStage({
     <div ref={rootRef} style={{ height: `${(panels.length + 1) * 100}vh` }}>
       <div
         ref={stickyRef}
-        className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
+        // pt haelt den fixierten Header frei. Der Koerper zentriert sich damit
+        // im Raum darunter, statt halb hinter dem Header zu liegen - sonst
+        // sind die beiden oberen Eckverzierungen nie zu sehen.
+        className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden pt-16 lg:pt-20"
         style={{
           // Bewusst NICHT mit dem Radius mitwachsen lassen: die Frontflaeche
           // liegt ohnehin immer auf z = 0, nur die dahinter weichen zurueck.
@@ -419,6 +440,7 @@ export default function RotaryStage({
               className="absolute left-0 top-0 overflow-hidden"
               style={{ ...faceStyle, transformStyle: 'preserve-3d' }}
             >
+              <FaceOrnament />
               <FitToFace>{panel}</FitToFace>
             </div>
           ))}
