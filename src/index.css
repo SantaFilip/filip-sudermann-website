@@ -285,29 +285,4 @@
     }
   }
 
-  @media (max-width: 767px) {
-    .rotary-face section > div > img {
-      max-height: 8vh;
-    }
-
-    /*
-     * Deckel am Seitenverhaeltnis-Container, nicht am Bild. Begrenzt man das
-     * Bild, behaelt sein aspect-Container die volle Hoehe und unter dem Bild
-     * bleibt ein leerer Kasten stehen. So schneidet object-fit sauber zu.
-     */
-    .rotary-face [class*="aspect-"] {
-      max-height: 30vh;
-      /* Ohne feste Breite zieht das Seitenverhaeltnis die Box mit der Hoehe
-         schmal und daneben bleibt Weissraum stehen. */
-      width: 100%;
-    }
-
-    .rotary-face .gap-10 {
-      gap: 1.5rem;
-    }
-
-    .rotary-face .mt-8 {
-      margin-top: 1rem;
-    }
-  }
 }

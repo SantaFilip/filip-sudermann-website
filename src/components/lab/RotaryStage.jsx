@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
+import FadeIn from '@/components/FadeIn';
 import { getLenis } from '@/lib/lenisInstance';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -143,17 +144,16 @@ export default function RotaryStage({
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
   // wirkt nur auf die Ausdehnung in Drehrichtung.
   const [cube, setCube] = useState({ w: 0, h: 0 });
-  const [reduced, setReduced] = useState(false);
-  const [mobile, setMobile] = useState(false);
+  // Synchron initialisieren, nicht erst im Effect: sonst montiert das Handy
+  // fuer einen Frame die Buehne, bevor sie wieder abgeschaltet wird.
+  const abfrage = (q) => typeof window !== 'undefined' && window.matchMedia(q).matches;
+  const [reduced, setReduced] = useState(() => abfrage('(prefers-reduced-motion: reduce)'));
+  const [mobile, setMobile] = useState(() => abfrage(`(max-width: ${MOBILE_MAX}px)`));
 
   // Erst wenn die Breitenklasse feststeht, ist entschieden, welche Achse und
   // welcher Fuellgrad gelten.
   const lateral = (mobile && mobileAxis ? mobileAxis : axis) === 'y';
   const fuellung = mobile && mobileFill != null ? mobileFill : fill;
-
-  useEffect(() => {
-    setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  }, []);
 
   // Beim Drehen des Telefons wechselt die Breitenklasse. Ohne Listener bliebe
   // der beim ersten Rendern gemessene Wert stehen und die Seite behielte die
@@ -167,7 +167,9 @@ export default function RotaryStage({
   }, []);
 
   useLayoutEffect(() => {
-    if (reduced || panels.length === 0) return;
+    // Auf dem Handy laeuft die Seite ohne Buehne: kein Pinning, kein
+    // Einrasten, keine Skalierung.
+    if (reduced || mobile || panels.length === 0) return;
     const root = rootRef.current;
     const sticky = stickyRef.current;
     const box = boxRef.current;
@@ -343,8 +345,17 @@ export default function RotaryStage({
     };
   }, [reduced, panels.length, mobile, lateral, sides, step, fuellung]);
 
-  if (reduced) {
-    return <div>{panels.map((p, i) => <div key={i}>{p}</div>)}</div>;
+  // Handy und reduzierte Bewegung bekommen die Seite so, wie sie ohne Buehne
+  // war: Sections untereinander im normalen Fluss, eingeblendet beim
+  // Reinscrollen. FadeIn haelt sich selbst an prefers-reduced-motion.
+  if (reduced || mobile) {
+    return (
+      <div>
+        {panels.map((panel, i) => (
+          <FadeIn key={i}>{panel}</FadeIn>
+        ))}
+      </div>
+    );
   }
 
   const faceStyle = {

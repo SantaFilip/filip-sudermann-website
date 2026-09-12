@@ -25,8 +25,10 @@ export const STAGE_PRESETS = {
 };
 
 export default function AxisSwitch({ preset, onChange }) {
+  // Auf dem Handy laeuft die Seite ohne Buehne - ein Formwaehler waere dort
+  // ohne Wirkung und nur irrefuehrend.
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-1 rounded border border-accent bg-card/90 p-1 backdrop-blur">
+    <div className="fixed bottom-4 left-4 z-50 hidden items-center gap-1 rounded border border-accent bg-card/90 p-1 backdrop-blur md:flex">
       <span className="px-2 font-mono text-xs text-muted-foreground">Form</span>
       {Object.entries(STAGE_PRESETS).map(([key, { label }]) => (
         <button
