@@ -278,14 +278,90 @@
     }
 
     /*
-     * Zwei mal zwei statt vier nebeneinander. In der halben Folienbreite sind
-     * vier Karten rund 130px schmal; die Ueberschriften brechen dann mitten im
-     * Wort ("Mark-tforsc-hung"), weil ohne Trennwoerterbuch hart umbrochen
-     * wird. Zwei Spalten geben jeder Karte die doppelte Breite.
+     * Zwei mal zwei statt vier nebeneinander - vier Karten in der halben
+     * Folienbreite waeren rund 130px schmal, die Ueberschriften braechen
+     * mitten im Wort ("Mark-tforsc-hung").
+     *
+     * Die alte Praesentation (5rem-Ziffer, Punkt, verbindende Linie - fuer
+     * eine Reihe aus vier gedacht) baute dabei 759px Hoehe in einer 425px
+     * schmalen Spalte: der Zoom fiel auf 0,66, kleine Legendentexte wurden
+     * bei 0,72rem * 0,66 ≈ 7,6px unlesbar weich - kein Zoom-Fehler mehr,
+     * schlicht zu viel Inhalt fuer zu wenig Platz. Jede Karte bekommt
+     * stattdessen ein kompaktes Icon-Abzeichen mit der Nummer als kleines
+     * Eck-Label; die alte Linie/der Punkt fallen weg, dafuer verbindet ein
+     * leises Rautenmuster hinter den vier Karten sie als eine Einheit -
+     * "vier Ecken eines groesseren Musters" statt einer Reihe.
      */
     .rotary-face #process .lg\:grid.grid-cols-4 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.5rem 0.8rem;
+      gap: 0.6rem;
+      position: relative;
+    }
+
+    /* Verbindendes Muster: eine leise Raute hinter den vier Karten. */
+    .rotary-face #process .lg\:grid.grid-cols-4::before {
+      content: '';
+      position: absolute;
+      inset: 8% 18%;
+      border: 1px solid hsl(var(--accent) / 0.35);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    /* Die alte Linie zwischen den vier Karten passt nicht zum 2x2-Muster. */
+    .rotary-face #process .lg\:grid.grid-cols-4 > .absolute {
+      display: none;
+    }
+
+    .rotary-face #process .lg\:grid.grid-cols-4 > div {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 0.6rem;
+      text-align: left;
+    }
+
+    /* Die grosse Hintergrundziffer wird zum kleinen Eck-Label im Abzeichen. */
+    .rotary-face #process .lg\:grid.grid-cols-4 > div > span {
+      position: absolute;
+      font-size: 0.85rem !important;
+      opacity: 0.55 !important;
+      top: -0.3rem;
+      left: 2.1rem;
+      margin: 0 !important;
+    }
+
+    /* Der Verbindungspunkt der alten Linie ist ohne sie ueberfluessig. */
+    .rotary-face #process .lg\:grid.grid-cols-4 > div > span + div {
+      display: none;
+    }
+
+    /* Icon-Kreis: kompaktes Abzeichen statt eigener Zeile. */
+    .rotary-face #process .lg\:grid.grid-cols-4 .w-14.h-14 {
+      width: 2.5rem !important;
+      height: 2.5rem !important;
+      margin: 0 !important;
+      flex-shrink: 0;
+    }
+
+    /* Karte: engere Polsterung, linksbuendiger Text neben dem Abzeichen. */
+    .rotary-face #process .lg\:grid.grid-cols-4 .rounded-2xl {
+      padding: 0.7rem 0.85rem !important;
+      text-align: left !important;
+    }
+
+    .rotary-face #process .lg\:grid.grid-cols-4 h3 {
+      font-size: 0.95rem !important;
+      text-align: left !important;
+      margin-bottom: 0.2rem !important;
+    }
+
+    .rotary-face #process .lg\:grid.grid-cols-4 p {
+      font-size: 0.72rem !important;
+      text-align: left !important;
+      line-height: 1.3 !important;
     }
   }
 
