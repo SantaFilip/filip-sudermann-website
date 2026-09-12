@@ -50,6 +50,16 @@ const SNAP_THRESHOLD = 0.12;
 // verschwindet, waehrend ihre Kante noch sichtbar ist.
 const CULL_DEG = 92;
 
+// Wie weit die aufgegangene Frontflaeche aus dem Koerper heraustritt.
+//
+// Bei einem geschlossenen Vielflaechner stoesst die Nachbarflaeche mit ihrer
+// vorderen Kante genau auf z = 0 - dieselbe Ebene, auf der die Frontflaeche
+// liegt. Verbreitert man sie dort, ragt sie in den Raum der Nachbarn und der
+// Compositor schneidet beide pixelweise ineinander: die breite Folie wird in
+// Streifen zerlegt. Ein kleiner Versatz nach vorn reicht, damit sie
+// vollstaendig vor jedem Punkt der Nachbarn liegt.
+const EXPAND_LIFT = 60;
+
 // Bis zu diesem Anteil des Scrollwegs bleibt der Teich unveraendert stehen,
 // danach laeuft er in den Grundton der Webseite ueber.
 const TEICH_HAELT = 0.6;
@@ -141,6 +151,9 @@ export default function RotaryStage({
   // 390px breit ist, bleibt davon nichts Lesbares uebrig.
   mobileAxis,
   mobileFill,
+  // Anteil der Buehnenbreite, auf den die vordere Facette aufgeht, sobald der
+  // Koerper still steht. Ohne Wert bleibt jede Facette so breit wie sie ist.
+  expandTo,
 } = {}) {
   // Winkel zwischen zwei benachbarten Flaechen. Vier Seiten geben die harte
   // Wuerfelkante, viele Seiten eine Rolle, die als Zylinder liest.
@@ -202,6 +215,10 @@ export default function RotaryStage({
     };
     let depth = 0;
     let drift = 0;
+    // Flaechenbreite lokal mitfuehren. Der React-Zustand taugt hier nicht:
+    // apply laeuft in der Closure des Effekts und sieht dort noch den Wert
+    // von vor dem letzten Rendern - beim Aufbau also 0.
+    let flaecheW = 0;
 
     const layout = () => {
       const vorgabe = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
@@ -222,11 +239,30 @@ export default function RotaryStage({
       // Die Tiefe des Koerpers spannt die Kante in Drehrichtung auf: bei
       // senkrechter Drehachse die Breite, sonst die Hoehe.
       depth = bodyRadius(lateral ? w : h, sides) * 2;
+      flaecheW = w;
       setCube({ w, h });
+
+      // setCube loest ein Neurendern aus, und das schreibt die Flaechenbreite
+      // aus dem Zustand zurueck - also auch ueber eine bereits aufgegangene
+      // Frontflaeche. Deshalb im naechsten Frame, nach dem Rendern, erneut
+      // anwenden.
+      requestAnimationFrame(() => apply(letztePos));
     };
 
     const apply = (pos) => {
+      letztePos = pos;
       const radius = depth / 2;
+      // Breite der vorderen Facette im Ruhezustand. Ueberschreitet sie die
+      // Schwelle der Container-Query, stellt die Section von selbst auf ihr
+      // weites Layout um - genau das, was die laterale Ansicht zeigt.
+      const breit = expandTo && !mobile ? Math.round(sticky.clientWidth * expandTo) : 0;
+      const vorne = Math.round(pos);
+      // Im Stillstand liegt nur noch die aufgegangene Folie im Bild. Die
+      // Nachbarn muessen weg: sie stossen mit ihrer vorderen Kante auf
+      // dieselbe Ebene, auf der die Folie liegt, und werden dort ineinander
+      // geschnitten - die breite Seite zerfiele in Streifen. Bewegt wird
+      // ohnehin nichts, es fehlt also auch nichts.
+      const offen = Boolean(breit) && ruht;
       const turn = (deg) => (lateral ? `rotateY(${-deg}deg)` : `rotateX(${deg}deg)`);
       // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
       // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
@@ -241,6 +277,7 @@ export default function RotaryStage({
         // Gleiche Formel wie bei den Inhaltsseiten. Mit s * 90 - pos * 90
         // liefe die Huelle gegenlaeufig und schnitte quer durch den Koerper.
         const deg = (pos - s) * step;
+        shell.style.visibility = offen && Math.abs(deg) > 1 ? 'hidden' : 'visible';
         shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
         shell.style.filter = `brightness(${shade(deg)})`;
       });
@@ -250,6 +287,10 @@ export default function RotaryStage({
         if (!face) return;
         const d = kuerzesterWeg(pos - i);
         const deg = d * step;
+        if (offen && d !== 0) {
+          face.style.visibility = 'hidden';
+          return;
+        }
         if (Math.abs(deg) > CULL_DEG) {
           face.style.visibility = 'hidden';
           return;
@@ -257,6 +298,19 @@ export default function RotaryStage({
         face.style.visibility = 'visible';
         face.style.transform = `${turn(deg)} translateZ(${radius}px)`;
         face.style.filter = `brightness(${shade(deg)})`;
+
+        if (breit) {
+          // Nur die Facette, die frontal steht, und nur im Stillstand.
+          const auf = ruht && kuerzesterWeg(vorne - i) === 0;
+          const w = auf ? breit : flaecheW;
+          face.style.width = `${w}px`;
+          // Links verankert, also den Zuwachs haelftig nach links ziehen,
+          // damit die Facette mittig aufgeht statt nach rechts zu wachsen.
+          face.style.marginLeft = `${-(w - flaecheW) / 2}px`;
+          if (auf) {
+            face.style.transform = `${turn(deg)} translateZ(${radius + EXPAND_LIFT}px)`;
+          }
+        }
       });
 
       const backdrop = backdropRef.current;
@@ -274,6 +328,11 @@ export default function RotaryStage({
 
     let snapTimer = null;
     let snapping = false;
+    // Steht der Koerper still? Nur dann geht die vordere Facette auf. Beim
+    // Aufbau steht er auf Flaeche 0, also von Anfang an offen - sonst muesste
+    // man erst einmal drehen, damit die erste Folie ihr weites Layout zeigt.
+    let ruht = true;
+    let letztePos = 0;
 
     // Zuletzt beobachtete Scrollrichtung: 1 nach unten, -1 nach oben.
     let dir = 1;
@@ -289,11 +348,20 @@ export default function RotaryStage({
       if (snapping || !st.isActive) return;
       const pos = st.progress * steps;
       const target = Math.min(steps, Math.max(0, snapTarget(pos)));
-      if (Math.abs(pos - target) < SNAP_EPSILON) return;
+      if (Math.abs(pos - target) < SNAP_EPSILON) {
+        // Steht schon gerade - dann ist jetzt Ruhe, ohne Fahrt.
+        ruht = true;
+        apply(pos);
+        return;
+      }
 
       const y = st.start + ((st.end - st.start) * target) / steps;
       snapping = true;
-      const done = () => { snapping = false; };
+      const done = () => {
+        snapping = false;
+        ruht = true;
+        apply(st.progress * steps);
+      };
 
       const lenis = getLenis();
       if (lenis) {
@@ -318,6 +386,9 @@ export default function RotaryStage({
       end: 'bottom bottom',
       scrub: true,
       onUpdate: (self) => {
+        // Waehrend der Schnappfahrt nicht zuruecksetzen: sie ist selbst
+        // Bewegung, wuerde die Facette also sofort wieder zuklappen.
+        if (!snapping) ruht = false;
         apply(self.progress * steps);
         // Waehrend des Einrastens nicht mitschreiben: die Schnappfahrt laeuft
         // sonst als Gegenrichtung ein und kippt das Ziel der naechsten Geste.
@@ -390,6 +461,12 @@ export default function RotaryStage({
     willChange: 'transform, filter',
   };
 
+  // Nur Breite und Versatz animieren. Die Drehung wird pro Frame gesetzt; ein
+  // Uebergang darauf liefe der Scroll-Position hinterher.
+  const inhaltStyle = expandTo
+    ? { ...faceStyle, transformStyle: 'preserve-3d', transition: 'width 420ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 420ms cubic-bezier(0.4, 0, 0.2, 1)' }
+    : { ...faceStyle, transformStyle: 'preserve-3d' };
+
   return (
     <div ref={rootRef} style={{ height: `${(panels.length + 1) * 100}vh` }}>
       <div
@@ -438,7 +515,7 @@ export default function RotaryStage({
               key={i}
               ref={(el) => { faceRefs.current[i] = el; }}
               className="absolute left-0 top-0 overflow-hidden"
-              style={{ ...faceStyle, transformStyle: 'preserve-3d' }}
+              style={inhaltStyle}
             >
               <FaceOrnament />
               <FitToFace>{panel}</FitToFace>

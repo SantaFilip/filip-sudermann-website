@@ -21,6 +21,10 @@ export const STAGE_PRESETS = {
     fill: 0.42,
     mobileAxis: 'x',
     mobileFill: 0.5,
+    // Im Stillstand geht die vordere Facette auf dieselbe Breite auf wie die
+    // laterale Ansicht. Damit ueberschreitet sie die Schwelle der
+    // Container-Query und uebernimmt deren weites Layout.
+    expandTo: 0.86,
   },
 };
 
