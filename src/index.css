@@ -112,6 +112,72 @@
    * Spezifitaet 0,1,1 schlaegt die Tailwind-Utility 0,1,0 - kein !important
    * noetig.
    */
+  /*
+   * Die Flaeche ist ein eigener Messraum. Ohne das richten sich die Sections
+   * nach der Fensterbreite und stellen in einer 600px schmalen Facette
+   * trotzdem ihr vierspaltiges Desktop-Raster auf.
+   */
+  .rotary-face {
+    container-type: inline-size;
+    container-name: facet;
+  }
+
+  @container facet (max-width: 900px) {
+    /* Hero: die Desktop-Variante ist fuer zwei Spalten gebaut, die schmale
+       Facette bekommt die einspaltige. */
+    .rotary-face .hidden.lg\:grid {
+      display: none;
+    }
+
+    .rotary-face .lg\:hidden.grid {
+      display: grid;
+    }
+
+    /* Jedes mehrspaltige Raster auf eine Spalte. minmax(0, 1fr) statt 1fr,
+       damit lange Woerter die Spalte nicht aufspreizen. */
+    .rotary-face [class*="grid-cols-"],
+    .rotary-face [class*="lg:grid-cols"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Zeilen, die als Flex nebeneinander laufen, ebenfalls stapeln. */
+    .rotary-face [class*="lg:flex-row"],
+    .rotary-face [class*="sm:flex-row"] {
+      flex-direction: column;
+    }
+
+    /*
+     * Einspaltig wird der Inhalt hoch, und die Hoehe erzwingt dann die
+     * Stauchung - die wiederum die Breite mitnimmt. Also Hoehe sparen:
+     * cqh misst die Facette, nicht das Fenster.
+     */
+    .rotary-face [class*="aspect-"] {
+      max-height: 34cqh;
+      width: 100%;
+    }
+
+    .rotary-face [class*="gap-1"],
+    .rotary-face [class*="gap-8"] {
+      gap: 1.25rem;
+    }
+
+    /* Schrift auf Facettenbreite bringen. Spezifitaet 0,1,1 schlaegt die
+       Utility-Klassen der Section. */
+    .rotary-face h1 {
+      font-size: clamp(1.75rem, 7cqw, 2.75rem);
+      line-height: 1.08;
+    }
+
+    .rotary-face h2 {
+      font-size: clamp(1.4rem, 5.5cqw, 2.25rem);
+      line-height: 1.12;
+    }
+
+    .rotary-face p {
+      font-size: clamp(0.9rem, 2.6cqw, 1.05rem);
+    }
+  }
+
   .rotary-face section {
     padding-top: 0;
     padding-bottom: 0;

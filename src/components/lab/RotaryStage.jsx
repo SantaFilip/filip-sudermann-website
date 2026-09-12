@@ -159,7 +159,20 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
     const box = boxRef.current;
     if (!root || !sticky || !box) return;
 
-    const steps = Math.max(1, panels.length - 1);
+    // Ein Schritt je Flaeche, nicht je Uebergang: der letzte Schritt fuehrt
+    // von der letzten Section zurueck auf die erste, der Koerper laeuft also
+    // einmal ganz herum.
+    const anzahl = panels.length;
+    const steps = Math.max(1, anzahl);
+
+    // Abstand zur Frontflaeche auf die kuerzeste Strecke um den Koerper
+    // bringen. Ohne das waere die erste Section vom Ende aus betrachtet acht
+    // Flaechen entfernt statt einer und kaeme nie ins Bild.
+    const kuerzesterWeg = (d) => {
+      let x = ((d % anzahl) + anzahl) % anzahl;
+      if (x > anzahl / 2) x -= anzahl;
+      return x;
+    };
     let depth = 0;
     let drift = 0;
 
@@ -205,7 +218,7 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
       // Inhaltsseiten darueber.
       faceRefs.current.forEach((face, i) => {
         if (!face) return;
-        const d = pos - i;
+        const d = kuerzesterWeg(pos - i);
         const deg = d * step;
         if (Math.abs(deg) > CULL_DEG) {
           face.style.visibility = 'hidden';
@@ -335,7 +348,7 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
   };
 
   return (
-    <div ref={rootRef} style={{ height: `${panels.length * 100}vh` }}>
+    <div ref={rootRef} style={{ height: `${(panels.length + 1) * 100}vh` }}>
       <div
         ref={stickyRef}
         className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
