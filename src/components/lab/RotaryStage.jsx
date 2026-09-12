@@ -131,7 +131,9 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
   const backdropRef = useRef(null);
   const faceRefs = useRef([]);
   const shellRefs = useRef([]);
-  const [cube, setCube] = useState(0);
+  // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
+  // wirkt nur auf die Ausdehnung in Drehrichtung.
+  const [cube, setCube] = useState({ w: 0, h: 0 });
   const [reduced, setReduced] = useState(false);
   const [mobile, setMobile] = useState(false);
 
@@ -158,7 +160,6 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
     if (!root || !sticky || !box) return;
 
     const steps = Math.max(1, panels.length - 1);
-    let size = 0;
     let depth = 0;
     let drift = 0;
 
@@ -166,14 +167,19 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
       const vorgabe = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
         ? CUBE_FILL_MOBILE
         : CUBE_FILL_DESKTOP;
-      size = Math.round(sticky.clientHeight * (fill ?? vorgabe));
-      // Die Tiefe des Koerpers richtet sich nach der Achse: bei senkrechter
-      // Drehachse rollt er seitlich, dann spannt die Flaechenbreite den
-      // Durchmesser auf - nicht die Hoehe.
-      // Kantenlaenge in Drehrichtung: quer zur Achse gemessen.
-      const kante = lateral ? sticky.clientWidth : size;
-      depth = bodyRadius(kante, sides) * 2;
-      setCube(size);
+
+      // Quer zur Drehachse bleibt die Flaeche so gross wie moeglich, laengs
+      // wird sie verkleinert. Sonst fuellt eine Facette die Drehrichtung
+      // allein aus, die naechste liegt ausserhalb des Sichtfelds und von der
+      // Rundung ist nichts zu sehen.
+      const laengs = fill ?? vorgabe;
+      const w = lateral ? Math.round(sticky.clientWidth * laengs) : sticky.clientWidth;
+      const h = Math.round(sticky.clientHeight * (lateral ? vorgabe : laengs));
+
+      // Die Tiefe des Koerpers spannt die Kante in Drehrichtung auf: bei
+      // senkrechter Drehachse die Breite, sonst die Hoehe.
+      depth = bodyRadius(lateral ? w : h, sides) * 2;
+      setCube({ w, h });
     };
 
     const apply = (pos) => {
@@ -315,8 +321,8 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
   }
 
   const faceStyle = {
-    width: '100%',
-    height: cube ? `${cube}px` : '94vh',
+    width: cube.w ? `${cube.w}px` : '100%',
+    height: cube.h ? `${cube.h}px` : '94vh',
     background: 'hsl(var(--card))',
     // Auf dem Handy fuellt die Seite den Bildschirm - ein Rahmen waere dort
     // nur eine Linie am Displayrand und kostet sichtbare Flaeche.
@@ -350,9 +356,10 @@ export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
 
         <div
           ref={boxRef}
-          className="relative w-full"
+          className="relative"
           style={{
-            height: cube ? `${cube}px` : '94vh',
+            width: cube.w ? `${cube.w}px` : '100%',
+            height: cube.h ? `${cube.h}px` : '94vh',
             transformStyle: 'preserve-3d',
           }}
         >

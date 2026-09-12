@@ -11,7 +11,7 @@ export const STAGE_PRESETS = {
   // ganzen Bildschirm, liegt die naechste bei 30 Grad schon ausserhalb des
   // Sichtfelds und von der Kruemmung ist nichts zu sehen. Erst mehrere
   // Facetten gleichzeitig im Bild lesen als Rolle.
-  rolle: { label: 'Rolle', axis: 'x', sides: 12, fill: 0.46 },
+  rolle: { label: 'Rolle', axis: 'y', sides: 12, fill: 0.42 },
 };
 
 export default function AxisSwitch({ preset, onChange }) {
