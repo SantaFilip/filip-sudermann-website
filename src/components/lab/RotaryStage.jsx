@@ -37,9 +37,20 @@ const SNAP_EPSILON = 0.004;
 // Radstups eine ganze Section ueberspringen; ohne Richtungsbias dagegen
 // zoege es einen auf die Ausgangsseite zurueck, obwohl man weiterwollte.
 const SNAP_THRESHOLD = 0.12;
-// Vier Seiten bilden den geschlossenen Koerper. Jede Seite steht 90 Grad zur
-// naechsten, die Tiefe entspricht damit exakt der Hoehe.
-const SIDES = 4;
+// Ab diesem Winkel zur Blickrichtung liegt eine Flaeche hinter der Kante und
+// wird nicht mehr gezeichnet. Knapp ueber 90 Grad, damit sie nicht schon
+// verschwindet, waehrend ihre Kante noch sichtbar ist.
+const CULL_DEG = 92;
+
+/**
+ * Radius eines regelmaessigen Koerpers mit n Seiten der Kantenlaenge a.
+ *
+ * Nur bei genau diesem Radius stossen benachbarte Flaechen kantengenau
+ * aneinander. Ist er zu klein, ueberlappen sie sich; ist er zu gross, klafft
+ * zwischen ihnen ein Spalt und der Koerper ist offen. Bei vier Seiten liefert
+ * die Formel a/2 - den Wuerfel.
+ */
+const bodyRadius = (a, n) => a / 2 / Math.tan(Math.PI / n);
 
 /** Beleuchtung: frontal volle Helligkeit, weggedreht abgedunkelt. */
 function shade(deg) {
@@ -108,8 +119,11 @@ function FitToFace({ children }) {
  * Flaeche laesst den Hintergrund durchscheinen und zerstoert den Eindruck
  * eines massiven Koerpers. Tiefe kommt ueber Helligkeit, nicht ueber Opazitaet.
  */
-export default function RotaryStage({ children, axis = 'x' }) {
+export default function RotaryStage({ children, axis = 'x', sides = 4, fill }) {
   const lateral = axis === 'y';
+  // Winkel zwischen zwei benachbarten Flaechen. Vier Seiten geben die harte
+  // Wuerfelkante, viele Seiten eine Rolle, die als Zylinder liest.
+  const step = 360 / sides;
   const panels = React.Children.toArray(children);
   const rootRef = useRef(null);
   const stickyRef = useRef(null);
@@ -149,14 +163,16 @@ export default function RotaryStage({ children, axis = 'x' }) {
     let drift = 0;
 
     const layout = () => {
-      const fill = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
+      const vorgabe = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
         ? CUBE_FILL_MOBILE
         : CUBE_FILL_DESKTOP;
-      size = Math.round(sticky.clientHeight * fill);
+      size = Math.round(sticky.clientHeight * (fill ?? vorgabe));
       // Die Tiefe des Koerpers richtet sich nach der Achse: bei senkrechter
       // Drehachse rollt er seitlich, dann spannt die Flaechenbreite den
       // Durchmesser auf - nicht die Hoehe.
-      depth = lateral ? sticky.clientWidth : size;
+      // Kantenlaenge in Drehrichtung: quer zur Achse gemessen.
+      const kante = lateral ? sticky.clientWidth : size;
+      depth = bodyRadius(kante, sides) * 2;
       setCube(size);
     };
 
@@ -175,7 +191,7 @@ export default function RotaryStage({ children, axis = 'x' }) {
         if (!shell) return;
         // Gleiche Formel wie bei den Inhaltsseiten. Mit s * 90 - pos * 90
         // liefe die Huelle gegenlaeufig und schnitte quer durch den Koerper.
-        const deg = (pos - s) * 90;
+        const deg = (pos - s) * step;
         shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
         shell.style.filter = `brightness(${shade(deg)})`;
       });
@@ -184,10 +200,8 @@ export default function RotaryStage({ children, axis = 'x' }) {
       faceRefs.current.forEach((face, i) => {
         if (!face) return;
         const d = pos - i;
-        const deg = d * 90;
-        // Knapp ueber 90 Grad halten, damit die Seite erst verschwindet,
-        // wenn sie wirklich hinter der Kante liegt.
-        if (Math.abs(d) > 1.02) {
+        const deg = d * step;
+        if (Math.abs(deg) > CULL_DEG) {
           face.style.visibility = 'hidden';
           return;
         }
@@ -294,7 +308,7 @@ export default function RotaryStage({ children, axis = 'x' }) {
       gsap.ticker.remove(tick);
       st.kill();
     };
-  }, [reduced, panels.length, mobile, lateral]);
+  }, [reduced, panels.length, mobile, lateral, sides, step, fill]);
 
   if (reduced) {
     return <div>{panels.map((p, i) => <div key={i}>{p}</div>)}</div>;
@@ -320,9 +334,12 @@ export default function RotaryStage({ children, axis = 'x' }) {
         ref={stickyRef}
         className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
         style={{
-          // Seitlich rollend ist der Koerper so tief wie die Flaeche breit -
-          // mit derselben Perspektive wie bei der Kippachse schoesse die
-          // vordere Flaeche weit ueber den Bildrand hinaus.
+          // Bewusst NICHT mit dem Radius mitwachsen lassen: die Frontflaeche
+          // liegt ohnehin immer auf z = 0, nur die dahinter weichen zurueck.
+          // Eine mit dem Radius wachsende Perspektive staucht diese Nachbarn
+          // dann kaum noch - die Rolle laege flach wie verschobene Platten
+          // statt sich sichtbar zu kruemmen. Massgeblich ist die Flaechen-
+          // groesse, und die haengt nur an der Achse.
           perspective: lateral ? '2600px' : '1250px',
           perspectiveOrigin: '50% 50%',
         }}
@@ -340,7 +357,7 @@ export default function RotaryStage({ children, axis = 'x' }) {
           }}
         >
           {/* Huelle: haelt den Koerper geschlossen, auch wo keine Section liegt. */}
-          {Array.from({ length: SIDES }, (_, s) => (
+          {Array.from({ length: sides }, (_, s) => (
             <div
               key={`shell-${s}`}
               ref={(el) => { shellRefs.current[s] = el; }}

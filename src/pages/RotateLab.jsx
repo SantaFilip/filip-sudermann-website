@@ -10,7 +10,7 @@ import GlobalReach from '@/components/sections/GlobalReach';
 import ConsultationBooking from '@/components/sections/ConsultationBooking';
 import FAQ from '@/components/sections/FAQ';
 import RotaryStage from '@/components/lab/RotaryStage';
-import AxisSwitch from '@/components/lab/AxisSwitch';
+import AxisSwitch, { STAGE_PRESETS } from '@/components/lab/AxisSwitch';
 
 /**
  * Testseite fuer die rotierende Trommel - bewusst NICHT verlinkt und nicht
@@ -22,16 +22,17 @@ import AxisSwitch from '@/components/lab/AxisSwitch';
  * abgeschnitten.
  */
 export default function RotateLab() {
-  const [axis, setAxis] = useState('x');
+  const [preset, setPreset] = useState('wuerfel');
+  const { axis, sides, fill } = STAGE_PRESETS[preset];
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <AxisSwitch axis={axis} onChange={setAxis} />
+      <AxisSwitch preset={preset} onChange={setPreset} />
 
       <main>
-        <RotaryStage key={axis} axis={axis}>
+        <RotaryStage key={preset} axis={axis} sides={sides} fill={fill}>
           <Hero />
           <TrustBar />
           <CreatorEconomy />
