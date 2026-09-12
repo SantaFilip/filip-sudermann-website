@@ -108,7 +108,8 @@ function FitToFace({ children }) {
  * Flaeche laesst den Hintergrund durchscheinen und zerstoert den Eindruck
  * eines massiven Koerpers. Tiefe kommt ueber Helligkeit, nicht ueber Opazitaet.
  */
-export default function RotaryStage({ children }) {
+export default function RotaryStage({ children, axis = 'x' }) {
+  const lateral = axis === 'y';
   const panels = React.Children.toArray(children);
   const rootRef = useRef(null);
   const stickyRef = useRef(null);
@@ -144,6 +145,7 @@ export default function RotaryStage({ children }) {
 
     const steps = Math.max(1, panels.length - 1);
     let size = 0;
+    let depth = 0;
     let drift = 0;
 
     const layout = () => {
@@ -151,11 +153,16 @@ export default function RotaryStage({ children }) {
         ? CUBE_FILL_MOBILE
         : CUBE_FILL_DESKTOP;
       size = Math.round(sticky.clientHeight * fill);
+      // Die Tiefe des Koerpers richtet sich nach der Achse: bei senkrechter
+      // Drehachse rollt er seitlich, dann spannt die Flaechenbreite den
+      // Durchmesser auf - nicht die Hoehe.
+      depth = lateral ? sticky.clientWidth : size;
       setCube(size);
     };
 
     const apply = (pos) => {
-      const radius = size / 2;
+      const radius = depth / 2;
+      const turn = (deg) => (lateral ? `rotateY(${-deg}deg)` : `rotateX(${deg}deg)`);
       // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
       // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
       box.style.transform = `translateZ(${-radius}px)`;
@@ -169,7 +176,7 @@ export default function RotaryStage({ children }) {
         // Gleiche Formel wie bei den Inhaltsseiten. Mit s * 90 - pos * 90
         // liefe die Huelle gegenlaeufig und schnitte quer durch den Koerper.
         const deg = (pos - s) * 90;
-        shell.style.transform = `rotateX(${deg}deg) translateZ(${radius - 2}px)`;
+        shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
         shell.style.filter = `brightness(${shade(deg)})`;
       });
 
@@ -185,7 +192,7 @@ export default function RotaryStage({ children }) {
           return;
         }
         face.style.visibility = 'visible';
-        face.style.transform = `rotateX(${deg}deg) translateZ(${radius}px)`;
+        face.style.transform = `${turn(deg)} translateZ(${radius}px)`;
         face.style.filter = `brightness(${shade(deg)})`;
       });
 
@@ -287,7 +294,7 @@ export default function RotaryStage({ children }) {
       gsap.ticker.remove(tick);
       st.kill();
     };
-  }, [reduced, panels.length, mobile]);
+  }, [reduced, panels.length, mobile, lateral]);
 
   if (reduced) {
     return <div>{panels.map((p, i) => <div key={i}>{p}</div>)}</div>;
@@ -312,7 +319,13 @@ export default function RotaryStage({ children }) {
       <div
         ref={stickyRef}
         className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
-        style={{ perspective: '1250px', perspectiveOrigin: '50% 50%' }}
+        style={{
+          // Seitlich rollend ist der Koerper so tief wie die Flaeche breit -
+          // mit derselben Perspektive wie bei der Kippachse schoesse die
+          // vordere Flaeche weit ueber den Bildrand hinaus.
+          perspective: lateral ? '2600px' : '1250px',
+          perspectiveOrigin: '50% 50%',
+        }}
       >
         <div ref={backdropRef} className="absolute inset-0">
           <RotatingBackdrop />

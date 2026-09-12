@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/sections/Hero';
@@ -10,6 +10,7 @@ import GlobalReach from '@/components/sections/GlobalReach';
 import ConsultationBooking from '@/components/sections/ConsultationBooking';
 import FAQ from '@/components/sections/FAQ';
 import RotaryStage from '@/components/lab/RotaryStage';
+import AxisSwitch from '@/components/lab/AxisSwitch';
 
 /**
  * Testseite fuer die rotierende Trommel - bewusst NICHT verlinkt und nicht
@@ -21,16 +22,16 @@ import RotaryStage from '@/components/lab/RotaryStage';
  * abgeschnitten.
  */
 export default function RotateLab() {
+  const [axis, setAxis] = useState('x');
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="fixed bottom-4 left-4 z-50 rounded border border-accent bg-card/90 px-3 py-1.5 text-xs font-mono text-muted-foreground backdrop-blur">
-        Testversion · Trommel + rotierender Hintergrund
-      </div>
+      <AxisSwitch axis={axis} onChange={setAxis} />
 
       <main>
-        <RotaryStage>
+        <RotaryStage key={axis} axis={axis}>
           <Hero />
           <TrustBar />
           <CreatorEconomy />

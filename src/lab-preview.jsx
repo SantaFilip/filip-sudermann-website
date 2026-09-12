@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -10,6 +10,7 @@ import CreatorComparison from '@/components/sections/CreatorComparison';
 import ArbeitsweiseSection from '@/components/sections/ArbeitsweiseSection';
 import FAQ from '@/components/sections/FAQ';
 import RotaryStage from '@/components/lab/RotaryStage';
+import AxisSwitch from '@/components/lab/AxisSwitch';
 import SmoothScroll from '@/components/SmoothScroll';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { ToastProvider } from '@/components/ui/use-toast';
@@ -40,6 +41,8 @@ function Placeholder({ title, reason }) {
 }
 
 function LabPreview() {
+  const [axis, setAxis] = useState('x');
+
   return (
     <SmoothScroll>
       <LanguageProvider>
@@ -48,12 +51,10 @@ function LabPreview() {
             <div className="min-h-screen bg-background">
               <Header />
 
-              <div className="fixed bottom-4 left-4 z-50 rounded border border-accent bg-card/90 px-3 py-1.5 font-mono text-xs text-muted-foreground backdrop-blur">
-                Vorschau · Trommel + rotierender Hintergrund
-              </div>
+              <AxisSwitch axis={axis} onChange={setAxis} />
 
               <main>
-                <RotaryStage>
+                <RotaryStage key={axis} axis={axis}>
                   <Hero />
                   <TrustBar />
                   <CreatorEconomy />
