@@ -5,19 +5,23 @@ import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Winkel zwischen zwei benachbarten Flaechen. 90 Grad gibt die harte
-// Wuerfelkante; flachere Werte wirken weicher, lassen aber die Nachbarflaeche
-// staendig mit im Bild stehen.
-const STEP_DEG = 90;
-// Ab diesem Abstand zur Frontflaeche wird eine Flaeche aus dem DOM-Layout
-// genommen. 1.15 statt 1.0, damit die wegkippende Flaeche nicht schon
-// verschwindet, waehrend ihre Kante noch sichtbar ist.
-const CULL = 1.15;
+// Anteil der Buehnenhoehe, den der Wuerfel einnimmt. Deutlich unter 1, damit
+// ober- und unterhalb Luft bleibt - fuellt der Koerper den Viewport exakt aus,
+// sieht man nie seine Silhouette und er wirkt wieder wie eine flache Seite.
+const CUBE_FILL = 0.84;
+// Vier Seiten bilden den geschlossenen Koerper. Jede Seite steht 90 Grad zur
+// naechsten, die Tiefe entspricht damit exakt der Hoehe.
+const SIDES = 4;
+
+/** Beleuchtung: frontal volle Helligkeit, weggedreht abgedunkelt. */
+function shade(deg) {
+  const lit = Math.max(0, Math.cos((deg * Math.PI) / 180));
+  return 0.46 + 0.54 * lit;
+}
 
 /**
- * Skaliert seinen Inhalt so weit herunter, dass er auf eine Trommelflaeche
- * passt. Die echten Sections der Seite sind fuer eine Trommel zu hoch - eine
- * Flaeche kann nicht scrollen, sonst bricht die Rotation.
+ * Skaliert seinen Inhalt auf eine Wuerfelseite. Eine Seite kann nicht
+ * scrollen - passt der Inhalt nicht, muss er kleiner werden.
  */
 function FitToFace({ children }) {
   const outerRef = useRef(null);
@@ -30,9 +34,6 @@ function FitToFace({ children }) {
     if (!outer || !inner) return;
 
     const measure = () => {
-      // clientHeight schliesst das Padding mit ein. Das muss raus, sonst
-      // skaliert der Inhalt auf die volle Flaeche und schiebt sich unter den
-      // fixierten Header.
       const cs = getComputedStyle(outer);
       const available =
         outer.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
@@ -49,10 +50,9 @@ function FitToFace({ children }) {
   }, []);
 
   return (
-    // pt-20 haelt die Flaeche unter dem fixierten Header frei.
     <div
       ref={outerRef}
-      className="flex h-full w-full items-center justify-center overflow-hidden pb-8 pt-20"
+      className="flex h-full w-full items-center justify-center overflow-hidden px-6 py-10"
     >
       <div
         ref={innerRef}
@@ -66,21 +66,27 @@ function FitToFace({ children }) {
 }
 
 /**
- * Scroll-getriebene 3D-Trommel.
+ * Scroll-getriebener Wuerfel.
  *
- * Jedes Kind wird zu einer Flaeche. Beim Scrollen kippt die aktuelle Flaeche
- * nach oben weg und die naechste von unten herein. Statt eines geschlossenen
- * Prismas mit fester Flaechenzahl werden immer nur die Nachbarn der aktuellen
- * Flaeche gerendert - so bleibt die harte 90-Grad-Kante erhalten, egal wie
- * viele Sections dranhaengen.
+ * Der Koerper besteht aus zwei Lagen: einer permanenten Huelle aus vier
+ * undurchsichtigen Seiten, die den Wuerfel immer geschlossen haelt, und den
+ * Inhaltsseiten darueber. Ohne die Huelle klafft an den Enden des Scrolls ein
+ * Loch - bei der ersten Section gibt es noch keine Vorgaengerseite, die von
+ * unten nachkommen koennte, und man schaut durch den Koerper hindurch.
+ *
+ * Inhaltsseiten bleiben deckend statt auszublenden: eine halbtransparente
+ * Flaeche laesst den Hintergrund durchscheinen und zerstoert den Eindruck
+ * eines massiven Koerpers. Tiefe kommt ueber Helligkeit, nicht ueber Opazitaet.
  */
 export default function RotaryStage({ children }) {
   const panels = React.Children.toArray(children);
   const rootRef = useRef(null);
   const stickyRef = useRef(null);
-  const drumRef = useRef(null);
+  const boxRef = useRef(null);
   const backdropRef = useRef(null);
   const faceRefs = useRef([]);
+  const shellRefs = useRef([]);
+  const [cube, setCube] = useState(0);
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
@@ -91,33 +97,51 @@ export default function RotaryStage({ children }) {
     if (reduced || panels.length === 0) return;
     const root = rootRef.current;
     const sticky = stickyRef.current;
-    const drum = drumRef.current;
-    if (!root || !sticky || !drum) return;
+    const box = boxRef.current;
+    if (!root || !sticky || !box) return;
 
     const steps = Math.max(1, panels.length - 1);
-    let radius = sticky.clientHeight / 2;
+    let size = 0;
     let drift = 0;
 
-    const apply = (pos) => {
-      // Halber Flaechenabstand als Tiefe: bei 90 Grad liegt die Frontflaeche
-      // damit exakt buendig auf z = 0.
-      drum.style.transform = `translateZ(${-radius}px)`;
+    const layout = () => {
+      size = Math.round(sticky.clientHeight * CUBE_FILL);
+      setCube(size);
+    };
 
+    const apply = (pos) => {
+      const radius = size / 2;
+      // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
+      // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
+      box.style.transform = `translateZ(${-radius}px)`;
+
+      // Huelle: vier Seiten, immer vorhanden, immer geschlossen. Zwei Pixel
+      // nach innen versetzt - lagen Huelle und Inhaltsseite auf exakt
+      // derselben Ebene, wuerden sie um die Sichtbarkeit kaempfen und die
+      // Huelle schoebe sich in Streifen ueber den Inhalt.
+      shellRefs.current.forEach((shell, s) => {
+        if (!shell) return;
+        // Gleiche Formel wie bei den Inhaltsseiten. Mit s * 90 - pos * 90
+        // liefe die Huelle gegenlaeufig und schnitte quer durch den Koerper.
+        const deg = (pos - s) * 90;
+        shell.style.transform = `rotateX(${deg}deg) translateZ(${radius - 2}px)`;
+        shell.style.filter = `brightness(${shade(deg)})`;
+      });
+
+      // Inhaltsseiten darueber.
       faceRefs.current.forEach((face, i) => {
         if (!face) return;
         const d = pos - i;
-        if (Math.abs(d) > CULL) {
+        const deg = d * 90;
+        // Knapp ueber 90 Grad halten, damit die Seite erst verschwindet,
+        // wenn sie wirklich hinter der Kante liegt.
+        if (Math.abs(d) > 1.02) {
           face.style.visibility = 'hidden';
           return;
         }
         face.style.visibility = 'visible';
-        face.style.transform = `rotateX(${d * STEP_DEG}deg) translateZ(${radius}px)`;
-        // Wegkippende Flaechen werden abgedunkelt statt nur transparent:
-        // eine halbtransparente Flaeche laesst den Hintergrund durchscheinen
-        // und der Text darunter wird unlesbar.
-        const f = Math.min(1, Math.abs(d));
-        face.style.opacity = String(1 - f * 0.65);
-        face.style.filter = `brightness(${1 - f * 0.35})`;
+        face.style.transform = `rotateX(${deg}deg) translateZ(${radius}px)`;
+        face.style.filter = `brightness(${shade(deg)})`;
       });
 
       const backdrop = backdropRef.current;
@@ -127,6 +151,8 @@ export default function RotaryStage({ children }) {
       }
     };
 
+    layout();
+
     const st = ScrollTrigger.create({
       trigger: root,
       start: 'top top',
@@ -134,13 +160,11 @@ export default function RotaryStage({ children }) {
       scrub: true,
       onUpdate: (self) => apply(self.progress * steps),
       onRefresh: (self) => {
-        radius = sticky.clientHeight / 2;
+        layout();
         apply(self.progress * steps);
       },
     });
 
-    // Eigenlauf des Hintergrunds: dreht auch dann weiter, wenn nicht
-    // gescrollt wird, sonst wirkt die Seite im Stillstand tot.
     const tick = () => {
       drift += 0.035;
       const backdrop = backdropRef.current;
@@ -159,37 +183,56 @@ export default function RotaryStage({ children }) {
     };
   }, [reduced, panels.length]);
 
-  // Ohne Bewegung: schlichter Stapel, keine Trommel, kein Pinning.
   if (reduced) {
     return <div>{panels.map((p, i) => <div key={i}>{p}</div>)}</div>;
   }
+
+  const faceStyle = {
+    width: '100%',
+    height: cube ? `${cube}px` : '84vh',
+    background: 'hsl(var(--card))',
+    border: '1px solid hsl(var(--border))',
+    boxShadow: '0 0 0 1px hsl(var(--accent) / 0.18), 0 30px 70px -30px hsl(217 62% 12% / 0.45)',
+    backfaceVisibility: 'hidden',
+    willChange: 'transform, filter',
+  };
 
   return (
     <div ref={rootRef} style={{ height: `${panels.length * 100}vh` }}>
       <div
         ref={stickyRef}
-        className="sticky top-0 h-screen w-full overflow-hidden"
-        style={{ perspective: '1600px', perspectiveOrigin: '50% 50%' }}
+        className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
+        style={{ perspective: '1250px', perspectiveOrigin: '50% 50%' }}
       >
         <div ref={backdropRef} className="absolute inset-0">
           <RotatingBackdrop />
         </div>
 
         <div
-          ref={drumRef}
-          className="relative h-full w-full"
-          style={{ transformStyle: 'preserve-3d' }}
+          ref={boxRef}
+          className="relative w-full"
+          style={{
+            height: cube ? `${cube}px` : '84vh',
+            transformStyle: 'preserve-3d',
+          }}
         >
+          {/* Huelle: haelt den Koerper geschlossen, auch wo keine Section liegt. */}
+          {Array.from({ length: SIDES }, (_, s) => (
+            <div
+              key={`shell-${s}`}
+              ref={(el) => { shellRefs.current[s] = el; }}
+              className="absolute left-0 top-0"
+              style={faceStyle}
+              aria-hidden="true"
+            />
+          ))}
+
           {panels.map((panel, i) => (
             <div
               key={i}
               ref={(el) => { faceRefs.current[i] = el; }}
-              className="absolute inset-0"
-              style={{
-                transformStyle: 'preserve-3d',
-                backfaceVisibility: 'hidden',
-                willChange: 'transform, opacity',
-              }}
+              className="absolute left-0 top-0 overflow-hidden"
+              style={{ ...faceStyle, transformStyle: 'preserve-3d' }}
             >
               <FitToFace>{panel}</FitToFace>
             </div>
