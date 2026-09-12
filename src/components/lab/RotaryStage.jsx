@@ -5,10 +5,24 @@ import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Anteil der Buehnenhoehe, den der Wuerfel einnimmt. Deutlich unter 1, damit
-// ober- und unterhalb Luft bleibt - fuellt der Koerper den Viewport exakt aus,
-// sieht man nie seine Silhouette und er wirkt wieder wie eine flache Seite.
-const CUBE_FILL = 0.84;
+// Anteil der Buehnenhoehe, den der Wuerfel einnimmt.
+//
+// Handy: eine Seite ist ein Bildschirmsegment, also volle Hoehe. Auf einem
+// kleinen Display ist jeder Pixel Rand verschenkter Platz, und die Silhouette
+// des Koerpers zeigt sich beim Drehen ohnehin.
+//
+// Desktop: knapp darunter, damit die Kanten des Koerpers sichtbar bleiben -
+// fuellt er den Viewport exakt aus, wirkt er wieder wie eine flache Seite.
+const CUBE_FILL_MOBILE = 1;
+const CUBE_FILL_DESKTOP = 0.94;
+const MOBILE_MAX = 767;
+
+// Hochskalieren ist keine Option: der Inhalt liegt bereits auf voller
+// Flaechenbreite, ein Faktor ueber 1 schiebt ihn seitlich aus der Flaeche
+// heraus und die Kanten werden abgeschnitten. Die Flaeche wird stattdessen
+// ueber die CSS-Regeln in index.css gefuellt, die dem Inhalt die ueberfluessige
+// Hoehe nehmen.
+const MAX_SCALE = 1;
 // Vier Seiten bilden den geschlossenen Koerper. Jede Seite steht 90 Grad zur
 // naechsten, die Tiefe entspricht damit exakt der Hoehe.
 const SIDES = 4;
@@ -39,7 +53,7 @@ function FitToFace({ children }) {
         outer.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
       const needed = inner.scrollHeight;
       if (available <= 0 || !needed) return;
-      setScale(Math.min(1, available / needed));
+      setScale(Math.min(MAX_SCALE, available / needed));
     };
 
     measure();
@@ -50,9 +64,11 @@ function FitToFace({ children }) {
   }, []);
 
   return (
+    // pt haelt den fixierten Header frei (h-16 mobil, h-20 ab lg), der Rest
+    // ist bewusst knapp - die Section bringt ihre eigenen Seitenabstaende mit.
     <div
       ref={outerRef}
-      className="flex h-full w-full items-center justify-center overflow-hidden px-6 py-10"
+      className="rotary-face flex h-full w-full items-center justify-center overflow-hidden pb-4 pt-16 lg:pt-20"
     >
       <div
         ref={innerRef}
@@ -88,9 +104,21 @@ export default function RotaryStage({ children }) {
   const shellRefs = useRef([]);
   const [cube, setCube] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const [mobile, setMobile] = useState(false);
 
   useEffect(() => {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }, []);
+
+  // Beim Drehen des Telefons wechselt die Breitenklasse. Ohne Listener bliebe
+  // der beim ersten Rendern gemessene Wert stehen und die Seite behielte die
+  // Raender der falschen Variante.
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`);
+    const sync = () => setMobile(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
   }, []);
 
   useLayoutEffect(() => {
@@ -105,7 +133,10 @@ export default function RotaryStage({ children }) {
     let drift = 0;
 
     const layout = () => {
-      size = Math.round(sticky.clientHeight * CUBE_FILL);
+      const fill = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
+        ? CUBE_FILL_MOBILE
+        : CUBE_FILL_DESKTOP;
+      size = Math.round(sticky.clientHeight * fill);
       setCube(size);
     };
 
@@ -181,7 +212,7 @@ export default function RotaryStage({ children }) {
       gsap.ticker.remove(tick);
       st.kill();
     };
-  }, [reduced, panels.length]);
+  }, [reduced, panels.length, mobile]);
 
   if (reduced) {
     return <div>{panels.map((p, i) => <div key={i}>{p}</div>)}</div>;
@@ -189,10 +220,14 @@ export default function RotaryStage({ children }) {
 
   const faceStyle = {
     width: '100%',
-    height: cube ? `${cube}px` : '84vh',
+    height: cube ? `${cube}px` : '94vh',
     background: 'hsl(var(--card))',
-    border: '1px solid hsl(var(--border))',
-    boxShadow: '0 0 0 1px hsl(var(--accent) / 0.18), 0 30px 70px -30px hsl(217 62% 12% / 0.45)',
+    // Auf dem Handy fuellt die Seite den Bildschirm - ein Rahmen waere dort
+    // nur eine Linie am Displayrand und kostet sichtbare Flaeche.
+    border: mobile ? 'none' : '1px solid hsl(var(--border))',
+    boxShadow: mobile
+      ? 'none'
+      : '0 0 0 1px hsl(var(--accent) / 0.18), 0 30px 70px -30px hsl(217 62% 12% / 0.45)',
     backfaceVisibility: 'hidden',
     willChange: 'transform, filter',
   };
@@ -212,7 +247,7 @@ export default function RotaryStage({ children }) {
           ref={boxRef}
           className="relative w-full"
           style={{
-            height: cube ? `${cube}px` : '84vh',
+            height: cube ? `${cube}px` : '94vh',
             transformStyle: 'preserve-3d',
           }}
         >

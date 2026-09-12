@@ -99,3 +99,77 @@
   .dotted-orbit { border: 1px dashed hsl(var(--border)); border-radius: 50%; }
   .glow-node { box-shadow: 0 0 12px 4px hsl(var(--accent) / 0.5); }
 }
+
+@layer components {
+  /*
+   * Sections auf einer Wuerfelseite.
+   *
+   * Im normalen Seitenfluss trennt py-28/py-32 die Sections voneinander. Auf
+   * einer Flaeche mit fester Hoehe sind das rund 250px tote Polsterung, die
+   * den Inhalt zusammenschrumpfen und in der Mitte schwimmen laesst. Die
+   * Flaeche selbst uebernimmt den Abstand, deshalb faellt er hier weg.
+   *
+   * Spezifitaet 0,1,1 schlaegt die Tailwind-Utility 0,1,0 - kein !important
+   * noetig.
+   */
+  .rotary-face section {
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top: 0;
+  }
+
+  /* Der Rahmen der Flaeche traegt die Begrenzung, nicht die Section. */
+  .rotary-face section > div {
+    width: 100%;
+  }
+
+  /*
+   * Feste Mindesthoehen aufheben. Der Hero setzt inline min-height: 640px;
+   * zusammen mit dem Bannerbild ergibt das rund 1170px natuerliche Hoehe bei
+   * 750px Platz. Die Flaeche muesste den Inhalt dann auf 64% stauchen - und
+   * weil gleichmaessig skaliert wird, schrumpft die Breite mit und ein Drittel
+   * der Flaeche bleibt leer. !important ist noetig: Inline-Styles schlagen
+   * jede Klasse.
+   */
+  .rotary-face [style*="min-height"] {
+    min-height: 0 !important;
+  }
+
+  /* Vollbreite Bannerbilder duerfen die Flaeche nicht allein auffuellen. */
+  .rotary-face section > div > img {
+    max-height: 24vh;
+    object-fit: contain;
+  }
+
+  /*
+   * Auf dem Handy ist eine Wuerfelseite genau ein Bildschirm. Jeder Pixel
+   * Hoehe, den der Inhalt zu viel braucht, wird per Skalierung bezahlt - und
+   * die schrumpft die Breite gleich mit. Deshalb hier enger: Banner klein,
+   * Portraet gedeckelt, Abstaende zusammengezogen.
+   */
+  @media (max-width: 767px) {
+    .rotary-face section > div > img {
+      max-height: 8vh;
+    }
+
+    /*
+     * Deckel am Seitenverhaeltnis-Container, nicht am Bild. Begrenzt man das
+     * Bild, behaelt sein aspect-Container die volle Hoehe und unter dem Bild
+     * bleibt ein leerer Kasten stehen. So schneidet object-fit sauber zu.
+     */
+    .rotary-face [class*="aspect-"] {
+      max-height: 30vh;
+      /* Ohne feste Breite zieht das Seitenverhaeltnis die Box mit der Hoehe
+         schmal und daneben bleibt Weissraum stehen. */
+      width: 100%;
+    }
+
+    .rotary-face .gap-10 {
+      gap: 1.5rem;
+    }
+
+    .rotary-face .mt-8 {
+      margin-top: 1rem;
+    }
+  }
+}
