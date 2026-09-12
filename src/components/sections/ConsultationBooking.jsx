@@ -6,9 +6,12 @@ import { useToast } from '@/components/ui/use-toast';
 
 // Calendly controls the widget language via each event type's language setting
 // (not URL params). To serve both DE and EN, use a separate event type per language.
+// Vorerst laufen beide Sprachen bewusst auf den deutschen Event-Type
+// (/erstgesprach) - englische Besucher sehen also ein deutsches Widget.
+// Sobald ein englischer Event-Type steht, hier 'en' wieder darauf umstellen.
 const CALENDLY_URLS = {
   de: 'https://calendly.com/filipsudermann-info/erstgesprach',
-  en: 'https://calendly.com/filipsudermann-info/30min',
+  en: 'https://calendly.com/filipsudermann-info/erstgesprach',
 };
 const CALENDLY_SCRIPT = 'https://assets.calendly.com/assets/external/widget.js';
 
