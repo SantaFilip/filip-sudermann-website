@@ -143,6 +143,32 @@
       grid-template-columns: minmax(0, 1fr);
     }
 
+    /*
+     * Ausnahme: Gegenueberstellungen bleiben nebeneinander.
+     *
+     * "Ohne / Mit Growth Operator" und "Workload / Gewinnanteil" sind
+     * Vergleiche - ihr Sinn steckt im direkten Nebeneinander. Untereinander
+     * gestapelt vergleicht das Auge nicht mehr, es liest zwei getrennte
+     * Listen. Beide tragen dasselbe Raster aus zwei Spalten mit Verbinder
+     * in der Mitte, daran sind sie zu erkennen.
+     *
+     * Muss nach der Regel darueber stehen: gleiche Spezifitaet, es gewinnt
+     * die spaetere.
+     */
+    .rotary-face [class*="grid-cols-[1fr_auto_1fr]"] {
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.7rem;
+    }
+
+    /* In der schmalen Facette zaehlt jeder Millimeter Spaltenbreite. */
+    .rotary-face [class*="grid-cols-[1fr_auto_1fr]"] > div {
+      padding: 0.9rem;
+    }
+
+    .rotary-face [class*="grid-cols-[1fr_auto_1fr]"] li {
+      gap: 0.5rem;
+    }
+
     /* Zeilen, die als Flex nebeneinander laufen, ebenfalls stapeln. */
     .rotary-face [class*="lg:flex-row"],
     .rotary-face [class*="sm:flex-row"] {
