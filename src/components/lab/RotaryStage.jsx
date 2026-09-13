@@ -464,11 +464,29 @@ export default function RotaryStage({
     apply(0);
     ScrollTrigger.refresh();
 
+    // Die erste Kalibrierung passiert beim Mount - oft bevor das grosse
+    // Hero-Bannerbild oder die Webfonts fertig geladen sind. Aendert sich die
+    // Seitenhoehe danach noch (Bild laedt nach, Text bricht mit dem
+    // richtigen Font anders um), stimmt "top top".."bottom bottom" nicht
+    // mehr mit der tatsaechlichen Dokumenthoehe ueberein: die errechnete
+    // Position landet zwischen den Flaechen statt auf ihnen, und ausser an
+    // den beiden Fixpunkten (Start, und wo der naechste Snap neu einrastet)
+    // faellt jede Flaeche aus dem CULL_DEG-Fenster - genau das Muster
+    // "nur die erste und letzte Flaeche zeigen etwas". Ein Nachkalibrieren,
+    // sobald wirklich alles geladen ist, behebt das unabhaengig davon, was
+    // im Einzelnen zu spaet fertig wurde.
+    const nachkalibrieren = () => ScrollTrigger.refresh();
+    window.addEventListener('load', nachkalibrieren);
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(nachkalibrieren);
+    }
+
     return () => {
       clearTimeout(snapTimer);
       window.removeEventListener('wheel', onInput);
       window.removeEventListener('touchend', onInput);
       window.removeEventListener('keyup', onInput);
+      window.removeEventListener('load', nachkalibrieren);
       gsap.ticker.remove(tick);
       st.kill();
     };
