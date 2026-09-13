@@ -263,13 +263,15 @@
      * Breite der Spalte und die Hoehe, die neben den Diagrammen frei ist.
      */
     /*
-     * Die Schritte bleiben vierspaltig - in zwei Reihen brauchen sie 890px
-     * natuerliche Hoehe bei 692px Platz, und alles wird auf 0,61 gestaucht.
-     * Damit vier Karten nebeneinander lesbar bleiben, muss ihre Spalte breit
-     * sein, also geben die Diagramme daneben Breite ab.
+     * Ohne Obergrenze fuellen die Diagramme ihre ganze Spalte und wirken neben
+     * den kompakten Schritt-Karten uebergross. 210px deckt sich mit der
+     * Originalgroesse aus Donut2D (size=210) - dieselbe Groesse wie im
+     * Onepager ohne Buehne, nur zusaetzlich durch den Facetten-Zoom gestaucht.
+     * Ein kleinerer Wert (frueher 150px) liess die Diagramme kleiner wirken
+     * als im Original, obwohl links noch reichlich Platz war.
      */
     .rotary-face #process .relative.shrink-0 {
-      max-width: 150px;
+      max-width: 210px;
     }
 
     .rotary-face #process .mt-24 .text-sm,
