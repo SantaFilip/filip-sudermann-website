@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/sections/Hero';
@@ -16,69 +16,123 @@ import FadeIn from '@/components/FadeIn';
 import RotaryStage from '@/components/lab/RotaryStage';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
+// Provisorischer Schalter: die Rolle zeigt im Livebetrieb leere Flaechen,
+// die sich bisher nicht zuverlaessig reproduzieren oder beheben liessen.
+// Bis das geklaert ist, laeuft die Seite standardmaessig als normaler
+// Onepager ohne die Buehne - die Rolle bleibt ueber den Schalter erreichbar,
+// um live weiter daran zu testen, ohne dass Besucher eine kaputte Seite
+// sehen.
+const ROLLE_STANDARD = false;
+
+function OnePager({ f }) {
+  return (
+    <>
+      <Hero />
+      <FadeIn><TrustBar /></FadeIn>
+      <FadeIn><CreatorEconomy /></FadeIn>
+      <FadeIn>
+        <InteractiveFolder
+          id="services"
+          tab={f.services.tab}
+          title={f.services.title}
+          subtitle={f.services.subtitle}
+          openLabel={f.services.openLabel}
+          closeLabel={f.services.closeLabel}
+        >
+          <ServicesContent />
+        </InteractiveFolder>
+      </FadeIn>
+      <FadeIn><CreatorComparison /></FadeIn>
+      <FadeIn><ArbeitsweiseSection /></FadeIn>
+      <FadeIn>
+        <InteractiveFolder
+          id="about"
+          tab={f.about.tab}
+          title={f.about.title}
+          subtitle={f.about.subtitle}
+          openLabel={f.about.openLabel}
+          closeLabel={f.about.closeLabel}
+        >
+          <AboutContent />
+        </InteractiveFolder>
+      </FadeIn>
+      <FadeIn><GlobalReach /></FadeIn>
+      <FadeIn><ConsultationBooking /></FadeIn>
+      <FadeIn><FAQ /></FadeIn>
+    </>
+  );
+}
+
+function Rolle({ f }) {
+  return (
+    <>
+      <RotaryStage
+        sides={12}
+        axis="y"
+        fill={0.42}
+        mobileAxis="x"
+        mobileFill={0.5}
+        expandTo={0.93}
+      >
+        <Hero />
+        <TrustBar />
+        <CreatorEconomy />
+        <CreatorComparison />
+        <ArbeitsweiseSection />
+        <GlobalReach />
+        <ConsultationBooking />
+        <FAQ />
+      </RotaryStage>
+
+      <FadeIn>
+        <InteractiveFolder
+          id="services"
+          tab={f.services.tab}
+          title={f.services.title}
+          subtitle={f.services.subtitle}
+          openLabel={f.services.openLabel}
+          closeLabel={f.services.closeLabel}
+        >
+          <ServicesContent />
+        </InteractiveFolder>
+      </FadeIn>
+      <FadeIn>
+        <InteractiveFolder
+          id="about"
+          tab={f.about.tab}
+          title={f.about.title}
+          subtitle={f.about.subtitle}
+          openLabel={f.about.openLabel}
+          closeLabel={f.about.closeLabel}
+        >
+          <AboutContent />
+        </InteractiveFolder>
+      </FadeIn>
+    </>
+  );
+}
+
 export default function Home() {
   const { t } = useLanguage();
   const f = t.folders;
+  const [rolle, setRolle] = useState(ROLLE_STANDARD);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main>
-        {/*
-         * Acht Sections liegen auf einem rotierenden Zylinder (12 Facetten,
-         * seitliche Drehung). Auf dem Handy faellt die Buehne von selbst weg
-         * und diese Sections laufen normal untereinander, siehe RotaryStage.
-         *
-         * Services und Ueber-mich-Folder fehlen hier bewusst: sie klappen auf
-         * und aendern dabei ihre Hoehe. Auf einer Flaeche fester Hoehe waere
-         * der aufgeklappte Inhalt abgeschnitten. Sie stehen deshalb unten,
-         * ausserhalb der Buehne, im normalen Scrollfluss - das verschiebt
-         * ihre Position gegenueber der linearen Seite, verliert aber keinen
-         * Inhalt.
-         */}
-        <RotaryStage
-          sides={12}
-          axis="y"
-          fill={0.42}
-          mobileAxis="x"
-          mobileFill={0.5}
-          expandTo={0.93}
-        >
-          <Hero />
-          <TrustBar />
-          <CreatorEconomy />
-          <CreatorComparison />
-          <ArbeitsweiseSection />
-          <GlobalReach />
-          <ConsultationBooking />
-          <FAQ />
-        </RotaryStage>
-
-        <FadeIn>
-          <InteractiveFolder
-            id="services"
-            tab={f.services.tab}
-            title={f.services.title}
-            subtitle={f.services.subtitle}
-            openLabel={f.services.openLabel}
-            closeLabel={f.services.closeLabel}
-          >
-            <ServicesContent />
-          </InteractiveFolder>
-        </FadeIn>
-        <FadeIn>
-          <InteractiveFolder
-            id="about"
-            tab={f.about.tab}
-            title={f.about.title}
-            subtitle={f.about.subtitle}
-            openLabel={f.about.openLabel}
-            closeLabel={f.about.closeLabel}
-          >
-            <AboutContent />
-          </InteractiveFolder>
-        </FadeIn>
-      </main>
+      {/*
+       * Provisorischer Testschalter, siehe ROLLE_STANDARD oben. Fix
+       * positioniert und dezent, damit er im normalen Betrieb nicht als
+       * eigenstaendige Funktion missverstanden wird.
+       */}
+      <button
+        type="button"
+        onClick={() => setRolle((v) => !v)}
+        className="fixed bottom-4 right-4 z-[100] rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur transition hover:text-foreground"
+      >
+        {rolle ? 'Onepager (ohne Rolle)' : 'Rolle testen'}
+      </button>
+      <main>{rolle ? <Rolle f={f} /> : <OnePager f={f} />}</main>
       <Footer />
     </div>
   );
