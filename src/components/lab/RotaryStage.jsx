@@ -489,27 +489,38 @@ export default function RotaryStage({
     apply(0);
     ScrollTrigger.refresh();
 
-    // "top top".."bottom bottom" bindet die Segmentgrenzen an die
-    // Dokumenthoehe zum Zeitpunkt des letzten refresh(). Waechst die Seite
-    // danach noch - Bild laedt nach, Font-Swap bricht Text anders um, ein
-    // Lazy-Image weiter unten wird erst beim Naehern geladen, das Calendly-
-    // Iframe schiebt seine Hoehe nach - verschiebt sich die tatsaechliche
-    // Position jeder Flaeche gegenueber der zuletzt berechneten. pos landet
-    // dann zwischen den Flaechen statt auf ihnen, und ausser an den beiden
-    // Fixpunkten (ganz oben, ganz unten) faellt jede Flaeche aus dem
-    // CULL_DEG-Fenster - genau das Muster "nur die erste und letzte Flaeche
-    // zeigen etwas".
+    // Beobachtung, die den eigentlichen Fehler entlarvt hat: die Flaechen
+    // bleiben leer - bis man die DevTools-Konsole aufklappt. Das aendert
+    // nichts an unserem Code, es loest nur ein echtes 'resize'-Ereignis aus
+    // (das Dokument wird durch die andockende Konsole schmaler). Danach
+    // steht sofort alles richtig da. Der Fehler liegt also nicht an fehlender
+    // Nachkalibrierung bei spaet ladendem Inhalt (das war die vorherige,
+    // falsche Spur), sondern daran, dass die erste Berechnung - Zoom pro
+    // Flaeche, ScrollTrigger-Grenzen - beim initialen Laden im Zusammenspiel
+    // mit dem 3D-Kontext der Buehne verlaesslich NICHT greift, und nur ein
+    // echtes 'resize' sie zuverlaessig nachzieht.
     //
-    // Ein einmaliges Nachkalibrieren bei 'load' oder document.fonts.ready
-    // wettet darauf, dass bis dahin wirklich alles fertig ist - trifft aber
-    // nicht auf Inhalte zu, die erst danach laden (Lazy-Loading, Iframes,
-    // asynchron nachgeladene Bilder). Stattdessen wird die Dokumenthoehe
-    // fortlaufend beobachtet: jede Aenderung loest eine neue Kalibrierung
-    // aus, unabhaengig davon, was sie verursacht hat oder wann sie passiert.
+    // Statt weiter zu raten, WARUM die erste Berechnung im Livebetrieb
+    // ausbleibt, wird genau das nachgestellt, was nachweislich hilft: kurz
+    // nach dem Aufbau ein synthetisches 'resize' feuern. Das ruft sowohl
+    // ScrollTrigger.refresh() (ScrollTrigger haengt selbst an 'resize') als
+    // auch jeden anderen resize-gebundenen Code auf - inklusive der
+    // ResizeObserver in FitToFace, deren Zoom-Messung genau daran haengt.
+    // Mehrfach gestaffelt, weil ein einzelner Zeitpunkt wieder zu frueh oder
+    // zu spaet relativ zu Bildern/Fonts/Iframes sein kann.
+    const stoss = () => window.dispatchEvent(new Event('resize'));
+    const stoesse = [
+      requestAnimationFrame(stoss),
+      setTimeout(stoss, 60),
+      setTimeout(stoss, 300),
+      setTimeout(stoss, 1000),
+      setTimeout(stoss, 2500),
+    ];
+
     let refreshTimer = null;
     const nachkalibrieren = () => {
       clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 120);
+      refreshTimer = setTimeout(stoss, 120);
     };
     const hoehenBeobachter = new ResizeObserver(nachkalibrieren);
     hoehenBeobachter.observe(document.body);
@@ -521,6 +532,8 @@ export default function RotaryStage({
     return () => {
       clearTimeout(snapTimer);
       clearTimeout(refreshTimer);
+      cancelAnimationFrame(stoesse[0]);
+      stoesse.slice(1).forEach(clearTimeout);
       window.removeEventListener('wheel', onInput);
       window.removeEventListener('touchend', onInput);
       window.removeEventListener('keyup', onInput);
