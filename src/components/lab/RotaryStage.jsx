@@ -65,6 +65,17 @@ const SEEK_DEG_PER_SEC = 220;
 const SEEK_MIN_DURATION = 0.35;
 const SEEK_MAX_DURATION = 1.4;
 
+// Ziehen dreht den Koerper direkt unter dem Zeiger. Unterhalb dieser
+// Wegstrecke gilt eine Beruehrung noch als Klick (oeffnet die Flaeche) -
+// darueber als Ziehen (dreht). Ohne Schwelle wuerde jeder Klick durch das
+// unvermeidliche Zittern der Maus/des Fingers schon als Drehversuch zaehlen.
+const DRAG_THRESHOLD_PX = 6;
+// Wie viele Grad Drehung ein Pixel Zeigerbewegung ausmacht - die "Griffigkeit"
+// des Ziehens. Zu hoch, und die Flaeche schiesst bei der kleinsten Bewegung
+// durch; zu niedrig, und man muss quer ueber den Bildschirm ziehen fuer eine
+// einzige Flaeche.
+const DRAG_DEG_PER_PX = 0.3;
+
 /**
  * Radius eines regelmaessigen Koerpers mit n Seiten der Kantenlaenge a.
  *
@@ -392,7 +403,7 @@ export default function RotaryStage({
     // nie rueckwaerts - das haelt die Drehrichtung durchgehend gleich) und
     // am Ziel aufklappen.
     const klickAuf = (i) => {
-      if (modus === 'seeking') return;
+      if (modus === 'seeking' || modus === 'dragging') return;
       if (modus === 'open' && offeneFlaeche === i) {
         modus = 'auto';
         offeneFlaeche = null;
@@ -425,20 +436,84 @@ export default function RotaryStage({
       });
     };
 
+    // Ziehen dreht den Koerper direkt unter dem Zeiger; ein Klick (Bewegung
+    // unterhalb der Schwelle) oeffnet stattdessen die Flaeche. Beides liegt
+    // auf demselben Overlay, deshalb per Pointer-Events statt 'click' selbst
+    // unterschieden - ein natives 'click' kennt den zurueckgelegten Weg nicht.
+    let ziehend = false;
+    let ziehStartX = 0;
+    let ziehStartPos = 0;
+    let ziehBewegt = false;
+    let ziehZeiger = null;
+
+    const ziehStart = (overlay) => (e) => {
+      if (modus === 'seeking') return;
+      ziehend = true;
+      ziehBewegt = false;
+      ziehStartX = e.clientX;
+      ziehStartPos = pos;
+      ziehZeiger = e.pointerId;
+      overlay.setPointerCapture?.(e.pointerId);
+    };
+
+    const ziehBewegen = (e) => {
+      if (!ziehend || e.pointerId !== ziehZeiger) return;
+      const dx = e.clientX - ziehStartX;
+      if (!ziehBewegt) {
+        if (Math.abs(dx) < DRAG_THRESHOLD_PX) return;
+        // Erst jetzt, beim Ueberschreiten der Schwelle, wirklich zum Ziehen
+        // wechseln - vorher koennte es noch ein Klick werden.
+        ziehBewegt = true;
+        if (seekTween) seekTween.kill();
+        modus = 'dragging';
+        offeneFlaeche = null;
+      }
+      e.preventDefault();
+      // Nach links ziehen bringt die naechste Flaeche herein (wie ein
+      // Karussell/Slider), nach rechts die vorherige zurueck - deshalb das
+      // Minus.
+      apply(ziehStartPos - (dx * DRAG_DEG_PER_PX) / step);
+    };
+
+    const ziehEnde = (e) => {
+      if (!ziehend || e.pointerId !== ziehZeiger) return;
+      ziehend = false;
+      if (ziehBewegt) {
+        modus = 'auto';
+        apply(pos);
+      }
+    };
+
     const abmeldeliste = [];
     faceRefs.current.forEach((face, i) => {
       if (!face) return;
+      const overlay = overlayRefs.current[i];
+      const closeBtn = closeRefs.current[i];
+      if (!overlay) return;
+
+      const onPointerDown = ziehStart(overlay);
+      const onPointerUp = (e) => {
+        const warGezogen = ziehBewegt;
+        ziehEnde(e);
+        // Kein Klick, wenn die Bewegung schon als Ziehen zaehlte.
+        if (!warGezogen) klickAuf(i);
+      };
+      const onPointerCancel = (e) => ziehEnde(e);
       const onClose = (e) => {
         e.stopPropagation();
         klickAuf(i);
       };
-      const onOverlay = () => klickAuf(i);
-      const overlay = overlayRefs.current[i];
-      const closeBtn = closeRefs.current[i];
-      overlay?.addEventListener('click', onOverlay);
+
+      overlay.addEventListener('pointerdown', onPointerDown);
+      overlay.addEventListener('pointermove', ziehBewegen);
+      overlay.addEventListener('pointerup', onPointerUp);
+      overlay.addEventListener('pointercancel', onPointerCancel);
       closeBtn?.addEventListener('click', onClose);
       abmeldeliste.push(() => {
-        overlay?.removeEventListener('click', onOverlay);
+        overlay.removeEventListener('pointerdown', onPointerDown);
+        overlay.removeEventListener('pointermove', ziehBewegen);
+        overlay.removeEventListener('pointerup', onPointerUp);
+        overlay.removeEventListener('pointercancel', onPointerCancel);
         closeBtn?.removeEventListener('click', onClose);
       });
     });
@@ -594,15 +669,17 @@ export default function RotaryStage({
               <FaceOrnament />
               <FitToFace>{panel}</FitToFace>
 
-              {/* Klick-Faenger: solange die Flaeche noch dreht, holt ein
-                  Klick irgendwo auf ihr sie nach vorn. Steht sie offen, wird
-                  er per pointer-events:none abgeschaltet, damit Buttons,
-                  Akkordeons und das Calendly-Widget normal reagieren. */}
+              {/* Klick-Faenger: solange die Flaeche noch dreht, oeffnet ein
+                  Klick sie, ein Ziehen dreht den Koerper direkt mit. Steht
+                  sie offen, wird er per pointer-events:none abgeschaltet,
+                  damit Buttons, Akkordeons und das Calendly-Widget normal
+                  reagieren. touch-action: pan-y laesst vertikales Scrollen
+                  der Seite unberuehrt und faengt nur die horizontale Geste. */}
               <div
                 ref={(el) => { overlayRefs.current[i] = el; }}
                 data-rotary-overlay=""
-                className="absolute inset-0 cursor-pointer"
-                style={{ zIndex: 5 }}
+                className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                style={{ zIndex: 5, touchAction: 'pan-y' }}
                 aria-hidden="true"
               />
 
