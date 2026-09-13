@@ -278,6 +278,39 @@
     }
 
     /*
+     * Nach der Kompaktierung der Schritte ist die Diagramm-Spalte der neue
+     * Engpass (638px). Panel-Polsterung, Vorlauf-Abstand und der Abstand vor
+     * der Pille sind fuer eine volle Desktop-Section bemessen, nicht fuer
+     * eine 692px hohe Folienhaelfte.
+     */
+    .rotary-face #process .mt-24 .mb-10 {
+      margin-bottom: 0.6rem;
+    }
+
+    .rotary-face #process .mt-24 [class*="py-10"] {
+      padding-top: 1.1rem !important;
+      padding-bottom: 1.1rem !important;
+    }
+
+    .rotary-face #process .mt-24 [class*="px-6"] {
+      padding-left: 1.1rem !important;
+      padding-right: 1.1rem !important;
+    }
+
+    .rotary-face #process .mt-24 .gap-8 {
+      gap: 0.5rem;
+    }
+
+    .rotary-face #process .mt-24 .mt-10 {
+      margin-top: 0.6rem;
+    }
+
+    .rotary-face #process .mt-24 [class*="py-3.5"] {
+      padding-top: 0.5rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+
+    /*
      * Zwei mal zwei statt vier nebeneinander - vier Karten in der halben
      * Folienbreite waeren rund 130px schmal, die Ueberschriften braechen
      * mitten im Wort ("Mark-tforsc-hung").

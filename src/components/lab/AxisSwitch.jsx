@@ -21,10 +21,15 @@ export const STAGE_PRESETS = {
     fill: 0.42,
     mobileAxis: 'x',
     mobileFill: 0.5,
-    // Im Stillstand geht die vordere Facette auf dieselbe Breite auf wie die
-    // laterale Ansicht. Damit ueberschreitet sie die Schwelle der
-    // Container-Query und uebernimmt deren weites Layout.
-    expandTo: 0.86,
+    // Im Stillstand geht die vordere Facette auf dieselbe Breite auf wie
+    // der Wuerfel (CUBE_WIDTH_DESKTOP) - nicht nur, damit sie die Schwelle
+    // der Container-Query ueberschreitet und deren weites Layout uebernimmt,
+    // sondern auch, damit der Zoom-Faktor identisch ausfaellt. Bei 0.86
+    // (statt 0.93) war die Flaeche knapp schmaler, Text brach frueher um,
+    // und die dadurch groessere natuerliche Hoehe zwang den Zoom sichtbar
+    // niedriger - selbst nach dem Schaerfe-Fix blieb die Rolle so minimal
+    // weicher als der Wuerfel bei sonst identischem Inhalt.
+    expandTo: 0.93,
   },
 };
 
