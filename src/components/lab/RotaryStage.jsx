@@ -362,7 +362,16 @@ export default function RotaryStage({
         if (!face) return;
         const d = kuerzesterWeg(pos - i);
         const deg = d * step;
-        if (offen && d !== 0) {
+        // i !== vorne, NICHT d !== 0: d ist eine Fliesskommazahl (pos - i).
+        // Im Ruhezustand liegt pos nur NAH an einer Ganzzahl (siehe
+        // REST_EPSILON oben), landet aber praktisch nie exakt darauf - d
+        // ist dann fuer die Frontflaeche selbst ein kleiner Wert wie 0.02,
+        // niemals exakt 0. d !== 0 war also so gut wie immer wahr, auch
+        // fuer die Flaeche, die gerade vorne stehen soll - das versteckte
+        // ausnahmslos jede Flaeche, inklusive der Front. vorne = Math.round(pos)
+        // ist dagegen immer eine echte Ganzzahl, der Vergleich mit dem
+        // ebenfalls ganzzahligen Index i ist deshalb exakt.
+        if (offen && i !== vorne) {
           face.style.visibility = 'hidden';
           return;
         }
@@ -376,7 +385,7 @@ export default function RotaryStage({
 
         if (breit) {
           // Nur die Facette, die frontal steht, und nur im Stillstand.
-          const auf = ruht && kuerzesterWeg(vorne - i) === 0;
+          const auf = ruht && vorne === i;
           const w = auf ? breit : flaecheW;
           face.style.width = `${w}px`;
           // Links verankert, also den Zuwachs haelftig nach links ziehen,
