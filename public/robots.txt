@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
-# Testrouten gehoeren nicht in den Index.
-Disallow: /lab/
 
 Sitemap: https://filip-sudermann.com/sitemap.xml

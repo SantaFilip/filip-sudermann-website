@@ -508,7 +508,17 @@ export default function RotaryStage({
     : { ...faceStyle, transformStyle: 'preserve-3d' };
 
   return (
-    <div ref={rootRef} style={{ height: `${(panels.length + 1) * 100}vh` }}>
+    // data-rotary-root/-steps: Ankerlinks in der Kopfzeile (#process, #beratung
+    // etc.) muessen ihre Zielflaeche finden koennen. Die Flaechen liegen
+    // absolut positioniert uebereinander, ihr eigenes offsetTop ist bedeutungslos
+    // - scrollToSection() liest stattdessen diese Attribute direkt aus dem DOM,
+    // um die Scrollposition der jeweiligen Flaeche zu berechnen.
+    <div
+      ref={rootRef}
+      data-rotary-root=""
+      data-rotary-steps={panels.length}
+      style={{ height: `${(panels.length + 1) * 100}vh` }}
+    >
       <div
         ref={stickyRef}
         // pt haelt den fixierten Header frei. Der Koerper zentriert sich damit
@@ -554,6 +564,7 @@ export default function RotaryStage({
             <div
               key={i}
               ref={(el) => { faceRefs.current[i] = el; }}
+              data-rotary-index={i}
               className="absolute left-0 top-0 overflow-hidden"
               style={inhaltStyle}
             >
