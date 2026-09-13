@@ -1,10 +1,10 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { X } from 'lucide-react';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 import FaceOrnament from '@/components/lab/FaceOrnament';
 import FadeIn from '@/components/FadeIn';
-import { getLenis } from '@/lib/lenisInstance';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -33,24 +33,6 @@ const MOBILE_MAX = 767;
 // Hoehe nehmen.
 const MAX_SCALE = 1;
 
-// Einrasten. Nach der letzten Eingabe wird auf die naechste ganze Flaeche
-// gefahren, damit der Wuerfel nie schraeg zwischen zwei Seiten stehen bleibt.
-const SNAP_IDLE_MS = 120;
-const SNAP_DURATION = 0.5;
-// Unterhalb dieses Abstands zur ganzen Flaeche steht der Wuerfel bereits
-// gerade - ein Schnappen waere nur ein sichtbares Zucken.
-const SNAP_EPSILON = 0.004;
-// Ab dieser Naehe zu einer ganzen Flaeche gilt die Buehne als "im
-// Stillstand" und die Frontflaeche darf aufgehen - grosszuegiger als
-// SNAP_EPSILON, damit das auch waehrend der letzten Millisekunden der
-// animierten Einrast-Fahrt zuverlaessig eintritt statt nur beim exakt
-// erreichten Ziel.
-const REST_EPSILON = 0.03;
-// Anteil einer Flaeche, den man in Scrollrichtung zuruecklegen muss, damit
-// weitergeschaltet wird. Ohne diese Schwelle wuerde jeder versehentliche
-// Radstups eine ganze Section ueberspringen; ohne Richtungsbias dagegen
-// zoege es einen auf die Ausgangsseite zurueck, obwohl man weiterwollte.
-const SNAP_THRESHOLD = 0.12;
 // Ab diesem Winkel zur Blickrichtung liegt eine Flaeche hinter der Kante und
 // wird nicht mehr gezeichnet. Knapp ueber 90 Grad, damit sie nicht schon
 // verschwindet, waehrend ihre Kante noch sichtbar ist.
@@ -66,9 +48,22 @@ const CULL_DEG = 92;
 // vollstaendig vor jedem Punkt der Nachbarn liegt.
 const EXPAND_LIFT = 60;
 
-// Bis zu diesem Anteil des Scrollwegs bleibt der Teich unveraendert stehen,
-// danach laeuft er in den Grundton der Webseite ueber.
-const TEICH_HAELT = 0.6;
+// Bis zu diesem Anteil des Scrollwegs, den der Nutzer ueber die Buehne hinweg
+// zurueckgelegt hat, bleibt der Teich unveraendert stehen, danach laeuft er
+// in den Grundton der Webseite ueber.
+const TEICH_HAELT = 0.35;
+
+// Eigengeschwindigkeit der Drehung, in Grad pro Sekunde - unabhaengig von der
+// Seitenzahl, damit Wuerfel und Rolle optisch gleich "langsam" wirken, obwohl
+// ihre Flaechen unterschiedlich weit auseinander liegen (90 Grad gegen 30).
+const AUTOPLAY_DEG_PER_SEC = 3;
+
+// Geschwindigkeit der Fahrt zu einer angeklickten Flaeche - schneller als die
+// Eigendrehung, damit ein Klick sich reaktionsschnell anfuehlt, aber weit
+// genug entfernte Flaechen trotzdem nicht ruckartig heranspringen.
+const SEEK_DEG_PER_SEC = 220;
+const SEEK_MIN_DURATION = 0.35;
+const SEEK_MAX_DURATION = 1.4;
 
 /**
  * Radius eines regelmaessigen Koerpers mit n Seiten der Kantenlaenge a.
@@ -175,13 +170,18 @@ function FitToFace({ children }) {
 }
 
 /**
- * Scroll-getriebener Wuerfel.
+ * Eigenstaendig rotierender Koerper.
  *
- * Der Koerper besteht aus zwei Lagen: einer permanenten Huelle aus vier
- * undurchsichtigen Seiten, die den Wuerfel immer geschlossen haelt, und den
- * Inhaltsseiten darueber. Ohne die Huelle klafft an den Enden des Scrolls ein
- * Loch - bei der ersten Section gibt es noch keine Vorgaengerseite, die von
- * unten nachkommen koennte, und man schaut durch den Koerper hindurch.
+ * Der Koerper besteht aus zwei Lagen: einer permanenten Huelle aus
+ * undurchsichtigen Seiten, die ihn immer geschlossen haelt, und den
+ * Inhaltsseiten darueber. Ohne die Huelle waeren die leeren Zwischenraeume
+ * (bei der Rolle: die Seiten ohne Section) ein Loch, durch das man
+ * hindurchsaehe.
+ *
+ * Die Drehung laeuft von selbst, angetrieben von einem Ticker statt vom
+ * Scroll-Fortschritt - der Scrollbalken bewegt nur noch die Seite, nicht den
+ * Koerper. Ein Klick auf eine Flaeche dreht sie nach vorn und klappt sie auf;
+ * ein zweiter Klick schliesst sie wieder und die Drehung laeuft weiter.
  *
  * Inhaltsseiten bleiben deckend statt auszublenden: eine halbtransparente
  * Flaeche laesst den Hintergrund durchscheinen und zerstoert den Eindruck
@@ -197,8 +197,9 @@ export default function RotaryStage({
   // 390px breit ist, bleibt davon nichts Lesbares uebrig.
   mobileAxis,
   mobileFill,
-  // Anteil der Buehnenbreite, auf den die vordere Facette aufgeht, sobald der
-  // Koerper still steht. Ohne Wert bleibt jede Facette so breit wie sie ist.
+  // Anteil der Buehnenbreite, auf den die vordere Facette aufgeht, sobald sie
+  // angeklickt wird. Ohne Wert bleibt jede Facette so breit wie sie ist -
+  // Klicks drehen dann nur noch nach vorn, ohne aufzuklappen.
   expandTo,
 } = {}) {
   // Winkel zwischen zwei benachbarten Flaechen. Vier Seiten geben die harte
@@ -210,6 +211,8 @@ export default function RotaryStage({
   const boxRef = useRef(null);
   const backdropRef = useRef(null);
   const faceRefs = useRef([]);
+  const overlayRefs = useRef([]);
+  const closeRefs = useRef([]);
   const shellRefs = useRef([]);
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
   // wirkt nur auf die Ausdehnung in Drehrichtung.
@@ -237,38 +240,25 @@ export default function RotaryStage({
   }, []);
 
   useLayoutEffect(() => {
-    // Auf dem Handy laeuft die Seite ohne Buehne: kein Pinning, kein
-    // Einrasten, keine Skalierung.
+    // Auf dem Handy laeuft die Seite ohne Buehne: keine Eigendrehung, keine
+    // Skalierung.
     if (reduced || mobile || panels.length === 0) return;
     const root = rootRef.current;
     const sticky = stickyRef.current;
     const box = boxRef.current;
     if (!root || !sticky || !box) return;
 
-    // Ein Schritt je Flaeche, nicht je Uebergang: der letzte Schritt fuehrt
-    // von der letzten Section zurueck auf die erste, der Koerper laeuft also
-    // einmal ganz herum.
-    const anzahl = panels.length;
-    const steps = Math.max(1, anzahl);
-
     // Abstand zur Frontflaeche auf die kuerzeste Strecke um den Koerper
-    // bringen.
-    //
-    // Kein Modulo-Wrap: das war ein Fehler. Er ging davon aus, die
-    // Inhaltsflaechen bildeten einen geschlossenen Kreis von genau `anzahl`
-    // Positionen - stimmt nur, wenn wirklich jede Seite des Koerpers Inhalt
-    // traegt (Wuerfel: sides === anzahl). Bei der Rolle hat der Koerper 12
-    // Seiten, aber nur 8 mit Inhalt - der Rest ist leere Huelle. Mit dem
-    // Wrap ueber `anzahl` (8) rechnete sich Flaeche 0 kurz vor Scrollende
-    // (pos nahe anzahl) faelschlich wieder als "vorne", als läge sie direkt
-    // neben der letzten Flaeche - dabei liegen dazwischen vier leere
-    // Huellenseiten, an denen nie vorbeigescrollt wird.
-    //
-    // pos bewegt sich ohnehin nie ausserhalb von [0, anzahl]: ScrollTrigger
-    // haelt self.progress fest auf [0, 1] geklemmt. Ein Wrap ist fuer die
-    // Distanz zur Front deshalb nie noetig - auch beim Wuerfel nicht, da
-    // dort dieselbe Grenze gilt.
-    const kuerzesterWeg = (d) => d;
+    // bringen - ueber die tatsaechliche Seitenzahl (sides), nicht ueber die
+    // Anzahl der Inhaltsflaechen. Die Drehung laeuft unbegrenzt weiter (kein
+    // Scroll-Fortschritt mehr, der sie auf [0, anzahl] klemmt), muss also bei
+    // jedem vollen Umlauf sauber umbrechen - und der volle Umlauf hat `sides`
+    // Schritte, nicht `panels.length`.
+    const kuerzesterWeg = (d) => {
+      let x = ((d % sides) + sides) % sides;
+      if (x > sides / 2) x -= sides;
+      return x;
+    };
     let depth = 0;
     let drift = 0;
     // Flaechenbreite lokal mitfuehren. Der React-Zustand taugt hier nicht:
@@ -302,56 +292,35 @@ export default function RotaryStage({
       // aus dem Zustand zurueck - also auch ueber eine bereits aufgegangene
       // Frontflaeche. Deshalb im naechsten Frame, nach dem Rendern, erneut
       // anwenden.
-      requestAnimationFrame(() => apply(letztePos));
+      requestAnimationFrame(() => apply(pos));
     };
 
-    const apply = (pos) => {
-      letztePos = pos;
+    // pos: authoritative Drehposition in Flaechen-Schritten, waechst
+    // unbegrenzt weiter (kein Scroll-Bezug mehr).
+    let pos = 0;
+    // modus: 'auto' dreht von selbst, 'seeking' faehrt gerade zu einer
+    // angeklickten Flaeche, 'open' steht offen und aufgeklappt.
+    let modus = 'auto';
+    let offeneFlaeche = null;
+    let seekTween = null;
+
+    const apply = (p) => {
+      pos = p;
       const radius = depth / 2;
-      // Breite der vorderen Facette im Ruhezustand. Ueberschreitet sie die
-      // Schwelle der Container-Query, stellt die Section von selbst auf ihr
-      // weites Layout um - genau das, was die laterale Ansicht zeigt.
       const breit = expandTo && !mobile ? Math.round(sticky.clientWidth * expandTo) : 0;
-      const vorne = Math.round(pos);
-      // Ruht die Buehne? Nicht als Flag gefuehrt, das die Snap-Animation per
-      // onComplete umlegt, sondern bei jedem Aufruf direkt aus der Position
-      // abgelesen: liegt pos nah genug an einer ganzen Flaeche, gilt das
-      // unabhaengig davon, WIE sie dort hingekommen ist.
-      //
-      // Der Unterschied war genau das Muster "nur erste und letzte Flaeche
-      // gehen auf": an den beiden Raendern liegt pos durch die Scroll-Grenze
-      // selbst exakt auf der Ganzzahl (0 bzw. steps) - keine Animation
-      // noetig, der synchrone "schon angekommen"-Zweig griff sofort. In der
-      // Mitte liegt pos beim Anhalten so gut wie nie exakt auf einer
-      // Ganzzahl, das lief also immer ueber die animierte Lenis-Fahrt und
-      // deren onComplete. Wurde die (durch eine weitere Eingabe, eine
-      // Unterbrechung oder eine Eigenheit von Lenis in Produktion)
-      // uebersprungen, blieb die Flaeche fuer immer im Rotationszustand
-      // haengen - leer, weil nur die aufgegangene Frontflaeche ueberhaupt
-      // deckenden Inhalt zeigt. Diese Ableitung braucht keine Bestaetigung
-      // von aussen mehr: sie ist bei jedem Frame der Animation selbst schon
-      // wahr, sobald die Position nah genug ist.
-      const ruht = Math.abs(pos - vorne) < REST_EPSILON;
-      // Im Stillstand liegt nur noch die aufgegangene Folie im Bild. Die
-      // Nachbarn muessen weg: sie stossen mit ihrer vorderen Kante auf
-      // dieselbe Ebene, auf der die Folie liegt, und werden dort ineinander
-      // geschnitten - die breite Seite zerfiele in Streifen. Bewegt wird
-      // ohnehin nichts, es fehlt also auch nichts.
-      const offen = Boolean(breit) && ruht;
+      const offen = Boolean(breit) && modus === 'open' && offeneFlaeche !== null;
       const turn = (deg) => (lateral ? `rotateY(${-deg}deg)` : `rotateX(${deg}deg)`);
       // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
       // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
       box.style.transform = `translateZ(${-radius}px)`;
 
-      // Huelle: vier Seiten, immer vorhanden, immer geschlossen. Zwei Pixel
-      // nach innen versetzt - lagen Huelle und Inhaltsseite auf exakt
-      // derselben Ebene, wuerden sie um die Sichtbarkeit kaempfen und die
-      // Huelle schoebe sich in Streifen ueber den Inhalt.
+      // Huelle: immer vorhanden, immer geschlossen. Zwei Pixel nach innen
+      // versetzt - lagen Huelle und Inhaltsseite auf exakt derselben Ebene,
+      // wuerden sie um die Sichtbarkeit kaempfen und die Huelle schoebe sich
+      // in Streifen ueber den Inhalt.
       shellRefs.current.forEach((shell, s) => {
         if (!shell) return;
-        // Gleiche Formel wie bei den Inhaltsseiten. Mit s * 90 - pos * 90
-        // liefe die Huelle gegenlaeufig und schnitte quer durch den Koerper.
-        const deg = (pos - s) * step;
+        const deg = kuerzesterWeg(p - s) * step;
         shell.style.visibility = offen && Math.abs(deg) > 1 ? 'hidden' : 'visible';
         shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
         applyShade(shell, deg);
@@ -360,18 +329,9 @@ export default function RotaryStage({
       // Inhaltsseiten darueber.
       faceRefs.current.forEach((face, i) => {
         if (!face) return;
-        const d = kuerzesterWeg(pos - i);
+        const d = kuerzesterWeg(p - i);
         const deg = d * step;
-        // i !== vorne, NICHT d !== 0: d ist eine Fliesskommazahl (pos - i).
-        // Im Ruhezustand liegt pos nur NAH an einer Ganzzahl (siehe
-        // REST_EPSILON oben), landet aber praktisch nie exakt darauf - d
-        // ist dann fuer die Frontflaeche selbst ein kleiner Wert wie 0.02,
-        // niemals exakt 0. d !== 0 war also so gut wie immer wahr, auch
-        // fuer die Flaeche, die gerade vorne stehen soll - das versteckte
-        // ausnahmslos jede Flaeche, inklusive der Front. vorne = Math.round(pos)
-        // ist dagegen immer eine echte Ganzzahl, der Vergleich mit dem
-        // ebenfalls ganzzahligen Index i ist deshalb exakt.
-        if (offen && i !== vorne) {
+        if (offen && i !== offeneFlaeche) {
           face.style.visibility = 'hidden';
           return;
         }
@@ -383,9 +343,19 @@ export default function RotaryStage({
         face.style.transform = `${turn(deg)} translateZ(${radius}px)`;
         applyShade(face, deg);
 
+        const auf = offen && i === offeneFlaeche;
+
+        // Der Klick-Faenger liegt nur ueber Flaechen, die noch drehen -
+        // sobald eine Flaeche offen steht, muss ihr eigener Inhalt (FAQ-
+        // Akkordeon, Calendly, Buttons) wieder normal klickbar sein. Schliessen
+        // passiert dann ueber den eigenen Schliessen-Knopf, nicht per Klick
+        // irgendwo auf die Flaeche.
+        const overlay = overlayRefs.current[i];
+        if (overlay) overlay.style.pointerEvents = auf ? 'none' : 'auto';
+        const closeBtn = closeRefs.current[i];
+        if (closeBtn) closeBtn.style.visibility = auf ? 'visible' : 'hidden';
+
         if (breit) {
-          // Nur die Facette, die frontal steht, und nur im Stillstand.
-          const auf = ruht && vorne === i;
           const w = auf ? breit : flaecheW;
           face.style.width = `${w}px`;
           // Links verankert, also den Zuwachs haelftig nach links ziehen,
@@ -399,169 +369,125 @@ export default function RotaryStage({
 
       const backdrop = backdropRef.current;
       if (backdrop) {
-        backdrop.style.setProperty('--spin', `${pos * 42 + drift}deg`);
-        // Der Teich soll bis kurz vor Schluss stehen bleiben und erst dann in
-        // den Grundton der Seite laufen. Linear ueber den ganzen Scroll waere
-        // er schon zur Haelfte verblasst, bevor man die Mitte erreicht.
-        const rest = (pos / steps - TEICH_HAELT) / (1 - TEICH_HAELT);
-        backdrop.style.setProperty('--tint', String(Math.min(1, Math.max(0, rest))));
+        backdrop.style.setProperty('--spin', `${p * 42 + drift}deg`);
       }
     };
 
     layout();
 
-    let snapTimer = null;
-    let snapping = false;
-    let letztePos = 0;
-
-    // Zuletzt beobachtete Scrollrichtung: 1 nach unten, -1 nach oben.
-    let dir = 1;
-
-    const snapTarget = (pos) => {
-      const unten = Math.floor(pos);
-      const rest = pos - unten;
-      if (dir > 0) return rest > SNAP_THRESHOLD ? unten + 1 : unten;
-      return rest < 1 - SNAP_THRESHOLD ? unten : unten + 1;
-    };
-
-    const snapToNearest = () => {
-      if (snapping || !st.isActive) return;
-      const pos = st.progress * steps;
-      const target = Math.min(steps, Math.max(0, snapTarget(pos)));
-      if (Math.abs(pos - target) < SNAP_EPSILON) {
-        // Steht schon gerade - nichts zu fahren, apply() liest die Ruhe
-        // selbst aus der Position ab.
+    // Klick auf eine Flaeche: steht schon eine offen und es ist dieselbe,
+    // schliessen und weiterdrehen. Sonst zu ihr hindrehen (immer vorwaerts,
+    // nie rueckwaerts - das haelt die Drehrichtung durchgehend gleich) und
+    // am Ziel aufklappen.
+    const klickAuf = (i) => {
+      if (modus === 'seeking') return;
+      if (modus === 'open' && offeneFlaeche === i) {
+        modus = 'auto';
+        offeneFlaeche = null;
         apply(pos);
         return;
       }
 
-      const y = st.start + ((st.end - st.start) * target) / steps;
-      snapping = true;
-      // onUpdate laeuft waehrend dieser Fahrt ohnehin bei jedem Frame und
-      // ruft apply() mit der jeweils aktuellen Position auf - die naehert
-      // sich der Ganzzahl kontinuierlich an, "Ruhe" stellt sich also von
-      // selbst ein, sobald sie nah genug ist. done() muss dafuer nichts
-      // mehr umschalten; es hebt nur die Sperre auf, die eine zweite
-      // Einrastfahrt waehrend dieser verhindert. Bleibt der Aufruf aus (eine
-      // weitere Eingabe unterbricht, Lenis meldet sich nicht zurueck), war
-      // die Facette trotzdem schon offen, sobald sie nah genug war - sie
-      // haengt nicht mehr im Rotationszustand fest.
-      const done = () => {
-        snapping = false;
+      const delta = ((i - pos) % sides + sides) % sides;
+      const ziel = pos + delta;
+      modus = 'seeking';
+      offeneFlaeche = null;
+      apply(pos);
+
+      if (seekTween) seekTween.kill();
+      const proxy = { v: pos };
+      const dauer = Math.min(
+        SEEK_MAX_DURATION,
+        Math.max(SEEK_MIN_DURATION, (delta * step) / SEEK_DEG_PER_SEC)
+      );
+      seekTween = gsap.to(proxy, {
+        v: ziel,
+        duration: dauer,
+        ease: 'power2.inOut',
+        onUpdate: () => apply(proxy.v),
+        onComplete: () => {
+          modus = 'open';
+          offeneFlaeche = i;
+          apply(ziel);
+        },
+      });
+    };
+
+    const abmeldeliste = [];
+    faceRefs.current.forEach((face, i) => {
+      if (!face) return;
+      const onClose = (e) => {
+        e.stopPropagation();
+        klickAuf(i);
       };
-
-      const lenis = getLenis();
-      if (lenis) {
-        // lock verhindert, dass Lenis' eigener Nachlauf gegen das Einrasten
-        // arbeitet und der Wuerfel wieder aus der Geraden gezogen wird.
-        lenis.scrollTo(y, { duration: SNAP_DURATION, lock: true, onComplete: done });
-      } else {
-        window.scrollTo({ top: y, behavior: 'smooth' });
-        setTimeout(done, SNAP_DURATION * 1000);
-      }
-    };
-
-    const scheduleSnap = () => {
-      if (snapping) return;
-      clearTimeout(snapTimer);
-      snapTimer = setTimeout(snapToNearest, SNAP_IDLE_MS);
-    };
-
-    const st = ScrollTrigger.create({
-      trigger: root,
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: true,
-      onUpdate: (self) => {
-        apply(self.progress * steps);
-        // Waehrend des Einrastens nicht mitschreiben: die Schnappfahrt laeuft
-        // sonst als Gegenrichtung ein und kippt das Ziel der naechsten Geste.
-        if (!snapping && self.direction) dir = self.direction;
-        // Faengt Ziehen am Scrollbalken und alles, was kein Rad-Ereignis
-        // ausloest. Waehrend des Einrastens laeuft es ins Leere, weil
-        // scheduleSnap dann sofort zurueckkehrt.
-        scheduleSnap();
-      },
-      onRefresh: (self) => {
-        layout();
-        apply(self.progress * steps);
-      },
+      const onOverlay = () => klickAuf(i);
+      const overlay = overlayRefs.current[i];
+      const closeBtn = closeRefs.current[i];
+      overlay?.addEventListener('click', onOverlay);
+      closeBtn?.addEventListener('click', onClose);
+      abmeldeliste.push(() => {
+        overlay?.removeEventListener('click', onOverlay);
+        closeBtn?.removeEventListener('click', onClose);
+      });
     });
-
-    // Direkt an der Eingabe haengen, nicht nur am Scroll-Ereignis: Lenis
-    // laesst die Seite nach dem Loslassen noch ausrollen. Wer bis zum Ende
-    // dieses Nachlaufs wartet, rastet spuerbar zu spaet ein.
-    const onInput = () => scheduleSnap();
-    window.addEventListener('wheel', onInput, { passive: true });
-    window.addEventListener('touchend', onInput, { passive: true });
-    window.addEventListener('keyup', onInput);
 
     const tick = () => {
       drift += 0.035;
-      const backdrop = backdropRef.current;
-      if (backdrop) {
-        backdrop.style.setProperty('--spin', `${st.progress * steps * 42 + drift}deg`);
+      if (modus === 'auto') {
+        const dt = gsap.ticker.deltaRatio(60) / 60;
+        apply(pos + (AUTOPLAY_DEG_PER_SEC * dt) / step);
       }
     };
     gsap.ticker.add(tick);
 
     apply(0);
-    ScrollTrigger.refresh();
 
-    // Beobachtung, die den eigentlichen Fehler entlarvt hat: die Flaechen
-    // bleiben leer - bis man die DevTools-Konsole aufklappt. Das aendert
-    // nichts an unserem Code, es loest nur ein echtes 'resize'-Ereignis aus
-    // (das Dokument wird durch die andockende Konsole schmaler). Danach
-    // steht sofort alles richtig da. Der Fehler liegt also nicht an fehlender
-    // Nachkalibrierung bei spaet ladendem Inhalt (das war die vorherige,
-    // falsche Spur), sondern daran, dass die erste Berechnung - Zoom pro
-    // Flaeche, ScrollTrigger-Grenzen - beim initialen Laden im Zusammenspiel
-    // mit dem 3D-Kontext der Buehne verlaesslich NICHT greift, und nur ein
-    // echtes 'resize' sie zuverlaessig nachzieht.
-    //
-    // Statt weiter zu raten, WARUM die erste Berechnung im Livebetrieb
-    // ausbleibt, wird genau das nachgestellt, was nachweislich hilft: kurz
-    // nach dem Aufbau ein synthetisches 'resize' feuern. Das ruft sowohl
-    // ScrollTrigger.refresh() (ScrollTrigger haengt selbst an 'resize') als
-    // auch jeden anderen resize-gebundenen Code auf - inklusive der
-    // ResizeObserver in FitToFace, deren Zoom-Messung genau daran haengt.
-    // Mehrfach gestaffelt, weil ein einzelner Zeitpunkt wieder zu frueh oder
-    // zu spaet relativ zu Bildern/Fonts/Iframes sein kann.
-    const stoss = () => window.dispatchEvent(new Event('resize'));
-    const stoesse = [
-      requestAnimationFrame(stoss),
-      setTimeout(stoss, 60),
-      setTimeout(stoss, 300),
-      setTimeout(stoss, 1000),
-      setTimeout(stoss, 2500),
-    ];
-
-    let refreshTimer = null;
+    // Nachkalibrieren, wenn sich die Flaechengroesse aendert - Bild laedt
+    // nach, Font-Swap bricht Text anders um, das Fenster wird verschoben.
+    // Kein Bezug mehr zu ScrollTrigger-Grenzen noetig: die Drehung haengt
+    // nicht mehr am Scroll-Fortschritt, also gibt es auch keine
+    // Kalibrierungs-Drift zwischen beiden mehr.
+    let layoutTimer = null;
     const nachkalibrieren = () => {
-      clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(stoss, 120);
+      clearTimeout(layoutTimer);
+      layoutTimer = setTimeout(layout, 120);
     };
-    const hoehenBeobachter = new ResizeObserver(nachkalibrieren);
-    hoehenBeobachter.observe(document.body);
+    const groessenBeobachter = new ResizeObserver(nachkalibrieren);
+    groessenBeobachter.observe(sticky);
     window.addEventListener('load', nachkalibrieren);
     if (document.fonts?.ready) {
       document.fonts.ready.then(nachkalibrieren);
     }
 
+    // Der Teich blendet in den Grundton der Seite ein, sobald man an der
+    // Buehne vorbeigescrollt hat - unabhaengig von der Drehung, rein an der
+    // Scrollposition der (jetzt normal im Fluss liegenden) Section
+    // gemessen. scrub ohne pin: nur eine Zahl mitschreiben, nichts anhalten.
+    // Von "Buehne komplett im Bild" (bottom bottom) bis "Buehne komplett
+    // durchgescrollt" (bottom top) liegt genau eine Viewporthoehe - darueber
+    // laeuft der Fortschritt linear 0 bis 1. TEICH_HAELT schiebt den Beginn
+    // des Einblendens nach hinten, wie zuvor beim scroll-gekoppelten pos.
+    const teichTrigger = ScrollTrigger.create({
+      trigger: root,
+      start: 'bottom bottom',
+      end: 'bottom top',
+      scrub: true,
+      onUpdate: (self) => {
+        const rest = (self.progress - TEICH_HAELT) / (1 - TEICH_HAELT);
+        backdropRef.current?.style.setProperty('--tint', String(Math.min(1, Math.max(0, rest))));
+      },
+    });
+
     return () => {
-      clearTimeout(snapTimer);
-      clearTimeout(refreshTimer);
-      cancelAnimationFrame(stoesse[0]);
-      stoesse.slice(1).forEach(clearTimeout);
-      window.removeEventListener('wheel', onInput);
-      window.removeEventListener('touchend', onInput);
-      window.removeEventListener('keyup', onInput);
+      clearTimeout(layoutTimer);
+      abmeldeliste.forEach((fn) => fn());
       window.removeEventListener('load', nachkalibrieren);
-      hoehenBeobachter.disconnect();
+      groessenBeobachter.disconnect();
       gsap.ticker.remove(tick);
-      st.kill();
+      if (seekTween) seekTween.kill();
+      teichTrigger.kill();
     };
-  }, [reduced, panels.length, mobile, lateral, sides, step, fuellung]);
+  }, [reduced, panels.length, mobile, lateral, sides, step, fuellung, expandTo]);
 
   // Handy und reduzierte Bewegung bekommen die Seite so, wie sie ohne Buehne
   // war: Sections untereinander im normalen Fluss, eingeblendet beim
@@ -591,30 +517,26 @@ export default function RotaryStage({
   };
 
   // Nur Breite und Versatz animieren. Die Drehung wird pro Frame gesetzt; ein
-  // Uebergang darauf liefe der Scroll-Position hinterher.
+  // Uebergang darauf liefe der Position hinterher.
   const inhaltStyle = expandTo
     ? { ...faceStyle, transformStyle: 'preserve-3d', transition: 'width 420ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 420ms cubic-bezier(0.4, 0, 0.2, 1)' }
     : { ...faceStyle, transformStyle: 'preserve-3d' };
 
   return (
-    // data-rotary-root/-steps: Ankerlinks in der Kopfzeile (#process, #beratung
-    // etc.) muessen ihre Zielflaeche finden koennen. Die Flaechen liegen
-    // absolut positioniert uebereinander, ihr eigenes offsetTop ist bedeutungslos
-    // - scrollToSection() liest stattdessen diese Attribute direkt aus dem DOM,
-    // um die Scrollposition der jeweiligen Flaeche zu berechnen.
-    <div
-      ref={rootRef}
-      data-rotary-root=""
-      data-rotary-steps={panels.length}
-      style={{ height: `${(panels.length + 1) * 100}vh` }}
-    >
+    // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
+    // #beratung etc.) muessen ihre Zielflaeche finden koennen, um sie per
+    // Klick zu oeffnen - siehe scrollToSection().
+    <div ref={rootRef} data-rotary-root="" className="pt-16 lg:pt-20">
       <div
         ref={stickyRef}
-        // pt haelt den fixierten Header frei. Der Koerper zentriert sich damit
-        // im Raum darunter, statt halb hinter dem Header zu liegen - sonst
-        // sind die beiden oberen Eckverzierungen nie zu sehen.
-        className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden pt-16 lg:pt-20"
+        // Normales Fluss-Element, nicht mehr gepinnt: die Buehne dreht sich
+        // von selbst, der Scrollbalken bewegt nur noch die Seite an ihr
+        // vorbei. Der Abstand zum fixierten Header sitzt auf dem Wrapper
+        // aussenrum (pt-16/pt-20), nicht hier - sonst frisst er von den 90vh,
+        // die dem Koerper zustehen.
+        className="relative flex w-full items-center justify-center overflow-hidden"
         style={{
+          height: '90vh',
           // Bewusst NICHT mit dem Radius mitwachsen lassen: die Frontflaeche
           // liegt ohnehin immer auf z = 0, nur die dahinter weichen zurueck.
           // Eine mit dem Radius wachsende Perspektive staucht diese Nachbarn
@@ -659,6 +581,41 @@ export default function RotaryStage({
             >
               <FaceOrnament />
               <FitToFace>{panel}</FitToFace>
+
+              {/* Klick-Faenger: solange die Flaeche noch dreht, holt ein
+                  Klick irgendwo auf ihr sie nach vorn. Steht sie offen, wird
+                  er per pointer-events:none abgeschaltet, damit Buttons,
+                  Akkordeons und das Calendly-Widget normal reagieren. */}
+              <div
+                ref={(el) => { overlayRefs.current[i] = el; }}
+                data-rotary-overlay=""
+                className="absolute inset-0 cursor-pointer"
+                style={{ zIndex: 5 }}
+                aria-hidden="true"
+              />
+
+              {/* Schliessen-Knopf: nur sichtbar, waehrend diese Flaeche
+                  offen steht. Eigene Schaltflaeche statt "Klick irgendwo
+                  schliesst" - sonst waere jeder Klick auf Inhalt (FAQ,
+                  Calendly, Buttons) gleichzeitig ein Schliessen. */}
+              <button
+                ref={(el) => { closeRefs.current[i] = el; }}
+                type="button"
+                data-rotary-close=""
+                aria-label="Zurueck zur Drehung"
+                className="absolute right-6 top-6 flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-colors hover:bg-accent/10"
+                style={{
+                  visibility: 'hidden',
+                  // Ueber der Eckverzierung (z-10, aber pointer-events-none):
+                  // die faechert sonst optisch durch den Knopf hindurch.
+                  zIndex: 11,
+                  borderColor: 'hsl(var(--accent) / 0.4)',
+                  background: 'hsl(var(--card))',
+                  color: 'hsl(var(--foreground))',
+                }}
+              >
+                <X size={16} />
+              </button>
             </div>
           ))}
         </div>
