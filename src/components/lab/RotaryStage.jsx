@@ -40,6 +40,12 @@ const SNAP_DURATION = 0.5;
 // Unterhalb dieses Abstands zur ganzen Flaeche steht der Wuerfel bereits
 // gerade - ein Schnappen waere nur ein sichtbares Zucken.
 const SNAP_EPSILON = 0.004;
+// Ab dieser Naehe zu einer ganzen Flaeche gilt die Buehne als "im
+// Stillstand" und die Frontflaeche darf aufgehen - grosszuegiger als
+// SNAP_EPSILON, damit das auch waehrend der letzten Millisekunden der
+// animierten Einrast-Fahrt zuverlaessig eintritt statt nur beim exakt
+// erreichten Ziel.
+const REST_EPSILON = 0.03;
 // Anteil einer Flaeche, den man in Scrollrichtung zuruecklegen muss, damit
 // weitergeschaltet wird. Ohne diese Schwelle wuerde jeder versehentliche
 // Radstups eine ganze Section ueberspringen; ohne Richtungsbias dagegen
@@ -297,6 +303,25 @@ export default function RotaryStage({
       // weites Layout um - genau das, was die laterale Ansicht zeigt.
       const breit = expandTo && !mobile ? Math.round(sticky.clientWidth * expandTo) : 0;
       const vorne = Math.round(pos);
+      // Ruht die Buehne? Nicht als Flag gefuehrt, das die Snap-Animation per
+      // onComplete umlegt, sondern bei jedem Aufruf direkt aus der Position
+      // abgelesen: liegt pos nah genug an einer ganzen Flaeche, gilt das
+      // unabhaengig davon, WIE sie dort hingekommen ist.
+      //
+      // Der Unterschied war genau das Muster "nur erste und letzte Flaeche
+      // gehen auf": an den beiden Raendern liegt pos durch die Scroll-Grenze
+      // selbst exakt auf der Ganzzahl (0 bzw. steps) - keine Animation
+      // noetig, der synchrone "schon angekommen"-Zweig griff sofort. In der
+      // Mitte liegt pos beim Anhalten so gut wie nie exakt auf einer
+      // Ganzzahl, das lief also immer ueber die animierte Lenis-Fahrt und
+      // deren onComplete. Wurde die (durch eine weitere Eingabe, eine
+      // Unterbrechung oder eine Eigenheit von Lenis in Produktion)
+      // uebersprungen, blieb die Flaeche fuer immer im Rotationszustand
+      // haengen - leer, weil nur die aufgegangene Frontflaeche ueberhaupt
+      // deckenden Inhalt zeigt. Diese Ableitung braucht keine Bestaetigung
+      // von aussen mehr: sie ist bei jedem Frame der Animation selbst schon
+      // wahr, sobald die Position nah genug ist.
+      const ruht = Math.abs(pos - vorne) < REST_EPSILON;
       // Im Stillstand liegt nur noch die aufgegangene Folie im Bild. Die
       // Nachbarn muessen weg: sie stossen mit ihrer vorderen Kante auf
       // dieselbe Ebene, auf der die Folie liegt, und werden dort ineinander
@@ -368,10 +393,6 @@ export default function RotaryStage({
 
     let snapTimer = null;
     let snapping = false;
-    // Steht der Koerper still? Nur dann geht die vordere Facette auf. Beim
-    // Aufbau steht er auf Flaeche 0, also von Anfang an offen - sonst muesste
-    // man erst einmal drehen, damit die erste Folie ihr weites Layout zeigt.
-    let ruht = true;
     let letztePos = 0;
 
     // Zuletzt beobachtete Scrollrichtung: 1 nach unten, -1 nach oben.
@@ -389,18 +410,25 @@ export default function RotaryStage({
       const pos = st.progress * steps;
       const target = Math.min(steps, Math.max(0, snapTarget(pos)));
       if (Math.abs(pos - target) < SNAP_EPSILON) {
-        // Steht schon gerade - dann ist jetzt Ruhe, ohne Fahrt.
-        ruht = true;
+        // Steht schon gerade - nichts zu fahren, apply() liest die Ruhe
+        // selbst aus der Position ab.
         apply(pos);
         return;
       }
 
       const y = st.start + ((st.end - st.start) * target) / steps;
       snapping = true;
+      // onUpdate laeuft waehrend dieser Fahrt ohnehin bei jedem Frame und
+      // ruft apply() mit der jeweils aktuellen Position auf - die naehert
+      // sich der Ganzzahl kontinuierlich an, "Ruhe" stellt sich also von
+      // selbst ein, sobald sie nah genug ist. done() muss dafuer nichts
+      // mehr umschalten; es hebt nur die Sperre auf, die eine zweite
+      // Einrastfahrt waehrend dieser verhindert. Bleibt der Aufruf aus (eine
+      // weitere Eingabe unterbricht, Lenis meldet sich nicht zurueck), war
+      // die Facette trotzdem schon offen, sobald sie nah genug war - sie
+      // haengt nicht mehr im Rotationszustand fest.
       const done = () => {
         snapping = false;
-        ruht = true;
-        apply(st.progress * steps);
       };
 
       const lenis = getLenis();
@@ -426,9 +454,6 @@ export default function RotaryStage({
       end: 'bottom bottom',
       scrub: true,
       onUpdate: (self) => {
-        // Waehrend der Schnappfahrt nicht zuruecksetzen: sie ist selbst
-        // Bewegung, wuerde die Facette also sofort wieder zuklappen.
-        if (!snapping) ruht = false;
         apply(self.progress * steps);
         // Waehrend des Einrastens nicht mitschreiben: die Schnappfahrt laeuft
         // sonst als Gegenrichtung ein und kippt das Ziel der naechsten Geste.
