@@ -252,13 +252,23 @@ export default function RotaryStage({
     const steps = Math.max(1, anzahl);
 
     // Abstand zur Frontflaeche auf die kuerzeste Strecke um den Koerper
-    // bringen. Ohne das waere die erste Section vom Ende aus betrachtet acht
-    // Flaechen entfernt statt einer und kaeme nie ins Bild.
-    const kuerzesterWeg = (d) => {
-      let x = ((d % anzahl) + anzahl) % anzahl;
-      if (x > anzahl / 2) x -= anzahl;
-      return x;
-    };
+    // bringen.
+    //
+    // Kein Modulo-Wrap: das war ein Fehler. Er ging davon aus, die
+    // Inhaltsflaechen bildeten einen geschlossenen Kreis von genau `anzahl`
+    // Positionen - stimmt nur, wenn wirklich jede Seite des Koerpers Inhalt
+    // traegt (Wuerfel: sides === anzahl). Bei der Rolle hat der Koerper 12
+    // Seiten, aber nur 8 mit Inhalt - der Rest ist leere Huelle. Mit dem
+    // Wrap ueber `anzahl` (8) rechnete sich Flaeche 0 kurz vor Scrollende
+    // (pos nahe anzahl) faelschlich wieder als "vorne", als läge sie direkt
+    // neben der letzten Flaeche - dabei liegen dazwischen vier leere
+    // Huellenseiten, an denen nie vorbeigescrollt wird.
+    //
+    // pos bewegt sich ohnehin nie ausserhalb von [0, anzahl]: ScrollTrigger
+    // haelt self.progress fest auf [0, 1] geklemmt. Ein Wrap ist fuer die
+    // Distanz zur Front deshalb nie noetig - auch beim Wuerfel nicht, da
+    // dort dieselbe Grenze gilt.
+    const kuerzesterWeg = (d) => d;
     let depth = 0;
     let drift = 0;
     // Flaechenbreite lokal mitfuehren. Der React-Zustand taugt hier nicht:
