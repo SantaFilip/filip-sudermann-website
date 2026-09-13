@@ -67,7 +67,6 @@ function Rolle({ f }) {
   return (
     <>
       <RotaryStage
-        sides={12}
         axis="y"
         fill={0.42}
         mobileAxis="x"

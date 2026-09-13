@@ -190,7 +190,18 @@ function FitToFace({ children }) {
 export default function RotaryStage({
   children,
   axis = 'x',
-  sides = 4,
+  // Optional: mehr Seiten als Inhaltsflaechen, fuer einen runderen Koerper
+  // (kleinerer Winkel pro Schritt). Ohne Angabe genau eine Seite je Flaeche -
+  // kein Rest, keine leere Huelle im Umlauf.
+  //
+  // Mit Extra-Seiten lief die alte, scroll-gebundene Drehung nie in sie
+  // hinein: pos war auf [0, anzahl] geklemmt, die leere Huelle lag ausserhalb
+  // der erreichbaren Strecke. Die jetzige Eigendrehung laeuft dagegen
+  // unbegrenzt weiter und durchquert diese Luecke bei jedem Umlauf - sichtbar
+  // als leere Flaechen zwischen letzter und erster Section. Deshalb per
+  // Default keine Extra-Seiten mehr; wer den runderen Look ausdruecklich
+  // will, kann sides weiterhin groesser als die Flaechenzahl angeben.
+  sides: sidesProp,
   fill,
   // Achse und Fuellgrad duerfen auf dem Handy abweichen. Seitliche Drehung
   // teilt die Breite auf mehrere Facetten auf - auf einem Geraet, das nur
@@ -202,10 +213,11 @@ export default function RotaryStage({
   // Klicks drehen dann nur noch nach vorn, ohne aufzuklappen.
   expandTo,
 } = {}) {
+  const panels = React.Children.toArray(children);
+  const sides = sidesProp ?? panels.length;
   // Winkel zwischen zwei benachbarten Flaechen. Vier Seiten geben die harte
   // Wuerfelkante, viele Seiten eine Rolle, die als Zylinder liest.
   const step = 360 / sides;
-  const panels = React.Children.toArray(children);
   const rootRef = useRef(null);
   const stickyRef = useRef(null);
   const boxRef = useRef(null);
