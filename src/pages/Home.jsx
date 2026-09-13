@@ -16,13 +16,13 @@ import FadeIn from '@/components/FadeIn';
 import RotaryStage from '@/components/lab/RotaryStage';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
-// Provisorischer Schalter: die Rolle zeigt im Livebetrieb leere Flaechen,
-// die sich bisher nicht zuverlaessig reproduzieren oder beheben liessen.
-// Bis das geklaert ist, laeuft die Seite standardmaessig als normaler
-// Onepager ohne die Buehne - die Rolle bleibt ueber den Schalter erreichbar,
-// um live weiter daran zu testen, ohne dass Besucher eine kaputte Seite
-// sehen.
-const ROLLE_STANDARD = false;
+// Die Rolle zeigte leere Flaechen, verursacht durch einen Float-Vergleich
+// (d !== 0 statt i !== vorne) in RotaryStage - siehe dortiger Commit. Per
+// Playwright im Production-Build reproduziert, behoben und verifiziert
+// (kompletter Scroll-Durchlauf ohne leere Flaeche), zusaetzlich live vom
+// Nutzer bestaetigt. Der Schalter bleibt als Fallback stehen, falls
+// spaeter doch noch ein Rand-fall auftaucht.
+const ROLLE_STANDARD = true;
 
 function OnePager({ f }) {
   return (
