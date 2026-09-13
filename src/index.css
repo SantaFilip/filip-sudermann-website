@@ -99,3 +99,444 @@
   .dotted-orbit { border: 1px dashed hsl(var(--border)); border-radius: 50%; }
   .glow-node { box-shadow: 0 0 12px 4px hsl(var(--accent) / 0.5); }
 }
+
+@layer components {
+  /*
+   * Sections auf einer Wuerfelseite.
+   *
+   * Im normalen Seitenfluss trennt py-28/py-32 die Sections voneinander. Auf
+   * einer Flaeche mit fester Hoehe sind das rund 250px tote Polsterung, die
+   * den Inhalt zusammenschrumpfen und in der Mitte schwimmen laesst. Die
+   * Flaeche selbst uebernimmt den Abstand, deshalb faellt er hier weg.
+   *
+   * Spezifitaet 0,1,1 schlaegt die Tailwind-Utility 0,1,0 - kein !important
+   * noetig.
+   */
+  /*
+   * Die Flaeche ist ein eigener Messraum. Ohne das richten sich die Sections
+   * nach der Fensterbreite und stellen in einer 600px schmalen Facette
+   * trotzdem ihr vierspaltiges Desktop-Raster auf.
+   */
+  .rotary-face {
+    /* size statt inline-size: so laesst sich auch die Hoehe der Facette
+       abfragen. Zulaessig, weil die Flaeche eine feste Hoehe bekommt und
+       nicht von ihrem Inhalt abhaengt. */
+    container-type: size;
+    container-name: facet;
+  }
+
+  @container facet (max-width: 900px) {
+    /* Hero: die Desktop-Variante ist fuer zwei Spalten gebaut, die schmale
+       Facette bekommt die einspaltige. */
+    .rotary-face .hidden.lg\:grid {
+      display: none;
+    }
+
+    .rotary-face .lg\:hidden.grid {
+      display: grid;
+    }
+
+    /* Jedes mehrspaltige Raster auf eine Spalte. minmax(0, 1fr) statt 1fr,
+       damit lange Woerter die Spalte nicht aufspreizen. */
+    .rotary-face [class*="grid-cols-"],
+    .rotary-face [class*="lg:grid-cols"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /*
+     * Ausnahme: Gegenueberstellungen bleiben nebeneinander.
+     *
+     * "Ohne / Mit Growth Operator" und "Workload / Gewinnanteil" sind
+     * Vergleiche - ihr Sinn steckt im direkten Nebeneinander. Untereinander
+     * gestapelt vergleicht das Auge nicht mehr, es liest zwei getrennte
+     * Listen. Beide tragen dasselbe Raster aus zwei Spalten mit Verbinder
+     * in der Mitte, daran sind sie zu erkennen.
+     *
+     * Muss nach der Regel darueber stehen: gleiche Spezifitaet, es gewinnt
+     * die spaetere.
+     */
+    .rotary-face [class*="grid-cols-[1fr_auto_1fr]"] {
+      /* minmax(0, 1fr) statt 1fr: eine reine 1fr-Spur hat den Inhalt als
+         Untergrenze. Die Donuts sind auf 210px festgenagelt, die Spur kann
+         also nicht schrumpfen, das Raster wird breiter als die Facette und
+         schiebt sich nach rechts aus der Mitte. */
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 0.7rem;
+      justify-items: center;
+    }
+
+    .rotary-face #process .relative.shrink-0 {
+      max-width: 210px;
+    }
+
+
+
+    /* In der schmalen Facette zaehlt jeder Millimeter Spaltenbreite. */
+    .rotary-face [class*="grid-cols-[1fr_auto_1fr]"] > div {
+      padding: 0.9rem;
+    }
+
+    .rotary-face [class*="grid-cols-[1fr_auto_1fr]"] li {
+      gap: 0.5rem;
+    }
+
+    /* Zeilen, die als Flex nebeneinander laufen, ebenfalls stapeln. */
+    .rotary-face [class*="lg:flex-row"],
+    .rotary-face [class*="sm:flex-row"] {
+      flex-direction: column;
+    }
+
+    /*
+     * Einspaltig wird der Inhalt hoch, und die Hoehe erzwingt dann die
+     * Stauchung - die wiederum die Breite mitnimmt. Also Hoehe sparen:
+     * cqh misst die Facette, nicht das Fenster.
+     */
+    .rotary-face [class*="aspect-"] {
+      max-height: 34cqh;
+      width: 100%;
+    }
+
+    .rotary-face [class*="gap-1"],
+    .rotary-face [class*="gap-8"] {
+      gap: 1.25rem;
+    }
+
+    /* Schrift auf Facettenbreite bringen. Spezifitaet 0,1,1 schlaegt die
+       Utility-Klassen der Section. */
+    .rotary-face h1 {
+      font-size: clamp(1.75rem, 7cqw, 2.75rem);
+      line-height: 1.08;
+    }
+
+    .rotary-face h2 {
+      font-size: clamp(1.4rem, 5.5cqw, 2.25rem);
+      line-height: 1.12;
+    }
+
+    .rotary-face p {
+      font-size: clamp(0.9rem, 2.6cqw, 1.05rem);
+    }
+  }
+
+  /*
+   * Weite Facetten - die Detailansicht.
+   *
+   * Arbeitsweise stapelt zwei vollstaendige Bloecke uebereinander: die
+   * Prozess-Schritte und die Gewinnbeteiligung, getrennt durch mt-24. Auf
+   * einer weiten Folie gehoeren sie nebeneinander, sonst ist die Folie doppelt
+   * so hoch wie noetig und die Breite bleibt leer.
+   *
+   * Bewusst an der BREITE aufgehaengt, nicht an der Hoehe: an der Hoehe
+   * angehaengt griff die Regel auch in der schmalen Facette, und dort
+   * kollabierte das Raster auf "0px 768px" - die Schritte auf null gequetscht,
+   * die Diagramme 114px aus der Mitte gedraengt.
+   */
+  @container facet (min-width: 1000px) {
+    .rotary-face #process > div {
+      display: grid;
+      /* Beide Spuren ausdruecklich schrumpfbar. "auto" fuer die Diagramme gab
+         ihnen ihre volle natuerliche Breite von 672px und liess den Schritten
+         340px - vier Karten darin sind 85px schmal und bauen dadurch 869px
+         hoch, was die ganze Folie auf 0,62 staucht. Haelftig geteilt haben
+         beide genug Breite, um flach zu bleiben. */
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1.5rem 3rem;
+      align-items: center;
+    }
+
+    /* Der Kopf mit Nummer, Titel und Untertitel laeuft ueber beide Spalten. */
+    .rotary-face #process > div > div:first-child {
+      grid-column: 1 / -1;
+      margin-bottom: 0;
+    }
+
+    /* Der Abstand trennte die Bloecke vertikal - das erledigt jetzt die
+       Spalte daneben. */
+    .rotary-face #process > div > .mt-24 {
+      margin-top: 0;
+    }
+
+    /*
+     * Die vier Prozess-Schritte stehen nebeneinander. In der eigenen Spalte
+     * bleiben dafuer rund 300px - vier Karten darin sind so schmal, dass die
+     * Ueberschriften mitten im Wort abschneiden. Untereinander haben sie die
+     * Breite der Spalte und die Hoehe, die neben den Diagrammen frei ist.
+     */
+    /*
+     * Die Schritte bleiben vierspaltig - in zwei Reihen brauchen sie 890px
+     * natuerliche Hoehe bei 692px Platz, und alles wird auf 0,61 gestaucht.
+     * Damit vier Karten nebeneinander lesbar bleiben, muss ihre Spalte breit
+     * sein, also geben die Diagramme daneben Breite ab.
+     */
+    .rotary-face #process .relative.shrink-0 {
+      max-width: 150px;
+    }
+
+    .rotary-face #process .mt-24 .text-sm,
+    .rotary-face #process .mt-24 .text-xs {
+      font-size: 0.72rem;
+    }
+
+    /*
+     * Zwei mal zwei statt vier nebeneinander - vier Karten in der halben
+     * Folienbreite waeren rund 130px schmal, die Ueberschriften braechen
+     * mitten im Wort ("Mark-tforsc-hung").
+     *
+     * Die alte Praesentation (5rem-Ziffer, Punkt, verbindende Linie - fuer
+     * eine Reihe aus vier gedacht) baute dabei 759px Hoehe in einer 425px
+     * schmalen Spalte: der Zoom fiel auf 0,66, kleine Legendentexte wurden
+     * bei 0,72rem * 0,66 ≈ 7,6px unlesbar weich - kein Zoom-Fehler mehr,
+     * schlicht zu viel Inhalt fuer zu wenig Platz. Jede Karte bekommt
+     * stattdessen ein kompaktes Icon-Abzeichen mit der Nummer als kleines
+     * Eck-Label; die alte Linie/der Punkt fallen weg, dafuer verbindet ein
+     * leises Rautenmuster hinter den vier Karten sie als eine Einheit -
+     * "vier Ecken eines groesseren Musters" statt einer Reihe.
+     */
+    .rotary-face #process .lg\:grid.grid-cols-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.6rem;
+      position: relative;
+    }
+
+    /* Verbindendes Muster: eine leise Raute hinter den vier Karten. */
+    .rotary-face #process .lg\:grid.grid-cols-4::before {
+      content: '';
+      position: absolute;
+      inset: 8% 18%;
+      border: 1px solid hsl(var(--accent) / 0.35);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    /* Die alte Linie zwischen den vier Karten passt nicht zum 2x2-Muster. */
+    .rotary-face #process .lg\:grid.grid-cols-4 > .absolute {
+      display: none;
+    }
+
+    .rotary-face #process .lg\:grid.grid-cols-4 > div {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 0.6rem;
+      text-align: left;
+    }
+
+    /* Die grosse Hintergrundziffer wird zum kleinen Eck-Label im Abzeichen. */
+    .rotary-face #process .lg\:grid.grid-cols-4 > div > span {
+      position: absolute;
+      font-size: 0.85rem !important;
+      opacity: 0.55 !important;
+      top: -0.3rem;
+      left: 2.1rem;
+      margin: 0 !important;
+    }
+
+    /* Der Verbindungspunkt der alten Linie ist ohne sie ueberfluessig. */
+    .rotary-face #process .lg\:grid.grid-cols-4 > div > span + div {
+      display: none;
+    }
+
+    /* Icon-Kreis: kompaktes Abzeichen statt eigener Zeile. */
+    .rotary-face #process .lg\:grid.grid-cols-4 .w-14.h-14 {
+      width: 3rem !important;
+      height: 3rem !important;
+      margin: 0 !important;
+      flex-shrink: 0;
+    }
+
+    /* Karte: engere Polsterung, linksbuendiger Text neben dem Abzeichen. */
+    .rotary-face #process .lg\:grid.grid-cols-4 .rounded-2xl {
+      padding: 0.9rem 1.1rem !important;
+      text-align: left !important;
+    }
+
+    .rotary-face #process .lg\:grid.grid-cols-4 h3 {
+      font-size: 1.05rem !important;
+      text-align: left !important;
+      margin-bottom: 0.25rem !important;
+    }
+
+    .rotary-face #process .lg\:grid.grid-cols-4 p {
+      font-size: 0.8rem !important;
+      text-align: left !important;
+      line-height: 1.35 !important;
+    }
+  }
+
+  /*
+   * Hohe Facetten. Zwei Sections sind im Seitenfluss bewusst flach gehalten
+   * und lassen auf einer bildschirmhohen Folie den Grossteil leer stehen -
+   * gemessen 18% bei der TrustBar und 58% beim FAQ. Auf einer Folie ist das
+   * kein Luftholen mehr, sondern eine halbleere Seite.
+   */
+  @container facet (min-height: 640px) {
+    /*
+     * TrustBar: aus der Leiste werden vier Kacheln. Sie hat keine id, aber
+     * ihr Raster ist eindeutig - sonst gibt es auf der Seite kein
+     * zweispaltiges Raster, das auf vier Spalten aufmacht.
+     */
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 {
+      gap: 1.25rem;
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 > div {
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.1rem;
+      min-height: 68cqh;
+      padding: 2.25rem 1.75rem;
+      background: hsl(var(--card));
+      border-left: 2px solid hsl(var(--accent) / 0.55);
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 svg {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 > div p:first-child {
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+
+    .rotary-face .grid-cols-2.lg\:grid-cols-4 > div p + p {
+      font-size: 0.95rem;
+    }
+
+    /* FAQ: die Fragen bekommen Hoehe, statt oben zusammenzukleben. */
+    .rotary-face #faq button {
+      padding-top: 2.4rem;
+      padding-bottom: 2.4rem;
+      font-size: 1.35rem;
+    }
+  }
+
+  /*
+   * Flache Facetten. Eine Rolle teilt die Hoehe auf mehrere Seiten auf, auf
+   * dem Handy bleiben pro Facette gut 340px. Was der Inhalt darueber hinaus
+   * braucht, wird mit Stauchung bezahlt - und die nimmt die Breite mit.
+   */
+  @container facet (max-height: 520px) {
+    .rotary-face section > div > img {
+      max-height: 11cqh;
+    }
+
+    .rotary-face [class*="aspect-"] {
+      max-height: 30cqh;
+      width: 100%;
+    }
+
+    .rotary-face [class*="gap-"] {
+      gap: 0.6rem;
+    }
+
+    .rotary-face [class*="mt-"],
+    .rotary-face [class*="mb-"] {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .rotary-face h1 {
+      font-size: clamp(1.2rem, 5cqw, 1.9rem);
+      line-height: 1.08;
+    }
+
+    .rotary-face h2 {
+      font-size: clamp(1.05rem, 4cqw, 1.5rem);
+      line-height: 1.1;
+    }
+
+    .rotary-face p {
+      font-size: clamp(0.78rem, 2.2cqw, 0.95rem);
+      line-height: 1.35;
+    }
+  }
+
+  /*
+   * Die Donut-Wrapper tragen ihre Groesse inline und stehen auf shrink-0.
+   * Ohne beides aufzuheben koennen sie nie schrumpfen: in schmalen Facetten
+   * schieben sie das Raster aus der Mitte, in weiten fressen sie Breite, die
+   * der Spalte daneben fehlt. !important ist noetig - Inline-Styles schlagen
+   * jede Klasse.
+   */
+  .rotary-face #process .relative.shrink-0 {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1;
+    flex-shrink: 1;
+    /* Die Obergrenze setzen die Queries weiter unten. Stuende sie hier, wuerde
+       sie die dortigen Werte schlagen: gleiche Spezifitaet, und diese Regel
+       steht spaeter in der Datei. */
+  }
+
+  .rotary-face #process .relative.shrink-0 > svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .rotary-face section {
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top: 0;
+  }
+
+  /* Der Rahmen der Flaeche traegt die Begrenzung, nicht die Section. */
+  .rotary-face section > div {
+    width: 100%;
+  }
+
+  /*
+   * Feste Mindesthoehen aufheben. Der Hero setzt inline min-height: 640px;
+   * zusammen mit dem Bannerbild ergibt das rund 1170px natuerliche Hoehe bei
+   * 750px Platz. Die Flaeche muesste den Inhalt dann auf 64% stauchen - und
+   * weil gleichmaessig skaliert wird, schrumpft die Breite mit und ein Drittel
+   * der Flaeche bleibt leer. !important ist noetig: Inline-Styles schlagen
+   * jede Klasse.
+   */
+  .rotary-face [style*="min-height"] {
+    min-height: 0 !important;
+  }
+
+  /* Vollbreite Bannerbilder duerfen die Flaeche nicht allein auffuellen. */
+  .rotary-face section > div > img {
+    max-height: 24vh;
+    object-fit: contain;
+  }
+
+  /*
+   * Auf dem Handy ist eine Wuerfelseite genau ein Bildschirm. Jeder Pixel
+   * Hoehe, den der Inhalt zu viel braucht, wird per Skalierung bezahlt - und
+   * die schrumpft die Breite gleich mit. Deshalb hier enger: Banner klein,
+   * Portraet gedeckelt, Abstaende zusammengezogen.
+   */
+  /*
+   * Flache Bildschirme. Nicht das Seitenverhaeltnis entscheidet, sondern die
+   * Viewport-Hoehe: ein 16:9-Laptop mit 768px hat rund 100px weniger Platz pro
+   * Flaeche als ein 16:10 mit 900px, und jeder fehlende Pixel wird mit
+   * Skalierung bezahlt - die die Breite gleich mit staucht. Deshalb hier
+   * dieselbe Diaet wie auf dem Handy, nur milder.
+   */
+  @media (min-width: 768px) and (max-height: 900px) {
+    .rotary-face section > div > img {
+      max-height: 13vh;
+    }
+
+    .rotary-face [class*="aspect-"] {
+      max-height: 52vh;
+      width: 100%;
+    }
+
+    .rotary-face [class*="mt-8"],
+    .rotary-face [class*="mt-12"] {
+      margin-top: 0.75rem;
+    }
+
+    .rotary-face [class*="mb-12"],
+    .rotary-face [class*="mb-16"] {
+      margin-bottom: 1rem;
+    }
+  }
+
+}

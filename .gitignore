@@ -33,3 +33,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Build-Output der Trommel-Vorschau
+dist-lab
