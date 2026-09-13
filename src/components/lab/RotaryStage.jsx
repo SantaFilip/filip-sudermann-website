@@ -464,18 +464,30 @@ export default function RotaryStage({
     apply(0);
     ScrollTrigger.refresh();
 
-    // Die erste Kalibrierung passiert beim Mount - oft bevor das grosse
-    // Hero-Bannerbild oder die Webfonts fertig geladen sind. Aendert sich die
-    // Seitenhoehe danach noch (Bild laedt nach, Text bricht mit dem
-    // richtigen Font anders um), stimmt "top top".."bottom bottom" nicht
-    // mehr mit der tatsaechlichen Dokumenthoehe ueberein: die errechnete
-    // Position landet zwischen den Flaechen statt auf ihnen, und ausser an
-    // den beiden Fixpunkten (Start, und wo der naechste Snap neu einrastet)
-    // faellt jede Flaeche aus dem CULL_DEG-Fenster - genau das Muster
-    // "nur die erste und letzte Flaeche zeigen etwas". Ein Nachkalibrieren,
-    // sobald wirklich alles geladen ist, behebt das unabhaengig davon, was
-    // im Einzelnen zu spaet fertig wurde.
-    const nachkalibrieren = () => ScrollTrigger.refresh();
+    // "top top".."bottom bottom" bindet die Segmentgrenzen an die
+    // Dokumenthoehe zum Zeitpunkt des letzten refresh(). Waechst die Seite
+    // danach noch - Bild laedt nach, Font-Swap bricht Text anders um, ein
+    // Lazy-Image weiter unten wird erst beim Naehern geladen, das Calendly-
+    // Iframe schiebt seine Hoehe nach - verschiebt sich die tatsaechliche
+    // Position jeder Flaeche gegenueber der zuletzt berechneten. pos landet
+    // dann zwischen den Flaechen statt auf ihnen, und ausser an den beiden
+    // Fixpunkten (ganz oben, ganz unten) faellt jede Flaeche aus dem
+    // CULL_DEG-Fenster - genau das Muster "nur die erste und letzte Flaeche
+    // zeigen etwas".
+    //
+    // Ein einmaliges Nachkalibrieren bei 'load' oder document.fonts.ready
+    // wettet darauf, dass bis dahin wirklich alles fertig ist - trifft aber
+    // nicht auf Inhalte zu, die erst danach laden (Lazy-Loading, Iframes,
+    // asynchron nachgeladene Bilder). Stattdessen wird die Dokumenthoehe
+    // fortlaufend beobachtet: jede Aenderung loest eine neue Kalibrierung
+    // aus, unabhaengig davon, was sie verursacht hat oder wann sie passiert.
+    let refreshTimer = null;
+    const nachkalibrieren = () => {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 120);
+    };
+    const hoehenBeobachter = new ResizeObserver(nachkalibrieren);
+    hoehenBeobachter.observe(document.body);
     window.addEventListener('load', nachkalibrieren);
     if (document.fonts?.ready) {
       document.fonts.ready.then(nachkalibrieren);
@@ -483,10 +495,12 @@ export default function RotaryStage({
 
     return () => {
       clearTimeout(snapTimer);
+      clearTimeout(refreshTimer);
       window.removeEventListener('wheel', onInput);
       window.removeEventListener('touchend', onInput);
       window.removeEventListener('keyup', onInput);
       window.removeEventListener('load', nachkalibrieren);
+      hoehenBeobachter.disconnect();
       gsap.ticker.remove(tick);
       st.kill();
     };
