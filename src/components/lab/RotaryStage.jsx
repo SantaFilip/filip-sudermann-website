@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 import FaceOrnament from '@/components/lab/FaceOrnament';
 import FadeIn from '@/components/FadeIn';
+import { BuildingBase, RoofStructure, RoofCrown, ArchitecturalLighting } from '@/components/lab/Architecture';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -237,6 +238,7 @@ export default function RotaryStage({
   const overlayRefs = useRef([]);
   const closeRefs = useRef([]);
   const shellRefs = useRef([]);
+  const columnRefs = useRef([]);
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
   // wirkt nur auf die Ausdehnung in Drehrichtung.
   const [cube, setCube] = useState({ w: 0, h: 0 });
@@ -347,6 +349,32 @@ export default function RotaryStage({
         shell.style.visibility = offen && Math.abs(deg) > 1 ? 'hidden' : 'visible';
         shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
         applyShade(shell, deg);
+      });
+
+      // Saeulen: eine je Nahtstelle zwischen zwei Facetten, auf halbem Winkel
+      // zwischen den Nachbarn positioniert (Versatz 0.5 Schritt). Sie drehen
+      // sich mit dem Koerper mit - anders als Sockel/Dach, die fest stehen -
+      // und markieren so visuell, wo eine Facette endet und die naechste
+      // beginnt. Beim Aufklappen ausgeblendet: nur eine Facette ist dann
+      // sichtbar, eine einzelne Saeule daneben wuerde verloren wirken.
+      //
+      // `radius` ist der Apothem (Abstand Zentrum-Flaechenmitte), an dem die
+      // Facetten kantengenau aneinanderstossen. Der Punkt, an dem sich zwei
+      // Facetten beruehren, liegt aber nicht auf diesem Kreis, sondern auf
+      // dem groesseren Umkreis durch die Eckpunkte (Umkreisradius = Apothem /
+      // cos(halber Aussenwinkel)) - stuende die Saeule nur beim Apothem-
+      // Radius, laege sie hinter der tatsaechlichen Kante und waere von der
+      // Kamera aus verdeckt.
+      const colRadius = radius / Math.cos(Math.PI / sides);
+      columnRefs.current.forEach((col, s) => {
+        if (!col) return;
+        const deg = kuerzesterWeg(p - s + 0.5) * step;
+        const hidden = offen || Math.abs(deg) > CULL_DEG;
+        col.style.visibility = hidden ? 'hidden' : 'visible';
+        if (!hidden) {
+          col.style.transform = `${turn(deg)} translateZ(${colRadius}px)`;
+          applyShade(col, deg);
+        }
       });
 
       // Inhaltsseiten darueber.
@@ -597,6 +625,32 @@ export default function RotaryStage({
     );
   }
 
+  // Saeulenbreite: schlank, aber bei kleinen Facetten nie unleserlich duenn.
+  const colW = Math.max(20, Math.round((cube.w || 0) * 0.052));
+  const colCapW = Math.round(colW * 1.75);
+  const colCapH = Math.max(12, Math.round(colW * 0.6));
+  const colStyle = lateral
+    ? {
+        position: 'absolute',
+        left: '50%',
+        top: 0,
+        width: `${colW}px`,
+        height: cube.h ? `${cube.h}px` : '94vh',
+        marginLeft: `${-colW / 2}px`,
+        backfaceVisibility: 'hidden',
+        willChange: 'transform, filter',
+      }
+    : {
+        position: 'absolute',
+        left: 0,
+        top: '50%',
+        width: cube.w ? `${cube.w}px` : '100%',
+        height: `${colW}px`,
+        marginTop: `${-colW / 2}px`,
+        backfaceVisibility: 'hidden',
+        willChange: 'transform, filter',
+      };
+
   const faceStyle = {
     width: cube.w ? `${cube.w}px` : '100%',
     height: cube.h ? `${cube.h}px` : '94vh',
@@ -617,11 +671,25 @@ export default function RotaryStage({
     ? { ...faceStyle, transformStyle: 'preserve-3d', transition: 'width 420ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 420ms cubic-bezier(0.4, 0, 0.2, 1)' }
     : { ...faceStyle, transformStyle: 'preserve-3d' };
 
+  // Dach und Sockel stehen fest (drehen NICHT mit) und rahmen die Buehne wie
+  // eine Rotunde um eine drehbare Vitrine. Bewusst niedrig gehalten (siehe
+  // Architecture.jsx-Kommentar): kein Kathedralendach, sondern ein flaches
+  // Kuppelband. Ein Teil ueberlappt die Buehne (negativer Rand), damit
+  // Saeulenfuss/-kopf nicht mit Luft zum Sockel/Dach abschliessen.
+  const roofH = Math.max(70, Math.min(190, (cube.w || 0) * 0.16));
+  const baseH = Math.max(50, Math.min(140, (cube.w || 0) * 0.12));
+
   return (
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
     // #beratung etc.) muessen ihre Zielflaeche finden koennen, um sie per
     // Klick zu oeffnen - siehe scrollToSection().
     <div ref={rootRef} data-rotary-root="" className="pt-16 lg:pt-20">
+      {cube.w > 0 && (
+        <div className="relative" style={{ height: `${roofH}px`, marginBottom: `${-roofH * 0.42}px` }}>
+          <RoofStructure width={cube.w} sides={sides} className="bottom-0" />
+          <RoofCrown width={cube.w} className="top-0" />
+        </div>
+      )}
       <div
         ref={stickyRef}
         // Normales Fluss-Element, nicht mehr gepinnt: die Buehne dreht sich
@@ -664,6 +732,48 @@ export default function RotaryStage({
               style={faceStyle}
               aria-hidden="true"
             />
+          ))}
+
+          {/* Saeulen: drehen mit dem Koerper, eine je Nahtstelle zwischen
+              zwei Facetten - siehe Positionierung in apply(). */}
+          {Array.from({ length: sides }, (_, s) => (
+            <div
+              key={`col-${s}`}
+              ref={(el) => { columnRefs.current[s] = el; }}
+              className="absolute flex flex-col items-center"
+              style={colStyle}
+              aria-hidden="true"
+            >
+              <div
+                style={{
+                  width: `${colCapW}px`,
+                  height: `${colCapH}px`,
+                  borderRadius: '3px',
+                  background: 'linear-gradient(180deg, hsl(45 68% 74%), hsl(42 58% 51%) 55%, hsl(36 55% 38%))',
+                  boxShadow: '0 1px 0 hsl(36 55% 30% / 0.6)',
+                  flexShrink: 0,
+                }}
+              />
+              <div
+                style={{
+                  width: `${colW}px`,
+                  flex: 1,
+                  background:
+                    'linear-gradient(90deg, hsl(38 26% 78%) 0%, hsl(42 40% 96%) 22%, hsl(42 40% 96%) 45%, hsl(35 22% 82%) 68%, hsl(35 22% 68%) 100%)',
+                  boxShadow: 'inset 0 0 0 1px hsl(38 20% 60% / 0.25)',
+                }}
+              />
+              <div
+                style={{
+                  width: `${colCapW}px`,
+                  height: `${colCapH}px`,
+                  borderRadius: '3px',
+                  background: 'linear-gradient(180deg, hsl(36 55% 38%), hsl(42 58% 51%) 55%, hsl(45 68% 74%))',
+                  boxShadow: '0 -1px 0 hsl(36 55% 30% / 0.6)',
+                  flexShrink: 0,
+                }}
+              />
+            </div>
           ))}
 
           {panels.map((panel, i) => (
@@ -717,6 +827,12 @@ export default function RotaryStage({
           ))}
         </div>
       </div>
+      {cube.w > 0 && (
+        <div className="relative" style={{ height: `${baseH}px`, marginTop: `${-baseH * 0.55}px` }}>
+          <BuildingBase width={cube.w} className="top-0" />
+          <ArchitecturalLighting width={cube.w} />
+        </div>
+      )}
     </div>
   );
 }
