@@ -6,7 +6,7 @@ export default function GlobalReach() {
   const { t, lang } = useLanguage();
 
   return (
-    <section className="py-20 lg:py-32 bg-card/30 border-t border-border">
+    <section id="global-reach" className="py-20 lg:py-32 bg-card/30 border-t border-border">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div>

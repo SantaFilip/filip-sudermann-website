@@ -228,6 +228,48 @@
       max-width: 100%;
     }
 
+    /*
+     * Global Reach: Titel in der Uebersicht zentriert und groesser, wie bei
+     * Creator-Economy - liest sonst klein und schief neben dem zentrierten
+     * Globus darunter.
+     */
+    .rotary-face #global-reach h2 {
+      text-align: center;
+      font-size: clamp(1.9rem, 9cqw, 3.2rem);
+      line-height: 1.05;
+    }
+
+    /* Arbeitsweise: der Titel ueber den Prozessschritten liest links-
+       buendig neben dem zentrierten Gewinnbeteiligungs-Block darunter
+       inkonsistent. */
+    .rotary-face #process h2 {
+      text-align: center;
+    }
+
+    /*
+     * Hero: das Banner-Bild (Slogan als Grafik) frisst in der schmalen
+     * Facette allein schon einen Gutteil der Hoehe und drueckt den
+     * eigentlichen Titel klein - hier weg damit. Titel und Subline
+     * zentriert und der Titel groesser, wie bei den anderen Facetten.
+     */
+    .rotary-face #top > .w-full > img {
+      display: none;
+    }
+
+    .rotary-face #top h1 {
+      text-align: center;
+      font-size: clamp(1.9rem, 9cqw, 3.2rem);
+      line-height: 1.05;
+    }
+
+    .rotary-face #top .lg\:hidden p {
+      text-align: center;
+    }
+
+    .rotary-face #top .lg\:hidden .flex {
+      justify-content: center;
+    }
+
     .rotary-face p {
       font-size: clamp(0.9rem, 2.6cqw, 1.05rem);
     }
