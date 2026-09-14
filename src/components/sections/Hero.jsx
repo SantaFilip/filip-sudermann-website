@@ -136,8 +136,8 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="relative"
           >
-            <div className="relative aspect-[4/5] bg-secondary overflow-hidden rounded-[30px]">
-              <Image src={IMAGES.heroPortrait} alt="Filip Sudermann" className="w-full h-full object-top" fittingType="fill" />
+            <div className="relative hero-portrait-box aspect-[4/5] bg-secondary overflow-hidden rounded-[30px]">
+              <Image src={IMAGES.heroPortrait} alt="Filip Sudermann" className="w-full h-full" fittingType="fill" />
               <span className="absolute bottom-4 left-5 text-sm font-medium text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] z-10">
                 ~ Filip Sudermann, 2026
               </span>

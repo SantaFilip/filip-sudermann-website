@@ -305,10 +305,26 @@
 
     .rotary-face #top .lg\:hidden p {
       text-align: center;
+      margin-top: 0.4rem;
     }
 
     .rotary-face #top .lg\:hidden .flex {
       justify-content: center;
+      margin-top: 0.75rem;
+    }
+
+    /*
+     * Das Quellbild ist exakt quadratisch (1024x1024) - die Box zwingt es
+     * aber auf 4:5 (hoeher als breit), object-cover schneidet dadurch oben
+     * und unten weg (Haare bzw. Laptop). Seitenverhaeltnis ans Original
+     * angeglichen: bei passendem Verhaeltnis zeigt cover das ganze Bild
+     * ohne Beschnitt, unabhaengig von object-position. Die generische
+     * `[class*="aspect-"]`-Regel oben deckelt jede solche Box auf 34cqh -
+     * fuer ein Quadrat zu knapp, hier grosszuegiger.
+     */
+    .rotary-face #top .hero-portrait-box {
+      aspect-ratio: 1 / 1;
+      max-height: 58cqh;
     }
 
     .rotary-face p {
