@@ -6,9 +6,11 @@ import { getLenis } from './lenisInstance';
  * Die Buehne dreht sich von selbst und haengt nicht mehr am Scroll-
  * Fortschritt - ein Sprung auf ihre Section bedeutet deshalb nicht mehr
  * "an eine bestimmte Scrollposition fahren", sondern "die Buehne ins Bild
- * holen und die passende Flaeche anklicken". Der eigentliche Klick-Handler
- * sitzt auf dem Overlay in der Flaeche (siehe RotaryStage.jsx); hier wird er
- * nur programmatisch ausgeloest.
+ * holen und die passende Flaeche oeffnen". Ausgeloest ueber ein eigenes
+ * 'rotary-open'-Event auf der Flaeche (siehe RotaryStage.jsx) - nicht per
+ * synthetischem 'click' auf dem Overlay: der reagiert seit dem Ziehen-Feature
+ * nur noch auf Pointer-Events (pointerdown/-move/-up), ein 'click' dort loest
+ * nichts mehr aus.
  */
 function tryRotaryExpand(el) {
   const panel = el.closest('[data-rotary-index]');
@@ -29,7 +31,7 @@ function tryRotaryExpand(el) {
   const closeBtn = panel.querySelector('[data-rotary-close]');
   const schonOffen = closeBtn && getComputedStyle(closeBtn).visibility === 'visible';
   if (!schonOffen) {
-    panel.querySelector('[data-rotary-overlay]')?.click();
+    panel.dispatchEvent(new CustomEvent('rotary-open'));
   }
 
   return true;

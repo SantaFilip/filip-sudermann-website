@@ -503,18 +503,26 @@ export default function RotaryStage({
         e.stopPropagation();
         klickAuf(i);
       };
+      // Programmatisches Oeffnen von aussen (Kopfzeilen-Anker, siehe
+      // scrollToSection.js). Kein synthetisches 'click' auf dem Overlay mehr:
+      // der reagiert seit dem Ziehen-Feature nur noch auf Pointer-Events
+      // (pointerdown/-move/-up), ein echtes 'click' dort loest nichts mehr
+      // aus. Ein eigenes Event auf der Flaeche selbst umgeht das sauber.
+      const onExternOeffnen = () => klickAuf(i);
 
       overlay.addEventListener('pointerdown', onPointerDown);
       overlay.addEventListener('pointermove', ziehBewegen);
       overlay.addEventListener('pointerup', onPointerUp);
       overlay.addEventListener('pointercancel', onPointerCancel);
       closeBtn?.addEventListener('click', onClose);
+      face.addEventListener('rotary-open', onExternOeffnen);
       abmeldeliste.push(() => {
         overlay.removeEventListener('pointerdown', onPointerDown);
         overlay.removeEventListener('pointermove', ziehBewegen);
         overlay.removeEventListener('pointerup', onPointerUp);
         overlay.removeEventListener('pointercancel', onPointerCancel);
         closeBtn?.removeEventListener('click', onClose);
+        face.removeEventListener('rotary-open', onExternOeffnen);
       });
     });
 
