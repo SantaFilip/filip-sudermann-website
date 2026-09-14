@@ -14,7 +14,7 @@ export default function CreatorComparison() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="mb-12">
           <div className="inline-flex flex-row items-center gap-4 border-2 border-accent rounded-xl px-6 py-3 mb-2 bg-card">
-            <span className="text-[34px] lg:text-[40px] font-heading font-extrabold tracking-tight text-accent leading-tight -translate-y-1 lg:-translate-y-1.5">2</span>
+            <span className="text-[34px] lg:text-[40px] font-heading font-extrabold tracking-tight text-accent leading-tight -translate-y-1 lg:-translate-y-1.5">3</span>
             <span className="text-[28px] lg:text-[34px] font-heading font-extrabold tracking-tight text-foreground leading-tight">{c.marktwortBadge}</span>
           </div>
           <h2 className="text-[2.8rem] lg:text-[4.5rem] font-heading font-bold tracking-tight leading-[1.05] text-balance">{c.title}</h2>

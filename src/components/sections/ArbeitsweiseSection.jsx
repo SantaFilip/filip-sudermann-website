@@ -15,7 +15,7 @@ export default function ArbeitsweiseSection() {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="mb-12">
           <div className="inline-flex flex-row items-center gap-4 border-2 border-accent rounded-xl px-6 py-3 mb-5 bg-card">
-            <span className="text-[34px] lg:text-[40px] font-heading font-extrabold tracking-tight text-accent leading-tight -translate-y-1 lg:-translate-y-1.5">3</span>
+            <span className="text-[34px] lg:text-[40px] font-heading font-extrabold tracking-tight text-accent leading-tight -translate-y-1 lg:-translate-y-1.5">4</span>
             <span className="text-[28px] lg:text-[34px] font-heading font-extrabold tracking-tight text-foreground leading-tight">{a.badgeName}</span>
           </div>
           <h2 className="text-3xl lg:text-5xl font-heading font-bold tracking-tight">{t.process.title}</h2>

@@ -1,7 +1,7 @@
 export const translations = {
   de: {
     nav: {
-      services: "Growth System",
+      services: "Wachstumssystem",
       results: "Marktvorteil",
       about: "Info zum Gründer",
       process: "Arbeitsweise",
@@ -116,7 +116,7 @@ export const translations = {
     arbeitsweise: { badgeName: "Arbeitsweise" },
     folders: {
       services: {
-        tab: "1 / Growth System",
+        tab: "1 / Wachstumssystem",
         title: "Angebote für dein Wachstum",
         subtitle: "Acht Module. Ein System. Volle Skalierungsübersicht.",
         openLabel: "Dossier öffnen",
@@ -149,7 +149,7 @@ export const translations = {
         ]
       },
       about: {
-        tab: "4 / Info zum Gründer",
+        tab: "2 / Info zum Gründer",
         title: "Etwas über Filip",
         subtitle: "Growth Operator & System Builder.",
         openLabel: "Dossier öffnen",
