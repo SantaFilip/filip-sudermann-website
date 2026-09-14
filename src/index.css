@@ -186,10 +186,11 @@
   }
 
   /* Infotext direkt darunter ebenfalls einzeilig - deutlich kleiner, der
-     Satz ist lang (rund 140 Zeichen). */
+     Satz ist lang (rund 140 Zeichen). Etwas grosszuegiger als zuvor, bleibt
+     aber unter dem Cap, ab dem er wieder ueberlaeuft. */
   .rotary-face #creator-economy p {
     white-space: nowrap;
-    font-size: clamp(0.45rem, 1.1cqw, 0.78rem);
+    font-size: clamp(0.45rem, 1.12cqw, 0.79rem);
   }
 
   @container facet (max-width: 900px) {
@@ -278,6 +279,36 @@
     .rotary-face h2 {
       font-size: clamp(1.4rem, 5.5cqw, 2.25rem);
       line-height: 1.12;
+    }
+
+    /*
+     * Creator-Economy in der Uebersicht (drehende, nicht aufgeklappte
+     * Facette): der Infotext ist hier selbst stark verkleinert kaum lesbar
+     * und nimmt Platz weg, der dem Titel fehlt - deshalb hier ausgeblendet.
+     * Der Titel ruemct dafuer zentriert nach oben und wird groesser, als es
+     * die universelle Regel weiter oben vorsieht (die gilt auch fuer die
+     * aufgeklappte Ansicht und darf dort nicht zu gross werden).
+     */
+    .rotary-face #creator-economy p {
+      display: none;
+    }
+
+    .rotary-face #creator-economy h2 {
+      text-align: center;
+      font-size: clamp(2.1rem, 10cqw, 3.4rem);
+      /* Die universelle Regel weiter oben erzwingt eine Zeile - bei dieser
+         Groesse passt das in der schmalen Facette nicht mehr, ohne rechts
+         abgeschnitten zu werden. Hier darf der Titel wieder normal
+         umbrechen. */
+      white-space: normal;
+      line-height: 1.1;
+    }
+
+    /* FitToFace zentriert seinen Inhalt sonst vertikal in der Flaechenmitte
+       (items-center) - der Titel soll hier aber oben stehen, nicht mittig
+       schweben. */
+    .rotary-face:has(#creator-economy) {
+      align-items: flex-start;
     }
 
     /*
