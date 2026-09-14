@@ -468,7 +468,7 @@ export const translations = {
         ]
       },
       about: {
-        tab: "4 / Founder Info",
+        tab: "2 / Founder Info",
         title: "Something about Filip",
         subtitle: "Growth Operator & System Builder.",
         openLabel: "Open dossier",
