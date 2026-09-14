@@ -166,6 +166,24 @@
     font-size: clamp(0.6rem, 2.3cqw, 0.95rem);
   }
 
+  /*
+   * Creator-Economy: der Titel liest neben der frei bleibenden
+   * Zeilenbreite deutlich zu klein - unabhaengig davon, ob die Facette
+   * schmal ist oder aufgeklappt (breit). max-w-3xl hielt die Box selbst
+   * schmal (der eigentliche Grund, warum sie nicht die ganze erste Zeile
+   * einnahm), cqw-basierte Groesse skaliert bei beiden Facettenbreiten mit
+   * - der hohe Cap (4.5rem) laesst sie in der aufgeklappten Ansicht so
+   * gross werden wie im Onepager auf Desktop-Breite.
+   */
+  .rotary-face #creator-economy h2 {
+    font-size: clamp(1.9rem, 6.5cqw, 4.5rem);
+    line-height: 1.05;
+  }
+
+  .rotary-face #creator-economy .max-w-3xl {
+    max-width: 100%;
+  }
+
   @container facet (max-width: 900px) {
     /* Hero: die Desktop-Variante ist fuer zwei Spalten gebaut, die schmale
        Facette bekommt die einspaltige. */
@@ -252,21 +270,6 @@
     .rotary-face h2 {
       font-size: clamp(1.4rem, 5.5cqw, 2.25rem);
       line-height: 1.12;
-    }
-
-    /*
-     * Creator-Economy: der Titel liest in der Uebersicht deutlich zu klein
-     * neben der frei bleibenden Zeilenbreite. Groesser und der max-w-3xl-
-     * Deckel des Wrappers aufgehoben, damit er die Facette wirklich
-     * ausfuellt statt vorzeitig umzubrechen.
-     */
-    .rotary-face #creator-economy h2 {
-      font-size: clamp(1.9rem, 9cqw, 3.2rem);
-      line-height: 1.05;
-    }
-
-    .rotary-face #creator-economy .max-w-3xl {
-      max-width: 100%;
     }
 
     /*
