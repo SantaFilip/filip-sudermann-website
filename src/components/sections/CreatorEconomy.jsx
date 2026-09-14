@@ -31,7 +31,7 @@ export default function CreatorEconomy() {
   const { t } = useLanguage();
 
   return (
-    <section className="py-20 lg:py-32 bg-background">
+    <section id="creator-economy" className="py-20 lg:py-32 bg-background">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="max-w-3xl mb-12">
           <h2 className="text-[2.8rem] lg:text-[4.5rem] font-heading font-bold tracking-tight leading-[1.1]">

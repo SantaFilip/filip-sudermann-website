@@ -213,6 +213,21 @@
       line-height: 1.12;
     }
 
+    /*
+     * Creator-Economy: der Titel liest in der Uebersicht deutlich zu klein
+     * neben der frei bleibenden Zeilenbreite. Groesser und der max-w-3xl-
+     * Deckel des Wrappers aufgehoben, damit er die Facette wirklich
+     * ausfuellt statt vorzeitig umzubrechen.
+     */
+    .rotary-face #creator-economy h2 {
+      font-size: clamp(1.9rem, 9cqw, 3.2rem);
+      line-height: 1.05;
+    }
+
+    .rotary-face #creator-economy .max-w-3xl {
+      max-width: 100%;
+    }
+
     .rotary-face p {
       font-size: clamp(0.9rem, 2.6cqw, 1.05rem);
     }
