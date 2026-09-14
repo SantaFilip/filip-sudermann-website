@@ -72,6 +72,7 @@ function Rolle({ f }) {
         mobileAxis="x"
         mobileFill={0.5}
         expandTo={0.93}
+        crossFill={0.6}
       >
         <Hero />
         <TrustBar />

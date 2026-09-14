@@ -224,6 +224,12 @@ export default function RotaryStage({
   // angeklickt wird. Ohne Wert bleibt jede Facette so breit wie sie ist -
   // Klicks drehen dann nur noch nach vorn, ohne aufzuklappen.
   expandTo,
+  // Anteil der Buehne quer zur Drehachse (bei liegender Drehung also die
+  // Hoehe), den der Koerper einnimmt. Ohne Wert wie bisher CUBE_FILL_DESKTOP
+  // (0.86) - der schmale Rest dient Sockel/Dach als Ansatzflaeche, direkt an
+  // der Facettenkante positioniert (siehe unten), nicht als freischwebende
+  // Elemente mit Abstand.
+  crossFill,
 } = {}) {
   const panels = React.Children.toArray(children);
   const sides = sidesProp ?? panels.length;
@@ -302,10 +308,14 @@ export default function RotaryStage({
       // Rundung ist nichts zu sehen.
       const laengs = fuellung ?? vorgabe;
       const quer = mobile ? 1 : CUBE_WIDTH_DESKTOP;
+      // crossFill ersetzt vorgabe nur auf dem Desktop - auf dem Handy bleibt
+      // die Flaeche bildschirmfuellend (Sockel/Dach werden dort ohnehin
+      // nicht gerendert, siehe Mobile-Fallback weiter unten).
+      const querFuellung = mobile ? vorgabe : crossFill ?? vorgabe;
       const w = lateral
         ? Math.round(sticky.clientWidth * laengs)
         : Math.round(sticky.clientWidth * quer);
-      const h = Math.round(sticky.clientHeight * (lateral ? vorgabe : laengs));
+      const h = Math.round(sticky.clientHeight * (lateral ? querFuellung : laengs));
 
       // Die Tiefe des Koerpers spannt die Kante in Drehrichtung auf: bei
       // senkrechter Drehachse die Breite, sonst die Hoehe.
@@ -682,24 +692,23 @@ export default function RotaryStage({
     : { ...faceStyle, transformStyle: 'preserve-3d' };
 
   // Dach und Sockel stehen fest (drehen NICHT mit) und rahmen die Buehne wie
-  // eine Rotunde um eine drehbare Vitrine. Bewusst niedrig gehalten (siehe
-  // Architecture.jsx-Kommentar): kein Kathedralendach, sondern ein flaches
-  // Kuppelband. Ein Teil ueberlappt die Buehne (negativer Rand), damit
-  // Saeulenfuss/-kopf nicht mit Luft zum Sockel/Dach abschliessen.
-  const roofH = Math.max(70, Math.min(190, (cube.w || 0) * 0.16));
-  const baseH = Math.max(50, Math.min(140, (cube.w || 0) * 0.12));
+  // eine Rotunde um eine drehbare Vitrine. Beide sitzen als Kinder von
+  // sticky, im selben Koordinatenraum wie die Facetten-Trommel - nicht als
+  // separate Bloecke davor/danach mit geschaetztem Ueberlapp. Die Trommel
+  // (cube.h hoch) steht per Flexbox vertikal zentriert in sticky; der Rand
+  // links/rechts davon (per crossFill kontrolliert, siehe RotaryStage-Prop)
+  // ist exakt bekannt: (100% - cube.h) / 2. Dach/Sockel fuellen genau diesen
+  // Rand, mit ein paar zusaetzlichen Pixeln Overlap in die Trommel hinein -
+  // damit stossen sie tatsaechlich an die Facettenkante, statt mit Luft
+  // davor zu schweben.
+  const kantenUeberlapp = 22;
+  const randHoehe = cube.h ? `calc((100% - ${cube.h}px) / 2 + ${kantenUeberlapp}px)` : '0px';
 
   return (
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
     // #beratung etc.) muessen ihre Zielflaeche finden koennen, um sie per
     // Klick zu oeffnen - siehe scrollToSection().
     <div ref={rootRef} data-rotary-root="" className="pt-16 lg:pt-20">
-      {cube.w > 0 && (
-        <div className="relative" style={{ height: `${roofH}px`, marginBottom: `${-roofH * 0.42}px` }}>
-          <RoofStructure width={cube.w} sides={sides} className="bottom-0" />
-          <RoofCrown width={cube.w} className="top-0" />
-        </div>
-      )}
       <div
         ref={stickyRef}
         // Normales Fluss-Element, nicht mehr gepinnt: die Buehne dreht sich
@@ -723,6 +732,13 @@ export default function RotaryStage({
         <div ref={backdropRef} className="absolute inset-0">
           <RotatingBackdrop />
         </div>
+
+        {cube.h > 0 && (
+          <div className="pointer-events-none absolute left-0 right-0 top-0" style={{ height: randHoehe }}>
+            <RoofStructure width={cube.w} sides={sides} className="bottom-0" />
+            <RoofCrown width={cube.w} className="top-0" />
+          </div>
+        )}
 
         <div
           ref={boxRef}
@@ -848,13 +864,18 @@ export default function RotaryStage({
             </div>
           ))}
         </div>
+
+        {cube.h > 0 && (
+          <div className="pointer-events-none absolute left-0 right-0 bottom-0" style={{ height: randHoehe }}>
+            {/* top-0, nicht bottom-0: die Plattform (oberer Rand der SVG)
+                soll an der Facettenkante anliegen (= oben in diesem
+                Randbereich), die Stufen darunter laufen frei nach unten
+                aus - nicht umgekehrt. */}
+            <BuildingBase width={cube.w} className="top-0" />
+          </div>
+        )}
+        {cube.w > 0 && <ArchitecturalLighting width={cube.w} />}
       </div>
-      {cube.w > 0 && (
-        <div className="relative" style={{ height: `${baseH}px`, marginTop: `${-baseH * 0.55}px` }}>
-          <BuildingBase width={cube.w} className="top-0" />
-          <ArchitecturalLighting width={cube.w} />
-        </div>
-      )}
     </div>
   );
 }
