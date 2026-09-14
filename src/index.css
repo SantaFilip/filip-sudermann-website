@@ -325,17 +325,19 @@
     }
 
     /*
-     * Das Quellbild ist exakt quadratisch (1024x1024) - die Box zwingt es
-     * aber auf 4:5 (hoeher als breit), object-cover schneidet dadurch oben
-     * und unten weg (Haare bzw. Laptop). Seitenverhaeltnis ans Original
-     * angeglichen: bei passendem Verhaeltnis zeigt cover das ganze Bild
-     * ohne Beschnitt, unabhaengig von object-position. Die generische
-     * `[class*="aspect-"]`-Regel oben deckelt jede solche Box auf 34cqh -
-     * fuer ein Quadrat zu knapp, hier grosszuegiger.
+     * Das Quellbild ist quadratisch (1024x1024). Der eigentliche Uebeltaeter
+     * war nie die 4:5-Seitenverhaeltnis-Klasse selbst, sondern die
+     * generische `[class*="aspect-"]`-Regel oben, die jede solche Box auf
+     * max-height:34cqh deckelt: das drueckte die Box flacher, als 4:5 bei
+     * voller Breite verlangt, und cover schnitt dadurch oben/unten weg
+     * (Haare bzw. Laptop). Bei ungestoerter 4:5-Berechnung schneidet cover
+     * gegen ein quadratisches Bild stattdessen nur seitlich zu - Haare und
+     * Laptop bleiben ueber die volle Bildhoehe erhalten, nur der leere
+     * Wandraum links/rechts faellt weg. Hier deshalb nur der Deckel
+     * aufgehoben, aspect-[4/5] aus der Komponente bleibt unangetastet.
      */
     .rotary-face #top .hero-portrait-box {
-      aspect-ratio: 1 / 1;
-      max-height: 58cqh;
+      max-height: 62cqh;
     }
 
     .rotary-face p {
