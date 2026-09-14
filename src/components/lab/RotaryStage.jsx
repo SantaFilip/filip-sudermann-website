@@ -245,9 +245,19 @@ export default function RotaryStage({
   const closeRefs = useRef([]);
   const shellRefs = useRef([]);
   const columnRefs = useRef([]);
+  const roofWrapRef = useRef(null);
+  const baseWrapRef = useRef(null);
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
-  // wirkt nur auf die Ausdehnung in Drehrichtung.
-  const [cube, setCube] = useState({ w: 0, h: 0 });
+  // wirkt nur auf die Ausdehnung in Drehrichtung. stageW ist die volle
+  // Buehnenbreite (sticky.clientWidth) - fuer Dach/Sockel, die den ganzen
+  // sichtbaren Faecher aus vorderer und beiden Nachbar-Facetten umfassen
+  // sollen, nicht nur eine einzelne Facette. cube.w allein waere hierfuer
+  // zu schmal: der auf dem Bildschirm sichtbare Faecher ist durch die
+  // perspektivische Projektion breiter als eine einzelne flache Facette,
+  // aber ein 3D-Kreisdurchmesser im Raum der drehenden Koerper laesst sich
+  // nicht direkt in Bildschirm-Pixel umrechnen (andere Massstabsebene) -
+  // die tatsaechliche Buehnenbreite ist der verlaessliche Bezug.
+  const [cube, setCube] = useState({ w: 0, h: 0, stageW: 0 });
   // Synchron initialisieren, nicht erst im Effect: sonst montiert das Handy
   // fuer einen Frame die Buehne, bevor sie wieder abgeschaltet wird.
   const abfrage = (q) => typeof window !== 'undefined' && window.matchMedia(q).matches;
@@ -321,7 +331,7 @@ export default function RotaryStage({
       // senkrechter Drehachse die Breite, sonst die Hoehe.
       depth = bodyRadius(lateral ? w : h, sides) * 2;
       flaecheW = w;
-      setCube({ w, h });
+      setCube({ w, h, stageW: sticky.clientWidth });
 
       // setCube loest ein Neurendern aus, und das schreibt die Flaechenbreite
       // aus dem Zustand zurueck - also auch ueber eine bereits aufgegangene
@@ -348,6 +358,12 @@ export default function RotaryStage({
       // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
       // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
       box.style.transform = `translateZ(${-radius}px)`;
+
+      // Dach/Sockel gehoeren zum geschlossenen Baukoerper - steht eine
+      // Facette einzeln aufgeklappt (volle Breite, kein Gebaeude-Kontext
+      // mehr sichtbar), stoeren sie nur und werden ausgeblendet.
+      if (roofWrapRef.current) roofWrapRef.current.style.visibility = offen ? 'hidden' : 'visible';
+      if (baseWrapRef.current) baseWrapRef.current.style.visibility = offen ? 'hidden' : 'visible';
 
       // Huelle: immer vorhanden, immer geschlossen. Zwei Pixel nach innen
       // versetzt - lagen Huelle und Inhaltsseite auf exakt derselben Ebene,
@@ -704,6 +720,11 @@ export default function RotaryStage({
   const kantenUeberlapp = 22;
   const randHoehe = cube.h ? `calc((100% - ${cube.h}px) / 2 + ${kantenUeberlapp}px)` : '0px';
 
+  // Dach/Sockel sollen den ganzen sichtbaren Faecher aus vorderer und
+  // beiden Nachbar-Facetten umfassen, nicht nur die vordere Facette allein
+  // (cube.w) - siehe Kommentar bei stageW oben.
+  const aussenDurchmesser = cube.stageW ? cube.stageW * 0.94 : cube.w;
+
   return (
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
     // #beratung etc.) muessen ihre Zielflaeche finden koennen, um sie per
@@ -734,9 +755,9 @@ export default function RotaryStage({
         </div>
 
         {cube.h > 0 && (
-          <div className="pointer-events-none absolute left-0 right-0 top-0" style={{ height: randHoehe }}>
-            <RoofStructure width={cube.w} sides={sides} className="bottom-0" />
-            <RoofCrown width={cube.w} className="top-0" />
+          <div ref={roofWrapRef} className="pointer-events-none absolute left-0 right-0 top-0" style={{ height: randHoehe }}>
+            <RoofStructure width={aussenDurchmesser} sides={sides} className="bottom-0" />
+            <RoofCrown width={aussenDurchmesser} className="top-0" />
           </div>
         )}
 
@@ -866,15 +887,15 @@ export default function RotaryStage({
         </div>
 
         {cube.h > 0 && (
-          <div className="pointer-events-none absolute left-0 right-0 bottom-0" style={{ height: randHoehe }}>
+          <div ref={baseWrapRef} className="pointer-events-none absolute left-0 right-0 bottom-0" style={{ height: randHoehe }}>
             {/* top-0, nicht bottom-0: die Plattform (oberer Rand der SVG)
                 soll an der Facettenkante anliegen (= oben in diesem
                 Randbereich), die Stufen darunter laufen frei nach unten
                 aus - nicht umgekehrt. */}
-            <BuildingBase width={cube.w} className="top-0" />
+            <BuildingBase width={aussenDurchmesser} className="top-0" />
           </div>
         )}
-        {cube.w > 0 && <ArchitecturalLighting width={cube.w} />}
+        {cube.w > 0 && <ArchitecturalLighting width={aussenDurchmesser} />}
       </div>
     </div>
   );
