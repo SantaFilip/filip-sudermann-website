@@ -364,8 +364,13 @@ export default function RotaryStage({
       // dem groesseren Umkreis durch die Eckpunkte (Umkreisradius = Apothem /
       // cos(halber Aussenwinkel)) - stuende die Saeule nur beim Apothem-
       // Radius, laege sie hinter der tatsaechlichen Kante und waere von der
-      // Kamera aus verdeckt.
-      const colRadius = radius / Math.cos(Math.PI / sides);
+      // Kamera aus verdeckt. Ein zusaetzlicher Vorsprung (12%) legt sie noch
+      // ein Stueck VOR die Kante: die Beruehrung ist geometrisch nur exakt
+      // auf einer einzigen Linie richtig, bei jeder Kamera-Perspektive
+      // abseits der Front klafft sonst eine duenne Luecke (Parallaxe
+      // zwischen zwei flachen Ebenen an einer Kante). Der Vorsprung plus die
+      // Saeulenbreite ueberdecken diese Luecke zuverlaessig.
+      const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.12;
       columnRefs.current.forEach((col, s) => {
         if (!col) return;
         const deg = kuerzesterWeg(p - s + 0.5) * step;
@@ -625,10 +630,15 @@ export default function RotaryStage({
     );
   }
 
-  // Saeulenbreite: schlank, aber bei kleinen Facetten nie unleserlich duenn.
-  const colW = Math.max(20, Math.round((cube.w || 0) * 0.052));
-  const colCapW = Math.round(colW * 1.75);
-  const colCapH = Math.max(12, Math.round(colW * 0.6));
+  // Saeulenbreite: deutlich kraeftiger als der erste Versuch. Schmale
+  // Saeulen trafen die Nahtstelle nur an einem mathematischen Punkt - bei
+  // jedem Blickwinkel abseits der exakten Front klaffte eine sichtbare
+  // Luecke zur Wand (Parallaxe zwischen der flachen Facette und der
+  // ebenfalls flachen Saeule an ihrer Kante). Eine breite Saeule ueberdeckt
+  // die Nahtstelle stattdessen grosszuegig auf beiden Seiten.
+  const colW = Math.max(34, Math.round((cube.w || 0) * 0.095));
+  const colCapW = Math.round(colW * 1.3);
+  const colCapH = Math.max(14, Math.round(colW * 0.4));
   const colStyle = lateral
     ? {
         position: 'absolute',
@@ -758,9 +768,21 @@ export default function RotaryStage({
                 style={{
                   width: `${colW}px`,
                   flex: 1,
-                  background:
-                    'linear-gradient(90deg, hsl(38 26% 78%) 0%, hsl(42 40% 96%) 22%, hsl(42 40% 96%) 45%, hsl(35 22% 82%) 68%, hsl(35 22% 68%) 100%)',
-                  boxShadow: 'inset 0 0 0 1px hsl(38 20% 60% / 0.25)',
+                  borderRadius: '2px',
+                  // Warmer Stein statt poliertes Metall: gedeckte Elfenbein-
+                  // Toene, keine grellen Glanzlichter. Die feine, sich
+                  // wiederholende Kannelur (klassische Saeulen-Riffelung)
+                  // bricht die Flaeche zusaetzlich - ohne sie liest eine
+                  // breite, einfarbige Flaeche als plumpe Wand statt als
+                  // Saeule.
+                  background: `
+                    repeating-linear-gradient(90deg,
+                      hsl(35 20% 78%) 0px, hsl(38 26% 85%) 3px,
+                      hsl(42 32% 90%) 6px, hsl(38 26% 85%) 9px),
+                    linear-gradient(90deg, hsl(35 20% 70%) 0%, hsl(40 30% 88%) 28%, hsl(42 30% 90%) 50%, hsl(38 24% 82%) 74%, hsl(34 18% 62%) 100%)
+                  `,
+                  backgroundBlendMode: 'soft-light, normal',
+                  boxShadow: 'inset 0 0 0 1px hsl(38 20% 55% / 0.3)',
                 }}
               />
               <div
