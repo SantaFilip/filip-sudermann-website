@@ -287,19 +287,29 @@
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] > div {
-      padding: 2.2rem;
+      padding: 2.6rem;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li span {
-      font-size: 1.35rem;
+      font-size: 1.6rem;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] ul.space-y-4 > li ~ li {
-      margin-top: 1.6rem;
+      margin-top: 1.9rem;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] p {
-      font-size: 1.05rem;
+      font-size: 1.25rem;
+    }
+
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li > div {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li > div svg {
+      width: 1.1rem;
+      height: 1.1rem;
     }
 
     /* Zeilen, die als Flex nebeneinander laufen, ebenfalls stapeln. */
