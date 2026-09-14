@@ -443,7 +443,13 @@
      * aufgehoben, aspect-[4/5] aus der Komponente bleibt unangetastet.
      */
     .rotary-face #top .hero-portrait-box {
-      max-height: 62cqh;
+      /* 62cqh war noch immer enger als das, was aspect-[4/5] bei voller
+         Breite braucht - die Box blieb dadurch flacher als 4:5 und schnitt
+         weiterhin oben/unten zu, statt nur seitlich. Grosszuegiger gesetzt,
+         damit 4:5 tatsaechlich greift; FitToFace skaliert den Rest der
+         Flaeche automatisch mit, falls dafuer insgesamt weniger Platz
+         bleibt. */
+      max-height: 160cqh;
     }
 
     .rotary-face p {
