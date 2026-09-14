@@ -271,6 +271,23 @@
       gap: 0.5rem;
     }
 
+    /* Marktvorteil: die Vergleichsboxen ("Ohne"/"Mit Growth Operator")
+       duerfen groesser sein und tiefer sitzen - unter der Ueberschrift
+       blieb sonst viel ungenutzter Leerraum am unteren Rand (FitToFace
+       skaliert per zoom nur bis zur Originalgroesse, nie darueber
+       hinaus). */
+    .rotary-face #results .grid.grid-cols-1 {
+      margin-top: 2.5rem;
+    }
+
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] > div {
+      padding: 1.4rem;
+    }
+
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li span {
+      font-size: 1.15rem;
+    }
+
     /* Zeilen, die als Flex nebeneinander laufen, ebenfalls stapeln. */
     .rotary-face [class*="lg:flex-row"],
     .rotary-face [class*="sm:flex-row"] {
@@ -368,8 +385,8 @@
       font-size: clamp(1.8rem, 7cqw, 3rem);
     }
 
-    .rotary-face #results p {
-      font-size: clamp(1rem, 3cqw, 1.3rem);
+    .rotary-face #results .mb-12 p {
+      font-size: clamp(1.1rem, 3.5cqw, 1.6rem);
     }
 
     /* Arbeitsweise: Titel und Infotext unter dem Badge wiederholen sich mit
