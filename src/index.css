@@ -176,12 +176,20 @@
    * gross werden wie im Onepager auf Desktop-Breite.
    */
   .rotary-face #creator-economy h2 {
-    font-size: clamp(1.9rem, 6.5cqw, 4.5rem);
+    font-size: clamp(1rem, 4.3cqw, 4.5rem);
     line-height: 1.05;
+    white-space: nowrap;
   }
 
   .rotary-face #creator-economy .max-w-3xl {
     max-width: 100%;
+  }
+
+  /* Infotext direkt darunter ebenfalls einzeilig - deutlich kleiner, der
+     Satz ist lang (rund 140 Zeichen). */
+  .rotary-face #creator-economy p {
+    white-space: nowrap;
+    font-size: clamp(0.45rem, 1.1cqw, 0.78rem);
   }
 
   @container facet (max-width: 900px) {
