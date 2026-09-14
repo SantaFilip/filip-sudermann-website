@@ -16,10 +16,12 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Reihenfolge folgt der Nummerierung der Badges (1 Wachstumssystem, 2 Info
+  // zum Gruender, 3 Marktvorteil, 4 Arbeitsweise, 5 Kontakt, 6 FAQ).
   const navItems = [
     { label: t.nav.services, href: '#services' },
-    { label: t.nav.results, href: '#results' },
     { label: t.nav.about, href: '#about' },
+    { label: t.nav.results, href: '#results' },
     { label: t.nav.process, href: '#process' },
     { label: t.nav.contact, href: '#beratung' },
     { label: t.nav.faq, href: '#faq' },
