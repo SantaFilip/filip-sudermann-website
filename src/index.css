@@ -129,9 +129,24 @@
    * Marktvorteil hat keine eigene schmal/breit-Unterscheidung wie
    * Arbeitsweise - dieselbe Regel gilt also unabhaengig von der
    * Facettenbreite, deshalb ausserhalb der @container-Bloecke.
+   *
+   * Den ganzen Kopf zentrieren (Badge, Titel, Untertitel), nicht nur den
+   * Titel: nur die h2 zu zentrieren liess sie zwischen linksbuendigem Badge
+   * und linksbuendigem Untertitel wie zufaellig in der Mitte schweben -
+   * text-align auf dem Wrapper zentriert alle drei einheitlich, das Badge
+   * (inline-flex) folgt dabei wie jeder Inline-Inhalt der Zeile.
    */
-  .rotary-face #results h2 {
+  .rotary-face #results .mb-12 {
     text-align: center;
+  }
+
+  /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
+     darin zentrierte sich, nicht sichtbar innerhalb der ganzen Kopfbreite.
+     Ohne die Grenze spannt die Box die volle (zentrierte) Breite auf. */
+  .rotary-face #results .mb-12 p,
+  .rotary-face #process .mb-12 p,
+  .rotary-face #process > div > div:first-child p {
+    max-width: 100%;
   }
 
   /* FAQ: die Wiederholung "FAQ" (Badge) / "Haeufige Fragen" (Titel) ist auf
@@ -265,10 +280,10 @@
       line-height: 1.05;
     }
 
-    /* Arbeitsweise: der Titel ueber den Prozessschritten liest links-
-       buendig neben dem zentrierten Gewinnbeteiligungs-Block darunter
-       inkonsistent. */
-    .rotary-face #process h2 {
+    /* Arbeitsweise: der ganze Kopf zentriert (Badge, Titel, Untertitel) -
+       nur den Titel zu zentrieren liess ihn zwischen linksbuendigem Badge
+       und Untertitel schweben, siehe Marktvorteil weiter oben. */
+    .rotary-face #process .mb-12 {
       text-align: center;
     }
 
@@ -327,16 +342,13 @@
       align-items: center;
     }
 
-    /* Der Kopf mit Nummer, Titel und Untertitel laeuft ueber beide Spalten. */
+    /* Der Kopf mit Nummer, Titel und Untertitel laeuft ueber beide Spalten
+       und ist als Ganzes zentriert - Badge, Titel und Untertitel zusammen,
+       nicht nur der Titel (der schwebte sonst allein zwischen den beiden
+       linksbuendigen Nachbarn). */
     .rotary-face #process > div > div:first-child {
       grid-column: 1 / -1;
       margin-bottom: 0;
-    }
-
-    /* Titel zentriert, wie in der schmalen Facette - liest sonst links-
-       buendig ueber der zentrierten Gewinnbeteiligungs-Ueberschrift darunter
-       inkonsistent. */
-    .rotary-face #process h2 {
       text-align: center;
     }
 
