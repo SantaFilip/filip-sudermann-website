@@ -205,6 +205,17 @@
     line-height: 1.05;
   }
 
+  /* Infotext und Standort-Badge darunter ebenfalls zentriert, analog zum
+     Titel - max-w-lg hielt den Infotext sonst in einer linksbuendigen Box
+     gefangen (Text darin zentriert, aber die Box selbst nicht). */
+  .rotary-face #global-reach .grid > div:first-child {
+    text-align: center;
+  }
+
+  .rotary-face #global-reach p {
+    max-width: 100%;
+  }
+
   @container facet (max-width: 900px) {
     /* Hero: die Desktop-Variante ist fuer zwei Spalten gebaut, die schmale
        Facette bekommt die einspaltige. */
@@ -322,17 +333,51 @@
       text-align: center;
     }
 
+    /* Kontakt in der Uebersicht: der Infotext ("Waehle einen Tag...") nimmt
+       hier nur Platz weg und wiederholt sich beim Aufklappen ohnehin nicht -
+       in der aufgeklappten Ansicht bleibt er sichtbar. */
+    .rotary-face #beratung p {
+      display: none;
+    }
+
     .rotary-face #faq .lg\:col-span-1 {
       text-align: center;
     }
 
     /* FitToFace zentriert seinen Inhalt sonst vertikal in der Flaechenmitte
        (items-center) - Titel/Kopf sollen hier aber oben stehen, nicht
-       mittig schweben. */
-    .rotary-face:has(#creator-economy),
-    .rotary-face:has(#beratung),
-    .rotary-face:has(#faq) {
-      align-items: flex-start;
+       mittig schweben.
+       align-items auf dem Container selbst greift hier nicht: die Flaeche
+       ist gleichzeitig der Query-Container (container-type: size) UND das
+       Element, das die Regel treffen soll - ein Container kann sich per
+       Spec nicht selbst ueber @container gezielt umstylen, das @container-
+       Rueckgrat wirkt nur auf seine Nachkommen. align-self auf dem direkten
+       Kind (dem FitToFace-Wrapper) trifft stattdessen einen echten
+       Nachkommen und funktioniert. */
+    .rotary-face:has(#creator-economy) > div,
+    .rotary-face:has(#beratung) > div,
+    .rotary-face:has(#faq) > div,
+    .rotary-face:has(#results) > div {
+      align-self: flex-start;
+    }
+
+    /* Marktvorteil: Titel und Infotext unter dem Badge lesen bei der
+       universellen Verkleinerung (h2/p weiter oben) zu klein - eigener,
+       groesserer Cap fuer diese Flaeche. */
+    .rotary-face #results h2 {
+      font-size: clamp(1.8rem, 7cqw, 3rem);
+    }
+
+    .rotary-face #results p {
+      font-size: clamp(1rem, 3cqw, 1.3rem);
+    }
+
+    /* Arbeitsweise: Titel und Infotext unter dem Badge wiederholen sich mit
+       der grossen Ueberschrift ("Ich unterstuetze Creator...") weiter unten
+       und nehmen hier nur Platz weg - in der Uebersicht ausgeblendet. */
+    .rotary-face #process .mb-12 h2,
+    .rotary-face #process .mb-12 p {
+      display: none;
     }
 
     /* Arbeitsweise: der ganze Kopf zentriert (Badge, Titel, Untertitel) -
