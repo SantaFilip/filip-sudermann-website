@@ -272,20 +272,34 @@
     }
 
     /* Marktvorteil: die Vergleichsboxen ("Ohne"/"Mit Growth Operator")
-       duerfen groesser sein und tiefer sitzen - unter der Ueberschrift
-       blieb sonst viel ungenutzter Leerraum am unteren Rand (FitToFace
-       skaliert per zoom nur bis zur Originalgroesse, nie darueber
-       hinaus). */
+       groesser und mit mehr Abstand zum Kopf. Unten bleibt trotzdem ein
+       Rest Leerflaeche - das liegt NICHT an zu wenig Innenabstand, sondern
+       an einer Diskrepanz zwischen der von FitToFace gemessenen
+       "natuerlichen" Hoehe (inner.scrollHeight bei zoom:1) und der
+       tatsaechlich gerenderten Hoehe bei angewandtem zoom < 1: gemessen
+       weichen beide um ~25% voneinander ab (Grid-Auto-Sizing kombiniert
+       mit der CSS-zoom-Eigenschaft rechnet nicht 1:1 herunter). Mehr
+       Padding/Margin hier schrumpft dadurch nur den Zoom-Faktor weiter,
+       ohne die Luecke proportional zu schliessen - deshalb bewusst
+       moderat gehalten statt immer weiter aufgedreht. */
     .rotary-face #results .grid.grid-cols-1 {
-      margin-top: 2.5rem;
+      margin-top: 4rem;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] > div {
-      padding: 1.4rem;
+      padding: 2.2rem;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li span {
-      font-size: 1.15rem;
+      font-size: 1.35rem;
+    }
+
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] ul.space-y-4 > li ~ li {
+      margin-top: 1.6rem;
+    }
+
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] p {
+      font-size: 1.05rem;
     }
 
     /* Zeilen, die als Flex nebeneinander laufen, ebenfalls stapeln. */
@@ -443,13 +457,17 @@
      * aufgehoben, aspect-[4/5] aus der Komponente bleibt unangetastet.
      */
     .rotary-face #top .hero-portrait-box {
-      /* 62cqh war noch immer enger als das, was aspect-[4/5] bei voller
-         Breite braucht - die Box blieb dadurch flacher als 4:5 und schnitt
-         weiterhin oben/unten zu, statt nur seitlich. Grosszuegiger gesetzt,
-         damit 4:5 tatsaechlich greift; FitToFace skaliert den Rest der
-         Flaeche automatisch mit, falls dafuer insgesamt weniger Platz
-         bleibt. */
-      max-height: 160cqh;
+      /* 160cqh liess 4:5 zwar greifen, aber bei voller Spaltenbreite wurde
+         die Box dadurch insgesamt zu gross - sie drueckte Titel/Subline
+         an den oberen Rand und dominierte die Flaeche. Statt nur die Hoehe
+         zu deckeln (das drueckte frueher die Form flacher als 4:5), wird
+         hier die Box selbst schmaler gemacht: bei kleinerer Breite braucht
+         4:5 automatisch weniger Hoehe, die Box bleibt also proportional
+         richtig UND insgesamt kompakter. max-height bleibt nur als lockere
+         Sicherheitsgrenze bestehen. */
+      max-width: 78%;
+      margin-inline: auto;
+      max-height: 90cqh;
     }
 
     .rotary-face p {
