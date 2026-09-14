@@ -125,6 +125,32 @@
     container-name: facet;
   }
 
+  /*
+   * Marktvorteil hat keine eigene schmal/breit-Unterscheidung wie
+   * Arbeitsweise - dieselbe Regel gilt also unabhaengig von der
+   * Facettenbreite, deshalb ausserhalb der @container-Bloecke.
+   */
+  .rotary-face #results h2 {
+    text-align: center;
+  }
+
+  /* FAQ: die Wiederholung "FAQ" (Badge) / "Haeufige Fragen" (Titel) ist auf
+     der eigenen Flaeche ueberfluessig - anders als im Onepager, wo die
+     Section weiter oben auf der Seite steht und die Wiederholung nicht
+     auffaellt. Gilt unabhaengig von der Facettenbreite. */
+  .rotary-face #faq h2 {
+    display: none;
+  }
+
+  /* Kontakt: der Infotext unter dem Titel bricht sowohl in der schmalen als
+     auch in der aufgeklappten Facette um - kleiner und ohne Umbruch passt
+     er in eine Zeile. cqw-basiert, damit er bei beiden Facettenbreiten
+     passt statt nur bei einer. */
+  .rotary-face #beratung p {
+    white-space: nowrap;
+    font-size: clamp(0.6rem, 2.3cqw, 0.95rem);
+  }
+
   @container facet (max-width: 900px) {
     /* Hero: die Desktop-Variante ist fuer zwei Spalten gebaut, die schmale
        Facette bekommt die einspaltige. */
@@ -305,6 +331,13 @@
     .rotary-face #process > div > div:first-child {
       grid-column: 1 / -1;
       margin-bottom: 0;
+    }
+
+    /* Titel zentriert, wie in der schmalen Facette - liest sonst links-
+       buendig ueber der zentrierten Gewinnbeteiligungs-Ueberschrift darunter
+       inkonsistent. */
+    .rotary-face #process h2 {
+      text-align: center;
     }
 
     /* Der Abstand trennte die Bloecke vertikal - das erledigt jetzt die
