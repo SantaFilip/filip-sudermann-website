@@ -193,6 +193,18 @@
     font-size: clamp(0.45rem, 1.12cqw, 0.79rem);
   }
 
+  /*
+   * Global Reach: Titel zentriert und groesser - unabhaengig von der
+   * Facettenbreite (galt zuvor nur in der schmalen Ansicht, in der
+   * aufgeklappten blieb er bei der kleineren Onepager-Groesse). Hoeherer
+   * Cap in der aufgeklappten Ansicht, analog zu Creator-Economy.
+   */
+  .rotary-face #global-reach h2 {
+    text-align: center;
+    font-size: clamp(1.9rem, 7cqw, 4.5rem);
+    line-height: 1.05;
+  }
+
   @container facet (max-width: 900px) {
     /* Hero: die Desktop-Variante ist fuer zwei Spalten gebaut, die schmale
        Facette bekommt die einspaltige. */
@@ -304,22 +316,23 @@
       line-height: 1.1;
     }
 
-    /* FitToFace zentriert seinen Inhalt sonst vertikal in der Flaechenmitte
-       (items-center) - der Titel soll hier aber oben stehen, nicht mittig
-       schweben. */
-    .rotary-face:has(#creator-economy) {
-      align-items: flex-start;
+    /* Kontakt und FAQ in der Uebersicht: Badge/Titel zentriert, wie bei den
+       anderen Facetten in diesem Zustand. */
+    .rotary-face #beratung .mb-12 {
+      text-align: center;
     }
 
-    /*
-     * Global Reach: Titel in der Uebersicht zentriert und groesser, wie bei
-     * Creator-Economy - liest sonst klein und schief neben dem zentrierten
-     * Globus darunter.
-     */
-    .rotary-face #global-reach h2 {
+    .rotary-face #faq .lg\:col-span-1 {
       text-align: center;
-      font-size: clamp(1.9rem, 9cqw, 3.2rem);
-      line-height: 1.05;
+    }
+
+    /* FitToFace zentriert seinen Inhalt sonst vertikal in der Flaechenmitte
+       (items-center) - Titel/Kopf sollen hier aber oben stehen, nicht
+       mittig schweben. */
+    .rotary-face:has(#creator-economy),
+    .rotary-face:has(#beratung),
+    .rotary-face:has(#faq) {
+      align-items: flex-start;
     }
 
     /* Arbeitsweise: der ganze Kopf zentriert (Badge, Titel, Untertitel) -
