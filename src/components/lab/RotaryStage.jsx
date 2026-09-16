@@ -43,18 +43,15 @@ const MOBILE_MAX = 767;
 const MAX_SCALE = 1;
 
 // Ab diesem Winkel zur Blickrichtung liegt eine Flaeche hinter der Kante und
-// wird nicht mehr gezeichnet. Der naheliegende Wert waere 90 Grad (eine
-// flache Flaeche steht dort exakt auf der Kante) - gemessen zeigt sich aber,
-// dass die tatsaechliche Bildschirmbreite einer Flaeche nicht monoton gegen
-// 90 Grad gegen Null laeuft: sie erreicht ihr Minimum (nahe 0px) schon bei
-// ca. 77-78 Grad und waechst DANACH wieder auf teils ueber 100px, bevor sie
-// bei einem hoeheren CULL_DEG hart verschwindet - ein Perspektiv-Artefakt an
-// der Kante, das genau als das gemeldete "Despawnen" sichtbar wurde (eine
-// noch 100px breite Flaeche verschwindet schlagartig). Der Schnitt liegt
-// jetzt kurz hinter diesem gemessenen Minimum, nicht bei der theoretischen
-// 90-Grad-Annahme - die Flaeche ist an dieser Stelle bereits auf wenige
-// Pixel geschrumpft, ihr Verschwinden faellt praktisch nicht mehr auf.
-const CULL_DEG = 80;
+// wird nicht mehr gezeichnet. Ein frueherer Versuch senkte diesen Wert auf
+// 80 Grad (kurz hinter einem gemessenen Bildschirmbreiten-Minimum bei ca.
+// 77-78 Grad), das machte das Verschwinden aber zu frueh sichtbar - eine
+// Flaeche verschwand, waehrend ihr Inhalt noch gut lesbar war. Jetzt bewusst
+// weiter aufgedreht (105 statt 92/80): die Flaeche ist an dieser Stelle
+// bereits so stark schraeg/verzerrt projiziert, dass sie kaum noch als
+// Inhalt lesbar ist, wenn sie verschwindet - das faellt weniger auf als ein
+// fruehes Verschwinden noch erkennbaren Inhalts.
+const CULL_DEG = 105;
 
 // Wie weit die aufgegangene Frontflaeche aus dem Koerper heraustritt.
 //

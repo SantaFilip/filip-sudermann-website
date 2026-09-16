@@ -422,32 +422,19 @@ function addLights(scene, circumRadius, perspectivePx) {
   scene.add(upfill);
 }
 
-// Kontrollpunkte des Kuppelprofils (t = Radiusanteil, yf = Hoehenanteil) -
-// von buildDome() (fuer die LatheGeometry-Profilkurve) UND buildDomeRibs()
-// (fuer den Kamm-Verlauf) gemeinsam genutzt. Vorher naeherte der Kamm das
-// Profil mit einer eigenen Potenzfunktion (1 - t^1.5) an, die an keinem
-// Punkt ausser den Enden mit der tatsaechlichen, mehrfach geknickten
-// Kuppelkurve uebereinstimmte - der Kamm lief dadurch sichtbar anders
-// gekruemmt als das Dach selbst. Stueckweise lineare Interpolation
-// zwischen denselben Punkten wie die LatheGeometry-Profilkurve (die
-// zwischen ihren Vector2-Punkten ebenfalls linear interpoliert) ergibt
-// exakt dieselbe Kurve.
-const DOME_PROFILE = [
-  { t: 0, yf: 1 },
-  { t: 0.32, yf: 0.93 },
-  { t: 0.62, yf: 0.72 },
-  { t: 0.86, yf: 0.38 },
-  { t: 1, yf: 0 },
-];
+// Kuppelprofil (t = Radiusanteil ab Spitze, yf = Hoehenanteil) - von
+// buildDome() (fuer die LatheGeometry-Profilkurve) UND buildDomeRibs()
+// (fuer den Kamm-Verlauf) gemeinsam genutzt, damit beide exakt dieselbe
+// Kurve zeichnen. Frueher eine stueckweise lineare Kurve durch fuenf feste
+// Kontrollpunkte, mit einem ausgepraegt FLACHEN Bereich nahe der Spitze
+// (yf aenderte sich von 0.93 auf 1.0 ueber fast ein Drittel des Radius) -
+// die Kuppel wirkte dadurch oben abgeflacht/gedeckelt statt kontinuierlich
+// bis zur Spitze (und damit bis zur UN-Flagge) anzusteigen. Jetzt eine
+// durchgehende Potenzkurve ohne Plateau - der Exponent knapp ueber 1 haelt
+// sie nah an einer Geraden (durchgehender Anstieg), mit nur einer sehr
+// leichten Rundung am Scheitel selbst.
 function domeProfileYFraction(t) {
-  for (let i = 0; i < DOME_PROFILE.length - 1; i++) {
-    const a = DOME_PROFILE[i], b = DOME_PROFILE[i + 1];
-    if (t <= b.t) {
-      const localT = (t - a.t) / (b.t - a.t);
-      return a.yf + (b.yf - a.yf) * localT;
-    }
-  }
-  return 0;
+  return 1 - Math.pow(t, 1.25);
 }
 
 function buildDome(circumRadius, heightBudget, sides) {
@@ -473,13 +460,17 @@ function buildDome(circumRadius, heightBudget, sides) {
   // dort noch unauffaellig bleibt.
   const fasciaH = heightBudget * 0.055;
 
-  const profile = [
-    new THREE.Vector2(0.001, domeH),
-    new THREE.Vector2(circumRadius * 0.32, domeH * 0.93),
-    new THREE.Vector2(circumRadius * 0.62, domeH * 0.72),
-    new THREE.Vector2(circumRadius * 0.86, domeH * 0.38),
-    new THREE.Vector2(circumRadius, 0),
-  ];
+  // Ueber domeProfileYFraction abgetastet (10 Stuetzstellen statt der
+  // frueheren 5 festen Punkte) - glattere Kurve, und garantiert exakt
+  // dieselbe Kruemmung wie der Kamm in buildDomeRibs, der dieselbe Funktion
+  // nutzt.
+  const profileSteps = 10;
+  const profile = [];
+  for (let i = 0; i <= profileSteps; i++) {
+    const t = i / profileSteps;
+    const r = i === 0 ? 0.001 : circumRadius * t;
+    profile.push(new THREE.Vector2(r, domeH * domeProfileYFraction(t)));
+  }
   const domeGeo = new THREE.LatheGeometry(profile, 64);
   // Kein `transmission`: ohne Environment-Map sampelt MeshPhysicalMaterial
   // dafuer den (leeren) Canvas-Hintergrund und faerbt die Kuppel unkontrolliert.
@@ -686,7 +677,12 @@ function buildBaseRing(circumRadius, columnCapWidth) {
   const band = Math.max(columnCapWidth * 1.2, circumRadius * 0.065);
   const inner = Math.max(0.01, circumRadius - band);
   const outer = circumRadius + band;
-  const lift = circumRadius * 0.001; // sichtbar ueber der Fliese, gegen Z-Fighting
+  // Echte Stufe statt nur eines Z-Fighting-Lifts: die Marmor-Umrandung lag
+  // vorher nur 0.1% ueber der Fliese (rein numerisch gegen Z-Fighting
+  // gedacht) - optisch ein nahtloser Sprung ohne erkennbare Stufe. Jetzt
+  // sichtbar angehoben, mit einer kurzen Zylinderwand (Riser) an beiden
+  // Kanten, die die Platte mit dem Fliesenboden darunter verbindet.
+  const stepH = circumRadius * 0.012;
   const geo = new THREE.RingGeometry(inner, outer, 64, 1);
   // Deutlich heller/reiner Weiss als der cremefarbene Fliesengrund, mit
   // Glanz statt Kachelmuster - sonst verschwimmt die "Umrandung" optisch
@@ -701,17 +697,27 @@ function buildBaseRing(circumRadius, columnCapWidth) {
   });
   const ring = new THREE.Mesh(geo, mat);
   ring.rotation.x = -Math.PI / 2;
-  ring.position.y = lift;
+  ring.position.y = stepH;
   group.add(ring);
 
-  // Duenne Goldkanten an beiden Raendern der Marmor-Umrandung - grenzt sie
-  // klar vom Fliesenfeld ab, statt nur uebers Material zu wirken.
+  // Riser: kurze, blickdichte Zylinderwand an Innen- und Aussenkante -
+  // macht den Hoehenversatz als echte Stufe sichtbar statt als Sprung.
+  [inner, outer].forEach((r) => {
+    const riserGeo = new THREE.CylinderGeometry(r, r, stepH, 64, 1, true);
+    const riserMat = new THREE.MeshStandardMaterial({ color: 0xefece2, metalness: 0.03, roughness: 0.4, side: THREE.DoubleSide });
+    const riser = new THREE.Mesh(riserGeo, riserMat);
+    riser.position.y = stepH / 2;
+    group.add(riser);
+  });
+
+  // Duenne Goldkanten an beiden Raendern der Marmor-Umrandung, jetzt an
+  // der Stufenoberkante - grenzt sie klar vom Fliesenfeld ab.
   [inner, outer].forEach((r) => {
     const edgeGeo = new THREE.TorusGeometry(r, circumRadius * 0.0025, 8, 64);
     const edgeMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.55, roughness: 0.3 });
     const edge = new THREE.Mesh(edgeGeo, edgeMat);
     edge.rotation.x = Math.PI / 2;
-    edge.position.y = lift;
+    edge.position.y = stepH;
     group.add(edge);
   });
 
