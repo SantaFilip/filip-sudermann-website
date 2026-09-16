@@ -53,15 +53,20 @@ function buildDome(circumRadius, sides) {
   const domeGeo = new THREE.LatheGeometry(profile, 64);
   // Kein `transmission`: ohne Environment-Map sampelt MeshPhysicalMaterial
   // dafuer den (leeren) Canvas-Hintergrund und faerbt die Kuppel kalt-blau
-  // statt warm-ivory. Einfache Transparenz + clearcoat wirkt hier als
-  // helles Glasdach und bleibt farblich kontrollierbar.
+  // statt warm-ivory. Undurchsichtig + clearcoat wirkt als festes Dach mit
+  // Glanz statt als Glas: `transparent`/DoubleSide liess vorher die
+  // Rueckseite der Kuppel durch die Vorderseite hindurchscheinen (zwei
+  // ueberlagerte, halbtransparente Flaechen statt einer festen Kappe) - wirkt
+  // dadurch schwebend statt aufliegend. `FrontSide` blendet ausserdem die von
+  // der Kamera abgewandte Rueckseite komplett aus, es ist wirklich nur die
+  // kameraseitige Haelfte zu sehen.
   const domeMat = new THREE.MeshPhysicalMaterial({
     color: IVORY,
     metalness: 0.04,
     roughness: 0.22,
-    transparent: true,
-    opacity: 0.5,
-    side: THREE.DoubleSide,
+    transparent: false,
+    opacity: 1,
+    side: THREE.FrontSide,
     clearcoat: 0.6,
     clearcoatRoughness: 0.15,
   });
