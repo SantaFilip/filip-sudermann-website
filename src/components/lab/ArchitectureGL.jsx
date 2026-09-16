@@ -158,9 +158,12 @@ function buildDome(circumRadius, heightBudget, sides) {
 
 function buildBase(circumRadius, heightBudget) {
   const group = new THREE.Group();
-  const topR = circumRadius * 0.93;
-  const midR = circumRadius * 1.1;
-  const botR = circumRadius * 1.28;
+  // topR = circumRadius (hier: der Ring-Radius, exakt derselbe wie bei den
+  // Saeulen) statt vorher *0.93 - die Plattformkante muss exakt dort
+  // sitzen, wo die Saeulenfuesse ankommen, nicht knapp daneben.
+  const topR = circumRadius;
+  const midR = circumRadius * 1.18;
+  const botR = circumRadius * 1.38;
   // Stufenhoehen an heightBudget (drumHalfHeight) gebunden, nicht an
   // circumRadius - siehe Kommentar in buildDome zur selben Falle bei der
   // Traufband-Lippe.
@@ -245,7 +248,7 @@ function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
 }
 
 const ArchitectureGL = forwardRef(function ArchitectureGL(
-  { stageW, stageH, perspectivePx, circumRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92 },
+  { stageW, stageH, perspectivePx, circumRadius, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92 },
   ref
 ) {
   const containerRef = useRef(null);
@@ -279,7 +282,7 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !stageW || !stageH || !circumRadius) return;
+    if (!container || !stageW || !stageH || !circumRadius || !ringRadius) return;
 
     const scene = new THREE.Scene();
     const fovRad = 2 * Math.atan(stageH / 2 / perspectivePx);
@@ -302,20 +305,17 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
     fill.position.set(-circumRadius, circumRadius * 0.3, perspectivePx * 0.2);
     scene.add(fill);
 
-    // Dach/Sockel sitzen bei z = centerOffsetZ (idR. 0, die Tiefe der
-    // gerade aktiven, unverzerrten Frontflaeche) - der volle Saeulen-
-    // Umkreisradius waere an dieser Tiefe zu breit (sein naechster Punkt
-    // zur Kamera liegt sonst deutlich VOR der Wand und wirkt dadurch
-    // ueberproportional vergroessert). Empirisch eingedaemmt, bis der
-    // sichtbare Baukoerper mit der Fassade zusammenpasst statt sie zu
-    // verschlucken.
-    const domeBaseRadius = circumRadius * 0.62;
-
-    const dome = buildDome(domeBaseRadius, drumHalfHeight, sides);
+    // Dach/Sockel sitzen auf derselben Drehachse (centerOffsetZ) und mit
+    // demselben Radius (ringRadius) wie die Saeulen - keine unabhaengig
+    // "passend" geschaetzte Groesse mehr, sondern exakt derselbe Kreis, auf
+    // dem auch die Saeulenkoepfe/-fuesse liegen. Zwei identische 3D-Punkte
+    // fallen unter jeder Kamera/Projektion zusammen - das haelt auch bei
+    // Rotation und aus jedem Blickwinkel, nicht nur zufaellig von vorne.
+    const dome = buildDome(ringRadius, drumHalfHeight, sides);
     dome.position.set(0, drumHalfHeight, centerOffsetZ);
     scene.add(dome);
 
-    const base = buildBase(domeBaseRadius, drumHalfHeight);
+    const base = buildBase(ringRadius, drumHalfHeight);
     base.position.set(0, -drumHalfHeight, centerOffsetZ);
     scene.add(base);
 
@@ -345,7 +345,7 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
       renderer.dispose();
       stateRef.current = {};
     };
-  }, [stageW, stageH, perspectivePx, circumRadius, drumHalfHeight, centerOffsetZ, sides, colWidth, colCapWidth, colCapHeight]);
+  }, [stageW, stageH, perspectivePx, circumRadius, ringRadius, drumHalfHeight, centerOffsetZ, sides, colWidth, colCapWidth, colCapHeight]);
 
   return (
     <div

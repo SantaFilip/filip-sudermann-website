@@ -695,18 +695,38 @@ export default function RotaryStage({
   // Der Koerper (boxRef) traegt selbst translateZ(-facettenRadius), damit
   // seine Frontflaeche auf z = 0 zu liegen kommt - die eigentliche
   // Drehachse aller Facetten/Saeulen sitzt also nicht bei z = 0, sondern
-  // bei z = -facettenRadius. Ein Test, Dach/Sockel exakt auf diese Achse
-  // zu zentrieren, sah geometrisch stimmig aus (deckt sich mit dem
-  // Saeulenradius), verschob die Kuppel/den Sockel aber sichtbar naeher
-  // zur Bildmitte: Y-Positionen sind unter reiner Y-Rotation invariant,
-  // aber ihre Bildschirm-Projektion haengt von der Kamera-Distanz ab -
-  // bei z = -facettenRadius (weiter weg) faellt dieselbe Weltmasse
-  // kleiner aus als bei z = 0, wo die jeweils aktive Frontflaeche
-  // unverzerrt (1:1) liegt. Da genau diese Frontflaeche lesbar bleiben
-  // muss, bleibt z = 0 die richtige Referenztiefe fuer Dach/Sockel; das
-  // Ausbauchen nach vorn wird stattdessen ueber den Radius selbst
-  // (domeBaseScale in ArchitectureGL) eingedaemmt.
-  const centerOffsetZ = 0;
+  // bei z = -facettenRadius. Dach und Sockel sitzen jetzt auf DERSELBEN
+  // Achse mit DEMSELBEN Radius wie die Saeulen (ringRadius, siehe unten,
+  // identische Formel wie colRadius in apply()) - dadurch sind es in
+  // echten 3D-Weltkoordinaten dieselben Punkte, an denen Saeulenkopf/-fuss
+  // und Dach-/Sockelrand zusammentreffen. Das ist projektions-unabhaengig:
+  // zwei identische 3D-Punkte fallen auf JEDER Kamera/Perspektive exakt
+  // zusammen, nicht nur zufaellig aus einem bestimmten Blickwinkel wie bei
+  // der vorherigen, nur ueber den Radius empirisch angenaeherten Loesung
+  // (domeBaseRadius = circumRadius * 0.62, zentriert auf z = 0) - die sah
+  // von vorne meist passend aus, klaffte aber bei anderen Rotationswinkeln
+  // wieder, weil Saeule und Dach/Sockel schlicht verschiedene Kreise waren.
+  const centerOffsetZ = -facettenRadius;
+  const ringRadius = circumRadius * 1.03;
+  // Verschiebt man Dach/Sockel/Saeulen auf die tatsaechliche Drehachse
+  // (centerOffsetZ statt 0), sitzen sie weiter von der Kamera entfernt als
+  // die jeweils aktive Frontflaeche (die exakt auf z = 0 faellt und deshalb
+  // unverzerrt/1:1 projiziert). Dieselbe Welt-Hoehe (drumHalfHeight) wirkt
+  // dadurch auf dem Bildschirm KLEINER als auf der Wand - das Dach ragte
+  // sichtbar in die Anzeigetafel hinein, obwohl Saeule und Dachrand in
+  // echten 3D-Koordinaten exakt zusammenfielen. Kompensiert durch eine
+  // Hochskalierung der Hoehe um genau den Faktor, den die groessere Distanz
+  // an Projektionsgroesse kostet (perspectivePx zu perspectivePx+Distanz) -
+  // damit landet die Kante auf dem Bildschirm wieder da, wo sie bei
+  // unverzerrter (1:1) Projektion waere. Radius (X/Z) bleibt unangetastet:
+  // die Beruehrung Saeule/Dach/Sockel haengt nur von Y und Radius ab, beide
+  // fuer alle drei gemeinsam skaliert/gleich - die Einheit bleibt exakt
+  // verschweisst, nur insgesamt sichtbar "hochskaliert".
+  // +4% Sicherheitsspanne: die Kompensation ist exakt fuer Punkte auf der
+  // Kamera-Blickachse (x = 0), Text sitzt aber nicht immer exakt dort -
+  // ohne Puffer blieb ein Haarriss-Ueberlapp an den hoechsten Buchstaben.
+  const drumHeightScale = ((perspektivePx + facettenRadius) / perspektivePx) * 1.04;
+  const effectiveDrumHalfHeight = drumHalfHeight * drumHeightScale;
 
   return (
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
@@ -828,7 +848,8 @@ export default function RotaryStage({
               stageH={cube.stageH}
               perspectivePx={perspektivePx}
               circumRadius={circumRadius}
-              drumHalfHeight={drumHalfHeight}
+              ringRadius={ringRadius}
+              drumHalfHeight={effectiveDrumHalfHeight}
               centerOffsetZ={centerOffsetZ}
               sides={sides}
               colWidth={colW}
