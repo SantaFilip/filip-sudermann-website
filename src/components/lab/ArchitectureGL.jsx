@@ -62,8 +62,11 @@ import * as THREE from 'three';
 const IVORY = 0xf2ead9;
 const STONE = 0xece1cb;
 const STONE_DEEP = 0xd9caa9;
-const BRASS = 0xb28f5c;
-const BRASS_LIGHT = 0xceac78;
+// Auf Wunsch etwas dunkler als zuvor (0xb28f5c/0xceac78) - metallischer
+// wirken die Materialien vor allem ueber metalness/roughness an den
+// jeweiligen Verwendungsstellen, nicht ueber die Grundfarbe allein.
+const BRASS = 0x9c7d4e;
+const BRASS_LIGHT = 0xb99b6a;
 const BRASS_DEEP = 0x7a5f3c;
 const NAVY = 0x0c1a32;
 const GLASS = 0xf0f1ea;
@@ -73,13 +76,26 @@ const GLASS = 0xf0f1ea;
 const QUARTZ = '#f6f4ee';
 const QUARTZ_DEEP = '#e6e1d3';
 const MARBLE_VEIN = '#a89a80';
+// Saeulen-Marmor (siehe buildColumnMarbleTexture): kuehleres, neutraleres
+// Grau als MARBLE_VEIN - der Sockel ist warmer Elfenbein-Marmor, die Saeule
+// ein kuehlerer, "Carrara"-artiger Weiss-/Grauton, bewusst unterschiedliche
+// Steinsorten.
+const COLUMN_VEIN = '#9b978d';
 
 // Nur fuer die Saeulen: auf Wunsch zurueck auf den urspruenglichen,
 // kraeftigeren Goldton (statt des gedaempften BRASS) - Dach/Gebaelk/Sockel
 // bleiben bei der gedaempften Palette, nur die Saeule selbst (und die aus
-// ihr herauswachsende Rippe/Kegel) tragen wieder den alten Ton.
-const COL_GOLD = 0xc9973a;
-const COL_STONE = 0xd9cbaa;
+// ihr herauswachsende Rippe/Kegel) tragen wieder den alten Ton. Gegenueber
+// dem ersten Versuch abgedunkelt (0xc9973a -> 0xa97e2c) - wirkte vorher zu
+// hell/gelb, fast wie Messingblech; die Materialien selbst (metalness/
+// roughness, siehe Verwendungsstellen) sind zusaetzlich metallischer
+// eingestellt.
+const COL_GOLD = 0xa97e2c;
+// Saeulenschaft: nicht mehr als Flatcolor, sondern per Textur (siehe
+// buildColumnMarbleTexture) - COL_STONE bleibt nur noch als Fallback/Tint
+// bestehen, deutlich weniger gelb als zuvor (0xd9cbaa war sichtbar
+// braun-gelbstichig, kein Marmor-Weiss).
+const COL_STONE = 0xeae6da;
 
 // Sockel-Oberflaeche: heller Elfenbein-Marmor aus konzentrisch angeordneten
 // Einzelplatten statt einer durchgehenden Flaeche - liest wie eine echte
@@ -181,6 +197,68 @@ function buildBaseMarbleTexture() {
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(3, 1);
+  tex.anisotropy = 8;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// Saeulenschaft: echtes weiss-graues Marmor (Carrara-Anmutung) statt der
+// vorherigen gelblich-braunen Flatcolor (COL_STONE allein wirkte wie
+// gefaerbter Kunststoff, nicht wie Naturstein). Kuehler/heller als die
+// warme Elfenbein-Sockeltextur - Saeule und Sockel sind unterschiedliche
+// Steinsorten, wie bei einem echten klassizistischen Bau ueblich. Reine
+// Aderung, kein Block-Raster - eine duenne, hohe Zylinderflaeche liest als
+// Steinblock-Fuge unpassend klein, eine durchlaufende Maserung dagegen wie
+// ein einzelner, hoher Marmorschaft.
+function buildColumnMarbleTexture() {
+  const w = 512, h = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+
+  const bgGrad = ctx.createLinearGradient(0, 0, w, 0);
+  bgGrad.addColorStop(0, '#f7f6f2');
+  bgGrad.addColorStop(0.5, '#efece4');
+  bgGrad.addColorStop(1, '#f5f3ee');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Ueberwiegend senkrechte, leicht maeandernde Adern - eine gedrehte
+  // Saeule aus einem einzigen Marmorblock zeigt typischerweise eine
+  // Maserung, die der Laengsachse folgt, nicht quer dazu.
+  ctx.filter = `blur(${w * 0.018}px)`;
+  ctx.strokeStyle = COLUMN_VEIN;
+  ctx.lineCap = 'round';
+  const veins = [
+    [[80, -60], [140, 220], [70, 460], [160, 700], [90, 1000], [130, 1090]],
+    [[300, -40], [260, 260], [340, 520], [270, 780], [330, 1000], [290, 1090]],
+    [[440, -60], [400, 300], [460, 600], [410, 860], [450, 1090]],
+    [[190, -50], [230, 340], [180, 640], [220, 900], [190, 1090]],
+  ];
+  veins.forEach((pts, vi) => {
+    ctx.globalAlpha = 0.16 - vi * 0.02;
+    ctx.lineWidth = w * (0.012 - vi * 0.0015);
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+      const my = (pts[i][1] + pts[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+    ctx.stroke();
+  });
+  ctx.filter = 'none';
+  ctx.globalAlpha = 1;
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 1);
   tex.anisotropy = 8;
   tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -363,7 +441,7 @@ function buildFlagMesh(code, tangentDir, scale) {
   // als Fahne, bleibt aber unabhaengig vom Bildschirm-Seitenverhaeltnis im
   // sichtbaren Bereich.
   const poleH = scale * 0.6;
-  const poleMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.55, roughness: 0.3 });
+  const poleMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.78, roughness: 0.2 });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(scale * 0.045, scale * 0.045, poleH, 8), poleMat);
   pole.position.set(0, poleH / 2, 0);
   group.add(pole);
@@ -594,32 +672,44 @@ function buildDome(circumRadius, heightBudget, sides) {
   group.add(dome);
 
   // Durchgehendes Gebaelk statt duenner Messinglippe: ein klassisches,
-  // dreiteiliges Traufband (Messing-Zierlinie / Steinkoerper / Messing-
-  // Zierlinie) - traegt das Dach sichtbar auf der Wand ab, ohne dass
-  // Messing zur Hauptflaeche wird. Die Steinmasse in der Mitte macht das
-  // Ganze strukturell lesbar ("cleaner continuous entablature/ring").
-  const trimMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.32, side: THREE.DoubleSide });
+  // dreiteiliges Traufband (Messing-Faszie / Steinfries / Messing-
+  // Tropfkante) - traegt das Dach sichtbar auf der Wand ab, ohne dass
+  // Messing zur Hauptflaeche wird.
+  //
+  // Rechtwinklige Absaetze statt der vorherigen durchgehend gerundeten
+  // Ausbuchtung: eine Flaeche, deren Radius sich ueber die ganze Hoehe
+  // stetig aendert (vor->raus->rein), hat ueberall eine leicht andere
+  // Normalenrichtung und schattiert deshalb gleichmaessig weich - liest als
+  // ein einziges rundes Polster, nicht als saubere, gestufte Gesimsleiste.
+  // Eine flache Faszie (waagerechte Kappe + senkrechter Abwurf), ein
+  // schlichter, UNGEWOELBTER Fries (reine Zylinderwand) und eine kurze
+  // Tropfkante ergeben den harten Hell/Dunkel-Wechsel einer echten
+  // Gesimsleiste, exakt wie bei den Sockelstufen (siehe baseLatheProfile).
+  const trimMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.72, roughness: 0.22, side: THREE.DoubleSide });
+  const capH = fasciaH * 0.22;
+  const friezeH = fasciaH * 0.62;
   const trimTopProfile = [
-    new THREE.Vector2(circumRadius * 0.996, 0),
-    new THREE.Vector2(circumRadius * 1.02, -fasciaH * 0.09),
-    new THREE.Vector2(circumRadius * 1.02, -fasciaH * 0.17),
-    new THREE.Vector2(circumRadius * 0.998, -fasciaH * 0.21),
+    new THREE.Vector2(circumRadius * 0.998, 0),
+    new THREE.Vector2(circumRadius * 1.025, 0),
+    new THREE.Vector2(circumRadius * 1.025, -capH),
+    new THREE.Vector2(circumRadius * 1.006, -capH),
   ];
   const trimTop = new THREE.Mesh(new THREE.LatheGeometry(trimTopProfile, 64), trimMat);
   group.add(trimTop);
 
+  // Fries: glatte, senkrechte Steinwand ohne Woelbung - der ruhige,
+  // unverzierte Mittelteil eines klassischen Gebaelks.
   const bandMat = new THREE.MeshStandardMaterial({ color: STONE_DEEP, metalness: 0.04, roughness: 0.78, side: THREE.DoubleSide });
   const bandProfile = [
-    new THREE.Vector2(circumRadius * 1.001, -fasciaH * 0.21),
-    new THREE.Vector2(circumRadius * 1.032, -fasciaH * 0.56),
-    new THREE.Vector2(circumRadius * 1.014, -fasciaH * 0.87),
+    new THREE.Vector2(circumRadius * 1.006, -capH),
+    new THREE.Vector2(circumRadius * 1.006, -friezeH),
   ];
   const band = new THREE.Mesh(new THREE.LatheGeometry(bandProfile, 64), bandMat);
   group.add(band);
 
   const trimBotProfile = [
-    new THREE.Vector2(circumRadius * 1.014, -fasciaH * 0.87),
-    new THREE.Vector2(circumRadius * 1.014, -fasciaH * 0.93),
+    new THREE.Vector2(circumRadius * 1.006, -friezeH),
+    new THREE.Vector2(circumRadius * 1.022, -fasciaH * 0.72),
     new THREE.Vector2(circumRadius * 0.99, -fasciaH),
   ];
   const trimBot = new THREE.Mesh(new THREE.LatheGeometry(trimBotProfile, 64), trimMat);
@@ -700,7 +790,7 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geo.setIndex(indices);
     geo.computeVertexNormals();
-    const ridgeMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide });
+    const ridgeMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.82, roughness: 0.18, side: THREE.DoubleSide });
     const ridge = new THREE.Mesh(geo, ridgeMat);
 
     // Kegel auf der Saeulenspitze: Basis sitzt exakt auf der Saeulenachse
@@ -711,7 +801,7 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     const basePt = new THREE.Vector3(
       circumRadius * Math.sin(beta), 0, circumRadius * Math.cos(beta)
     );
-    const coneMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.62, roughness: 0.26 });
+    const coneMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.84, roughness: 0.16 });
     const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 20), coneMat);
     cone.position.copy(basePt).addScaledVector(up, coneHeight / 2);
 
@@ -801,7 +891,7 @@ function buildBaseRing(circumRadius, columnCapWidth) {
   // der Stufenoberkante - grenzt sie klar vom Fliesenfeld ab.
   [inner, outer].forEach((r) => {
     const edgeGeo = new THREE.TorusGeometry(r, circumRadius * 0.0025, 8, 64);
-    const edgeMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.55, roughness: 0.3 });
+    const edgeMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.75, roughness: 0.2 });
     const edge = new THREE.Mesh(edgeGeo, edgeMat);
     edge.rotation.x = Math.PI / 2;
     edge.position.y = stepH;
@@ -857,7 +947,7 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
 
   // Goldkante am Plattformrand.
   const rimGeo = new THREE.TorusGeometry(topR, circumRadius * 0.006, 10, 64);
-  const rimMat = new THREE.MeshStandardMaterial({ color: BRASS_LIGHT, metalness: 0.6, roughness: 0.25 });
+  const rimMat = new THREE.MeshStandardMaterial({ color: BRASS_LIGHT, metalness: 0.78, roughness: 0.2 });
   const rim = new THREE.Mesh(rimGeo, rimMat);
   rim.rotation.x = Math.PI / 2;
   group.add(rim);
@@ -870,7 +960,7 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   // dass Messing die Flaeche dominiert. Bei drei echten Stufen (siehe
   // baseLatheProfile) liest eine einzelne Kante nicht mehr als "die
   // Sockelstufe", sondern es braucht eine je Absatz.
-  const stepEdgeMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.35, transparent: true, opacity: 0.7 });
+  const stepEdgeMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.7, roughness: 0.25, transparent: true, opacity: 0.7 });
   [[r1, y1], [r2, y2]].forEach(([r, y]) => {
     const edge = new THREE.Mesh(new THREE.TorusGeometry(r, circumRadius * 0.003, 8, 64), stepEdgeMat);
     edge.rotation.x = Math.PI / 2;
@@ -905,8 +995,13 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
 function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   const group = new THREE.Group();
   const shaftHeight = Math.max(1, totalHeight - colCapHeight * 2);
-  const shaftMat = new THREE.MeshStandardMaterial({ color: COL_STONE, metalness: 0.05, roughness: 0.5 });
-  const capMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.5, roughness: 0.3 });
+  const shaftMat = new THREE.MeshStandardMaterial({
+    color: COL_STONE,
+    map: buildColumnMarbleTexture(),
+    metalness: 0.04,
+    roughness: 0.38,
+  });
+  const capMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.8, roughness: 0.18 });
 
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(colWidth / 2, colWidth / 2, shaftHeight, 24), shaftMat);
   group.add(shaft);

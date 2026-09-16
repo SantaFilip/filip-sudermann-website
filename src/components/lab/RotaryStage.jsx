@@ -771,10 +771,24 @@ export default function RotaryStage({
     background: 'hsl(var(--card))',
     // Auf dem Handy fuellt die Seite den Bildschirm - ein Rahmen waere dort
     // nur eine Linie am Displayrand und kostet sichtbare Flaeche.
-    border: mobile ? 'none' : '1px solid hsl(var(--border))',
+    //
+    // Rahmenfarbe auf den Gold-Ton der Architektur (--accent, dieselbe
+    // Farbe wie Saeulenkapitell/Gebaelk und die Eckmarkierung in
+    // FaceOrnament) statt des neutralen --border - die Flaeche liest damit
+    // leichter als in den Baukoerper eingesetzte Tafel statt als
+    // eigenstaendige, nur zufaellig davorschwebende Karte. Die beiden
+    // inset-Schatten (oben/unten) deuten eine leichte Fassung/Nische an -
+    // bewusst sehr sparsam (kurze, weiche Verlaeufe), nur ein Hauch mehr
+    // Integration, keine neue Rahmen-Optik.
+    border: mobile ? 'none' : '1px solid hsl(var(--accent) / 0.3)',
     boxShadow: mobile
       ? 'none'
-      : '0 0 0 1px hsl(var(--accent) / 0.18), 0 30px 70px -30px hsl(217 62% 12% / 0.45)',
+      : [
+          '0 0 0 1px hsl(var(--accent) / 0.22)',
+          '0 30px 70px -30px hsl(217 62% 12% / 0.45)',
+          'inset 0 14px 20px -22px hsl(217 62% 12% / 0.4)',
+          'inset 0 -10px 16px -20px hsl(217 62% 12% / 0.28)',
+        ].join(', '),
     backfaceVisibility: 'hidden',
     willChange: 'transform, filter',
   };
