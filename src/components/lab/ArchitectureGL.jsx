@@ -268,19 +268,40 @@ function buildFlagTexture(code) {
 // tangentialer Richtung (quer zur Fassade, wie an einer echten Gebaeudefront)
 // statt radial nach aussen - so bleibt sie aus der ueberwiegend frontalen
 // Kamera-Perspektive lesbar, statt sich selbst zu verdecken.
-function buildFlagMesh(code, tipPt, tangentDir, scale) {
+//
+// Alles in LOKALEN Koordinaten aufgebaut (Mastfuss = Ursprung), NICHT mehr
+// mit tipPt in jeden Vertex eingerechnet - der Aufrufer setzt stattdessen
+// `group.position` auf tipPt. Grund: fuer die Wind-Animation (siehe
+// setColumns) muss die Flagge um die MAST-Achse rotieren koennen, nicht um
+// die weit entfernte Trommel-Achse - das geht nur, wenn der Mastfuss auch
+// der tatsaechliche Rotationsursprung (Objektursprung) ist.
+function buildFlagMesh(code, tangentDir, scale) {
   const group = new THREE.Group();
-  const poleH = scale * 1.7;
+  // Deutlich kuerzer als der erste Versuch (1.7 -> 0.6): scale haengt an
+  // der Saeulen-/Kapitellbreite, NICHT am vertikalen Hoehenbudget der
+  // Buehne - auf einem breiten, kurzen Screen (viel Breite, wenig Hoehe)
+  // wurde der Mast dadurch hoeher als die Kuppel selbst und stach oben aus
+  // dem Bild heraus. Ein kurzer Stummel auf dem Kegel liest optisch genauso
+  // als Fahne, bleibt aber unabhaengig vom Bildschirm-Seitenverhaeltnis im
+  // sichtbaren Bereich.
+  const poleH = scale * 0.6;
   const poleMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.55, roughness: 0.3, transparent: true });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(scale * 0.045, scale * 0.045, poleH, 8), poleMat);
-  pole.position.copy(tipPt).addScaledVector(new THREE.Vector3(0, 1, 0), poleH / 2);
+  pole.position.set(0, poleH / 2, 0);
   group.add(pole);
+
+  // Die Flagge selbst sitzt in einer eigenen Untergruppe, die um die
+  // Mastachse (lokales Y bei der Anschlagshoehe) rotiert - der Mast selbst
+  // bleibt starr, nur das Tuch weht.
+  const flagPivot = new THREE.Group();
+  flagPivot.position.set(0, poleH * 0.97, 0);
+  group.add(flagPivot);
 
   const flagW = scale * 1.35 * 1.8;
   const flagH = scale * 0.9 * 1.8;
-  const topAttach = tipPt.clone().addScaledVector(new THREE.Vector3(0, 1, 0), poleH * 0.97);
+  const topAttach = new THREE.Vector3(0, 0, 0);
   const topOuter = topAttach.clone().addScaledVector(tangentDir, flagW);
-  const botAttach = topAttach.clone().addScaledVector(new THREE.Vector3(0, 1, 0), -flagH);
+  const botAttach = new THREE.Vector3(0, -flagH, 0);
   const botOuter = topOuter.clone().addScaledVector(new THREE.Vector3(0, 1, 0), -flagH);
 
   const positions = [
@@ -304,9 +325,10 @@ function buildFlagMesh(code, tipPt, tangentDir, scale) {
     map: buildFlagTexture(code), side: THREE.DoubleSide,
   });
   const flag = new THREE.Mesh(geo, flagMat);
-  group.add(flag);
+  flagPivot.add(flag);
 
   group.userData.mats = [poleMat, flagMat];
+  group.userData.flagPivot = flagPivot;
   return group;
 }
 
@@ -368,10 +390,13 @@ function buildDome(circumRadius, heightBudget, sides) {
   // Radius - auf einem breiten, aber niedrigen Bildschirm (breite Fassade,
   // wenig Hoehe) wurde sie riesig und fraess sich sichtbar in die
   // Anzeigetafel darunter, obwohl die Kuppel selbst gar nicht zu breit war.
-  // Etwas steiler als die vorherige, sehr flache Fassung (0.36), aber
-  // immer noch deutlich unter der urspruenglichen Zirkuszelt-Hoehe (0.55) -
-  // "premium atrium dome" mit spuerbarer Woelbung statt platter Scheibe.
-  const domeH = heightBudget * 0.46;
+  // Noch einmal steiler auf Wunsch (0.46 -> 0.58) - jetzt bewusst ueber der
+  // urspruenglichen Zirkuszelt-Hoehe (0.55). Die fruehere "Zirkuszelt"-Kritik
+  // galt der Farbe/dem Material, nicht der reinen Hoehe - mit der gedaempften
+  // Palette und dem glaesernen Material (siehe domeMat unten) traegt eine
+  // steilere Kuppel jetzt eher, wirkt eher wie ein Kuppelbau als wie eine
+  // flache Scheibe.
+  const domeH = heightBudget * 0.58;
   // Gebaelk/Entablature statt duenner Lippe: haengt bewusst unter den
   // Dachrand (y = 0, die Wandkante) hinein, ist also der einzige Teil der
   // Kuppel, der ueberhaupt in den Bereich der Anzeigetafel hineinragt. Bei
@@ -485,7 +510,7 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   const group = new THREE.Group();
   // Muss exakt mit domeH aus buildDome() uebereinstimmen (siehe Kommentar
   // dort) - sonst driften Kamm und Kuppelflaeche auseinander.
-  const domeH = heightBudget * 0.46;
+  const domeH = heightBudget * 0.58;
   const capW = columnCapWidth || circumRadius * 0.09;
   const halfAngle = Math.max(0.012, capW / 2 / circumRadius);
   const steps = 14;
@@ -558,11 +583,15 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     const tipPt = basePt.clone().addScaledVector(up, coneHeight);
     const tangentDir = new THREE.Vector3(Math.cos(beta), 0, -Math.sin(beta));
     const flagCode = FLAG_CODES[i % FLAG_CODES.length];
-    const flagGroup = buildFlagMesh(flagCode, tipPt, tangentDir, capW * 0.9);
+    const flagGroup = buildFlagMesh(flagCode, tangentDir, capW * 0.9);
+    flagGroup.position.copy(tipPt);
 
     const sideGroup = new THREE.Group();
     sideGroup.add(ridge, cone, flagGroup);
     sideGroup.userData.mats = [ridgeMat, coneMat, ...flagGroup.userData.mats];
+    // Fuer die Wind-Animation in setColumns() direkt erreichbar, ohne den
+    // Kindpfad (sideGroup -> flagGroup -> flagPivot) jedes Mal abzulaufen.
+    sideGroup.userData.flagPivot = flagGroup.userData.flagPivot;
     group.add(sideGroup);
   }
 
@@ -842,6 +871,14 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       // falschen Position sass. Jede Rippe bekommt jetzt ihre EIGENE exakte
       // Rotation statt der Annahme.
       const step = 360 / sides;
+      // Wind-Animation der Flaggen: eine sanfte Grund-Schwingung plus eine
+      // schnellere, kleinere Flatterbewegung, je Saeule phasenverschoben
+      // (sonst wehen alle acht Flaggen exakt synchron - liest als ein
+      // einziges starres Objekt statt als Stoff im Wind). performance.now()
+      // statt eines mitgefuehrten Zaehlers: setColumns laeuft ohnehin jeden
+      // GSAP-Tick, ein echter Zeitwert macht die Geschwindigkeit unabhaengig
+      // von der tatsaechlichen Framerate.
+      const t = performance.now() / 1000;
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
         const absDeg = Math.abs(deg);
@@ -857,6 +894,11 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
             rib.rotation.y = ((-deg - s * step) * Math.PI) / 180;
             const ribMats = rib.userData.mats;
             if (ribMats) ribMats.forEach((m) => { m.opacity = fade; });
+            const flagPivot = rib.userData.flagPivot;
+            if (flagPivot) {
+              const phase = s * 1.3;
+              flagPivot.rotation.y = Math.sin(t * 1.6 + phase) * 0.18 + Math.sin(t * 4.1 + phase * 1.7) * 0.06;
+            }
           }
         }
         if (!hidden) {

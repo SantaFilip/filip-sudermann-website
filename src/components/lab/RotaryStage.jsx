@@ -25,6 +25,14 @@ const CUBE_FILL_DESKTOP = 0.86;
 // Seitlicher Rand auf dem Desktop, damit der Koerper wie ein Buch auf dem
 // Wasser liegt statt bildschirmbreit anzustossen.
 const CUBE_WIDTH_DESKTOP = 0.93;
+// Das gesamte Gebaeude (Saeulen/Dach/Sockel/Inhalt zusammen) 5% kleiner als
+// die eigentliche Fuellung - schafft zusaetzlichen Luftraum rundum, allen
+// voran ueber der Kuppel, die sonst bei einer steileren Kuppelhoehe an der
+// Buehnenoberkante anstossen kann. Wirkt auf `cube.w`/`cube.h` (also auf
+// die gesamte davon abgeleitete Geometrie), NICHT auf `stageW`/`stageH`
+// (die Buehnen-/Kameragroesse bleibt gleich - nur das Gebaeude darin wird
+// kleiner gezeichnet).
+const GEBAEUDE_SKALIERUNG = 0.95;
 const MOBILE_MAX = 767;
 
 // Hochskalieren ist keine Option: der Inhalt liegt bereits auf voller
@@ -319,10 +327,10 @@ export default function RotaryStage({
       // die Flaeche bildschirmfuellend (Sockel/Dach werden dort ohnehin
       // nicht gerendert, siehe Mobile-Fallback weiter unten).
       const querFuellung = mobile ? vorgabe : crossFill ?? vorgabe;
-      const w = lateral
-        ? Math.round(sticky.clientWidth * laengs)
-        : Math.round(sticky.clientWidth * quer);
-      const h = Math.round(sticky.clientHeight * (lateral ? querFuellung : laengs));
+      const w = Math.round((lateral
+        ? sticky.clientWidth * laengs
+        : sticky.clientWidth * quer) * GEBAEUDE_SKALIERUNG);
+      const h = Math.round(sticky.clientHeight * (lateral ? querFuellung : laengs) * GEBAEUDE_SKALIERUNG);
 
       // Die Tiefe des Koerpers spannt die Kante in Drehrichtung auf: bei
       // senkrechter Drehachse die Breite, sonst die Hoehe.
