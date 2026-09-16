@@ -43,15 +43,11 @@ const MOBILE_MAX = 767;
 const MAX_SCALE = 1;
 
 // Ab diesem Winkel zur Blickrichtung liegt eine Flaeche hinter der Kante und
-// wird nicht mehr gezeichnet. Ein frueherer Versuch senkte diesen Wert auf
-// 80 Grad (kurz hinter einem gemessenen Bildschirmbreiten-Minimum bei ca.
-// 77-78 Grad), das machte das Verschwinden aber zu frueh sichtbar - eine
-// Flaeche verschwand, waehrend ihr Inhalt noch gut lesbar war. Jetzt bewusst
-// weiter aufgedreht (105 statt 92/80): die Flaeche ist an dieser Stelle
-// bereits so stark schraeg/verzerrt projiziert, dass sie kaum noch als
-// Inhalt lesbar ist, wenn sie verschwindet - das faellt weniger auf als ein
-// fruehes Verschwinden noch erkennbaren Inhalts.
-const CULL_DEG = 105;
+// wird nicht mehr gezeichnet. War zwischenzeitlich bei 80 (zu frueh, Inhalt
+// noch lesbar beim Verschwinden) und danach bei 105 (laut Rueckmeldung
+// wiederum spuerbar zu spaet) - jetzt naeher an der theoretischen 90-Grad-
+// Kante (Flaeche exakt auf der Kante des Koerpers), mit nur wenig Puffer.
+const CULL_DEG = 98;
 
 // Wie weit die aufgegangene Frontflaeche aus dem Koerper heraustritt.
 //

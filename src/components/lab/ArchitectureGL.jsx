@@ -674,8 +674,18 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
 // Sockel-Oberflaeche (y = 0 in diesem Koordinatensystem).
 function buildBaseRing(circumRadius, columnCapWidth) {
   const group = new THREE.Group();
-  const band = Math.max(columnCapWidth * 1.2, circumRadius * 0.065);
-  const inner = Math.max(0.01, circumRadius - band);
+  // Deutlich breiter als zuvor (1.2x -> 2.0x der Kapitellbreite) - die
+  // Saeule soll komplett auf der weissen Marmorflaeche stehen, nicht mit
+  // ihrem Kapitell schon auf das Mosaik uebergreifen. Bleibt trotzdem klar
+  // innerhalb von midR (1.18x circumRadius in buildBase), damit die naechste
+  // Sockelstufe nicht ueberschrieben wird.
+  const band = Math.max(columnCapWidth * 2.0, circumRadius * 0.09);
+  // Volle Scheibe statt schmalem Ring: `inner` haengt NICHT mehr an band -
+  // eine breitere band (fuer eine breitere Aussenkante) hätte sonst auch
+  // die Innenkante weiter nach innen gezogen und dort ein Loch aufgerissen,
+  // durch das die Mosaik-Fliese direkt am Saeulenfuss sichtbar wurde -
+  // genau das Gegenteil von "Saeule komplett auf Weiss".
+  const inner = circumRadius * 0.2;
   const outer = circumRadius + band;
   // Echte Stufe statt nur eines Z-Fighting-Lifts: die Marmor-Umrandung lag
   // vorher nur 0.1% ueber der Fliese (rein numerisch gegen Z-Fighting
@@ -970,7 +980,7 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       // RotaryStage.jsx) rotierte eine Rippe sonst weiter herum, als die
       // Kuppel-Silhouette sie noch optisch traegt - sie schwebte sichtbar
       // frei im Himmel, ohne erkennbare Verbindung zur Kuppelflaeche.
-      const ribCut = ribCullDeg ?? Math.min(cullDeg, 88);
+      const ribCut = ribCullDeg ?? Math.min(cullDeg, 93);
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
         const absDeg = Math.abs(deg);
