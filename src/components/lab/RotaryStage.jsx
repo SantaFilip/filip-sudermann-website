@@ -390,13 +390,10 @@ export default function RotaryStage({
       // dem groesseren Umkreis durch die Eckpunkte (Umkreisradius = Apothem /
       // cos(halber Aussenwinkel)) - stuende die Saeule nur beim Apothem-
       // Radius, laege sie hinter der tatsaechlichen Kante und waere von der
-      // Kamera aus verdeckt. Ein zusaetzlicher Vorsprung (12%) legt sie noch
-      // ein Stueck VOR die Kante: die Beruehrung ist geometrisch nur exakt
-      // auf einer einzigen Linie richtig, bei jeder Kamera-Perspektive
-      // abseits der Front klafft sonst eine duenne Luecke (Parallaxe
-      // zwischen zwei flachen Ebenen an einer Kante). Der Vorsprung plus die
-      // Saeulenbreite ueberdecken diese Luecke zuverlaessig.
-      const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.12;
+      // Kamera aus verdeckt. Ein minimaler Vorsprung (3%) reicht gegen
+      // Z-Fighting an der Kante - 12% (voriger Wert) liess die Saeule
+      // sichtbar vor der Wand schweben statt darin zu sitzen.
+      const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.03;
       columnRefs.current.forEach((col, s) => {
         if (!col) return;
         const deg = kuerzesterWeg(p - s + 0.5) * step;
@@ -675,6 +672,10 @@ export default function RotaryStage({
         marginLeft: `${-colW / 2}px`,
         backfaceVisibility: 'hidden',
         willChange: 'transform, filter',
+        // Ohne das faengt die breite, weit vorne liegende Saeule den
+        // Ziehen-Overlay der Facette darunter ab - Rotation per Drag liess
+        // sich seit den breiteren Saeulen nicht mehr auslösen.
+        pointerEvents: 'none',
       }
     : {
         position: 'absolute',
@@ -685,6 +686,7 @@ export default function RotaryStage({
         marginTop: `${-colW / 2}px`,
         backfaceVisibility: 'hidden',
         willChange: 'transform, filter',
+        pointerEvents: 'none',
       };
 
   const faceStyle = {
