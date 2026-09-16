@@ -145,6 +145,171 @@ function buildTileTexture() {
   return tex;
 }
 
+// Acht Landesflaggen, eine je Saeule - auf jedem Kegel oben eine eigene
+// (siehe buildDomeRibs/buildFlagMesh). Reihenfolge entspricht der
+// Saeulen-Indexreihenfolge (Index 0..7 im Uhrzeigersinn um die Trommel).
+// Vereinfachte, aber erkennbare Zeichnungen statt Bild-Assets - per Canvas
+// erzeugt wie die Sockel-Textur, da keine externen Bilder zur Verfuegung
+// stehen.
+const FLAG_CODES = ['DE', 'US', 'CN', 'RU', 'FR', 'JP', 'GB', 'BR'];
+
+function buildFlagTexture(code) {
+  const w = 120, h = 80;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  const stripesH = (colors) => {
+    const bandH = h / colors.length;
+    colors.forEach((c, i) => {
+      ctx.fillStyle = c;
+      ctx.fillRect(0, i * bandH, w, bandH + 1);
+    });
+  };
+  const stripesV = (colors) => {
+    const bandW = w / colors.length;
+    colors.forEach((c, i) => {
+      ctx.fillStyle = c;
+      ctx.fillRect(i * bandW, 0, bandW + 1, h);
+    });
+  };
+  const star = (cx, cy, r) => {
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + i * (Math.PI * 4) / 5;
+      const px = cx + r * Math.cos(a), py = cy + r * Math.sin(a);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  switch (code) {
+    case 'DE':
+      stripesH(['#1a1a1a', '#d0132a', '#f2c14e']);
+      break;
+    case 'US':
+      stripesH(Array.from({ length: 13 }, (_, i) => (i % 2 === 0 ? '#b31942' : '#ffffff')));
+      ctx.fillStyle = '#0a3161';
+      ctx.fillRect(0, 0, w * 0.44, h * 0.54);
+      ctx.fillStyle = '#ffffff';
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 4; c++) {
+          star(w * 0.06 + c * w * 0.11, h * 0.09 + r * h * 0.17, 2.1);
+        }
+      }
+      break;
+    case 'CN':
+      ctx.fillStyle = '#de2910';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#ffde00';
+      star(w * 0.16, h * 0.24, 8);
+      star(w * 0.32, h * 0.12, 3);
+      star(w * 0.38, h * 0.22, 3);
+      star(w * 0.38, h * 0.34, 3);
+      star(w * 0.32, h * 0.42, 3);
+      break;
+    case 'RU':
+      stripesH(['#ffffff', '#0039a6', '#d52b1e']);
+      break;
+    case 'FR':
+      stripesV(['#0055a4', '#ffffff', '#ef4135']);
+      break;
+    case 'JP':
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#bc002d';
+      ctx.beginPath();
+      ctx.arc(w / 2, h / 2, h * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case 'GB': {
+      ctx.fillStyle = '#00247d';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = h * 0.16;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
+      ctx.strokeStyle = '#cf142b';
+      ctx.lineWidth = h * 0.07;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = h * 0.26;
+      ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+      ctx.strokeStyle = '#cf142b';
+      ctx.lineWidth = h * 0.12;
+      ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+      break;
+    }
+    case 'BR':
+      ctx.fillStyle = '#009c3b';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#ffdf00';
+      ctx.beginPath();
+      ctx.moveTo(w / 2, h * 0.12); ctx.lineTo(w * 0.9, h / 2); ctx.lineTo(w / 2, h * 0.88); ctx.lineTo(w * 0.1, h / 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#002776';
+      ctx.beginPath();
+      ctx.arc(w / 2, h / 2, h * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    default:
+      ctx.fillStyle = '#cccccc';
+      ctx.fillRect(0, 0, w, h);
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// Fahnenmast + Flagge auf der Kegelspitze: die Flagge haengt am Mast in
+// tangentialer Richtung (quer zur Fassade, wie an einer echten Gebaeudefront)
+// statt radial nach aussen - so bleibt sie aus der ueberwiegend frontalen
+// Kamera-Perspektive lesbar, statt sich selbst zu verdecken.
+function buildFlagMesh(code, tipPt, tangentDir, scale) {
+  const group = new THREE.Group();
+  const poleH = scale * 1.7;
+  const poleMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.55, roughness: 0.3, transparent: true });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(scale * 0.045, scale * 0.045, poleH, 8), poleMat);
+  pole.position.copy(tipPt).addScaledVector(new THREE.Vector3(0, 1, 0), poleH / 2);
+  group.add(pole);
+
+  const flagW = scale * 1.35 * 1.8;
+  const flagH = scale * 0.9 * 1.8;
+  const topAttach = tipPt.clone().addScaledVector(new THREE.Vector3(0, 1, 0), poleH * 0.97);
+  const topOuter = topAttach.clone().addScaledVector(tangentDir, flagW);
+  const botAttach = topAttach.clone().addScaledVector(new THREE.Vector3(0, 1, 0), -flagH);
+  const botOuter = topOuter.clone().addScaledVector(new THREE.Vector3(0, 1, 0), -flagH);
+
+  const positions = [
+    topAttach.x, topAttach.y, topAttach.z,
+    topOuter.x, topOuter.y, topOuter.z,
+    botAttach.x, botAttach.y, botAttach.z,
+    botOuter.x, botOuter.y, botOuter.z,
+  ];
+  const uvs = [0, 1, 1, 1, 0, 0, 1, 0];
+  const indices = [0, 1, 2, 1, 3, 2];
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  // Unlit (MeshBasicMaterial) statt MeshStandardMaterial: eine duenne
+  // flache Fahne haengt am Dach weit oben, meist im Schatten des direkten
+  // Lichts - mit PBR-Beleuchtung wirkte sie dadurch fast schwarz/unsichtbar.
+  // Eine Flagge soll ohnehin flach-farbig wirken, kein Materiallook noetig.
+  const flagMat = new THREE.MeshBasicMaterial({
+    map: buildFlagTexture(code), side: THREE.DoubleSide,
+  });
+  const flag = new THREE.Mesh(geo, flagMat);
+  group.add(flag);
+
+  group.userData.mats = [poleMat, flagMat];
+  return group;
+}
+
 // Einfache Gradient-Himmel-Umgebung als Reflection-Map - ohne sie hat die
 // Kuppel nichts zum Spiegeln und wirkt trotz Glasmaterial nur wie eine
 // matte, dunkle Flaeche (besonders die Unterseite, die kaum Direktlicht
@@ -203,10 +368,10 @@ function buildDome(circumRadius, heightBudget, sides) {
   // Radius - auf einem breiten, aber niedrigen Bildschirm (breite Fassade,
   // wenig Hoehe) wurde sie riesig und fraess sich sichtbar in die
   // Anzeigetafel darunter, obwohl die Kuppel selbst gar nicht zu breit war.
-  // Flach gehalten statt hoch gewoelbt - "premium atrium dome", nicht
-  // Zirkuszelt. Ein niedrigeres domeH verkuerzt gleichzeitig automatisch
-  // den Sichtbarkeitsradius der Kuppelsilhouette ueber der Anzeigetafel.
-  const domeH = heightBudget * 0.36;
+  // Etwas steiler als die vorherige, sehr flache Fassung (0.36), aber
+  // immer noch deutlich unter der urspruenglichen Zirkuszelt-Hoehe (0.55) -
+  // "premium atrium dome" mit spuerbarer Woelbung statt platter Scheibe.
+  const domeH = heightBudget * 0.46;
   // Gebaelk/Entablature statt duenner Lippe: haengt bewusst unter den
   // Dachrand (y = 0, die Wandkante) hinein, ist also der einzige Teil der
   // Kuppel, der ueberhaupt in den Bereich der Anzeigetafel hineinragt. Bei
@@ -230,20 +395,19 @@ function buildDome(circumRadius, heightBudget, sides) {
   // aus Reflexion (envMap, hoher Clearcoat) - reales Glas unter Kunstlicht
   // wirkt ohnehin oft eher spiegelnd-opak. `FrontSide` blendet die von der
   // Kamera abgewandte Rueckseite komplett aus.
-  // Zurueckhaltender Glaseindruck statt Hochglanz-Kuppel: niedrigerer
-  // Clearcoat/Reflectivity/envMapIntensity, damit die Flaeche mattes,
-  // leicht gefrostetes Glas zeigt statt eine spiegelnde Blase.
+  // Wieder deutlich mehr Glanz als die zwischenzeitlich sehr matte Fassung -
+  // soll wieder klar nach edlem, poliertem Glas aussehen statt gefrostet.
   const domeMat = new THREE.MeshPhysicalMaterial({
     color: GLASS,
     metalness: 0.08,
-    roughness: 0.18,
+    roughness: 0.07,
     transparent: false,
     opacity: 1,
     side: THREE.FrontSide,
-    clearcoat: 0.5,
-    clearcoatRoughness: 0.22,
-    reflectivity: 0.45,
-    envMapIntensity: 0.7,
+    clearcoat: 0.85,
+    clearcoatRoughness: 0.06,
+    reflectivity: 0.78,
+    envMapIntensity: 1.15,
   });
   const dome = new THREE.Mesh(domeGeo, domeMat);
   group.add(dome);
@@ -321,21 +485,33 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   const group = new THREE.Group();
   // Muss exakt mit domeH aus buildDome() uebereinstimmen (siehe Kommentar
   // dort) - sonst driften Kamm und Kuppelflaeche auseinander.
-  const domeH = heightBudget * 0.36;
+  const domeH = heightBudget * 0.46;
   const capW = columnCapWidth || circumRadius * 0.09;
   const halfAngle = Math.max(0.012, capW / 2 / circumRadius);
   const steps = 14;
   const raise = 1.006; // minimal ueber die Kuppelflaeche angehoben, gegen Z-Fighting
   const pitch = 0.62; // First-Hoehe relativ zur halben Kammbreite - Giebel-Neigung
 
+  // Kegelmasse einmal vorab (gleich fuer jede Saeule): Basis auf dem
+  // Kapitell, Spitze coneHeight darueber - der Kamm setzt dort an, nicht an
+  // der Traufe.
+  const coneRadius = capW * 0.62;
+  const coneHeight = capW * 0.95;
+  const up = new THREE.Vector3(0, 1, 0);
+
   for (let i = 0; i < sides; i++) {
     const beta = (i / sides) * Math.PI * 2;
     const positions = [];
     const indices = [];
     for (let s = 0; s <= steps; s++) {
-      const t = s / steps; // 0 = Kuppelspitze, 1 = Traufe/Saeulenkopf
+      const t = s / steps; // 0 = Kuppelspitze, 1 = Kegelspitze (Traufe-Ende)
       const r = t * circumRadius * raise;
-      const y = domeH * (1 - Math.pow(t, 1.5));
+      // Hoehe laeuft nicht mehr von 0 (Traufe) bis domeH, sondern von
+      // coneHeight (Kegelspitze) bis domeH (Kuppelspitze) - "von der
+      // Kegelspitze aus soll der Rahmen des Dachs beginnen". Bei t=1 landet
+      // das exakt auf der Kegelspitze (r=circumRadius, y=coneHeight), bei
+      // t=0 weiterhin exakt auf dem Kuppelscheitel.
+      const y = coneHeight + (domeH - coneHeight) * (1 - Math.pow(t, 1.5));
       const wa = halfAngle * t; // an der Spitze auf einen Punkt zulaufend
       const halfWidthLinear = r * wa;
       const peakY = y + halfWidthLinear * pitch;
@@ -366,25 +542,27 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     const ridgeMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
     const ridge = new THREE.Mesh(geo, ridgeMat);
 
-    // Kegel auf der Saeulenspitze: Basis sitzt auf dem Kapitell (t=1), Spitze
-    // zeigt gerade nach oben - an die Ausrichtung der Saeule selbst gebunden
-    // (ihre Achse steht immer senkrecht, unabhaengig von der Rotation),
-    // nicht an die Kammrichtung. Der Kamm waechst seitlich aus dem Kegel
-    // heraus zur Kuppelspitze, der Kegel selbst bleibt aber vertikal.
+    // Kegel auf der Saeulenspitze: Basis sitzt exakt auf der Saeulenachse
+    // (circumRadius OHNE den raise-Faktor, der nur fuer den Kamm auf der
+    // Kuppelflaeche gegen Z-Fighting gebraucht wird) - sonst sitzt der
+    // Kegel sichtbar neben statt mittig auf der Saeule. Spitze zeigt gerade
+    // nach oben, an die Saeulenachse gebunden, nicht an die Kammrichtung.
     const basePt = new THREE.Vector3(
-      circumRadius * raise * Math.sin(beta), 0, circumRadius * raise * Math.cos(beta)
+      circumRadius * Math.sin(beta), 0, circumRadius * Math.cos(beta)
     );
-    const up = new THREE.Vector3(0, 1, 0);
-
-    const coneRadius = capW * 0.62;
-    const coneHeight = capW * 0.95;
     const coneMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.62, roughness: 0.26, transparent: true });
     const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 20), coneMat);
     cone.position.copy(basePt).addScaledVector(up, coneHeight / 2);
 
+    // Flagge auf der Kegelspitze - tangential zur Fassade ausgerichtet.
+    const tipPt = basePt.clone().addScaledVector(up, coneHeight);
+    const tangentDir = new THREE.Vector3(Math.cos(beta), 0, -Math.sin(beta));
+    const flagCode = FLAG_CODES[i % FLAG_CODES.length];
+    const flagGroup = buildFlagMesh(flagCode, tipPt, tangentDir, capW * 0.9);
+
     const sideGroup = new THREE.Group();
-    sideGroup.add(ridge, cone);
-    sideGroup.userData.mats = [ridgeMat, coneMat];
+    sideGroup.add(ridge, cone, flagGroup);
+    sideGroup.userData.mats = [ridgeMat, coneMat, ...flagGroup.userData.mats];
     group.add(sideGroup);
   }
 
@@ -648,6 +826,22 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       // auffiel. Saeule und Rippe jetzt exakt genauso: harter Schnitt bei
       // cullDeg, synchron mit ihrer Flaeche, keine Zwischenstufe.
       const fade = 1;
+      // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei beta = k*step
+      // (in Grad) aufgebaut - siehe dortige Schleife, mit x=+r*sin(beta).
+      // Die Saeule dagegen nutzt x=-colRadius*sin(deg) (siehe unten, aus der
+      // CSS-Rotationsmatrix) - ENTGEGENGESETZTES Vorzeichen. Die noetige
+      // Zielausrichtung fuer die Rippe ist deshalb NICHT beta=deg, sondern
+      // beta=-deg (numerisch verifiziert gegen die alte, gemeinsame
+      // Gruppenrotation -degs[0], die genau das fuer k=0 ergab). Frueher
+      // wurde EINE gemeinsame Rotation (-degs[0]) auf die ganze Gruppe
+      // angewandt, aus der Annahme, dass k*step-degs[0] fuer alle k gleich
+      // -degs[k] ist - das gilt aber nur, solange kuerzesterWeg() fuer keine
+      // der Saeulen auf den "anderen" Zweig des Kreises wechselt. Genau an
+      // der Kantenabschneidung (nahe cullDeg) kann das fuer eine einzelne
+      // Saeule zuerst passieren, wodurch NUR ihre Rippe kurzzeitig an der
+      // falschen Position sass. Jede Rippe bekommt jetzt ihre EIGENE exakte
+      // Rotation statt der Annahme.
+      const step = 360 / sides;
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
         const absDeg = Math.abs(deg);
@@ -660,6 +854,7 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
         if (rib) {
           rib.visible = !hidden;
           if (!hidden) {
+            rib.rotation.y = ((-deg - s * step) * Math.PI) / 180;
             const ribMats = rib.userData.mats;
             if (ribMats) ribMats.forEach((m) => { m.opacity = fade; });
           }
@@ -676,16 +871,6 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
           if (mats) mats.forEach((m) => { m.opacity = fade; });
         }
       });
-      // Rippen (Kegel-Giebel Saeule->Kuppelspitze) drehen als starre Gruppe
-      // mit - alle Saeulen liegen jederzeit exakt `step` Grad auseinander,
-      // nur ihre gemeinsame Phase verschiebt sich mit der Rotation. Rippe k
-      // steht bei festem Basiswinkel k*step (gleiche sin/cos-Konvention wie
-      // die Saeulen); rotiert man die ganze Gruppe um -degs[0], fallen alle
-      // Rippen exakt auf die aktuellen Saeulenpositionen (hergeleitet:
-      // fuer degK = (p-k+0.5)*step und Basiswinkel k*step kuerzt sich der
-      // Index k komplett heraus, uebrig bleibt -degs[0] fuer jede Rippe
-      // gleichermassen).
-      if (ribs) ribs.rotation.y = (-(degs[0] ?? 0) * Math.PI) / 180;
       renderer.render(scene, camera);
     },
   }));
