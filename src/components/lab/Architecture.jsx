@@ -25,7 +25,7 @@ export function BuildingBase({ width, className = '' }) {
   return (
     <div
       className={`pointer-events-none absolute left-1/2 -translate-x-1/2 ${className}`}
-      style={{ width: `${width}px`, aspectRatio: '1000 / 200' }}
+      style={{ width: `${width}px`, aspectRatio: '1000 / 200', filter: 'drop-shadow(0 10px 14px hsl(217 48% 12% / 0.3))' }}
       aria-hidden="true"
     >
       <svg viewBox="0 0 1000 200" width="100%" height="100%" preserveAspectRatio="none">
@@ -49,48 +49,78 @@ export function BuildingBase({ width, className = '' }) {
         {/* obere Plattform, traegt die Saeulen */}
         <ellipse cx="500" cy="68" rx="345" ry="22" fill={NAVY} opacity="0.9" />
         <ellipse cx="500" cy="56" rx="345" ry="22" fill="url(#rs-base-top)" stroke={GOLD_LIGHT} strokeWidth="1.6" />
+        {/* Kontaktschatten - dort, wo die Saeulen tatsaechlich aufstehen.
+            Ohne ihn wirkt die Plattform wie ein separates Teil, das nur
+            zufaellig darunter liegt statt das Gewicht zu tragen. */}
+        <ellipse cx="500" cy="56" rx="345" ry="22" fill="none" stroke={NAVY} strokeWidth="3" strokeOpacity="0.18" />
       </svg>
     </div>
   );
 }
 
-/** Flaches Kuppeldach mit Rippen, die auf die Saeulen ausgerichtet sind. */
+/**
+ * Flaches Kuppeldach mit Rippen, die auf die Saeulen ausgerichtet sind.
+ *
+ * Eine reine Umrisslinie mit einer einzigen Flaechenfuellung liest als
+ * flacher Aufkleber, nicht als Volumen - vor allem an den seitlichen Enden,
+ * wo eine simple Bogenflaeche auf null Hoehe zulaeuft. Drei Korrekturen
+ * geben ihr echte Tiefe:
+ * 1. Ein Traufband/Gesims MIT eigener Hoehe (nicht nur eine Linie) - dunkler
+ *    an der Unterseite (Eigenschatten), heller obendrauf, wie ein echtes
+ *    Bauteil mit Dicke statt einer Kante bei null.
+ * 2. Ein staerkerer Verlauf inklusive Glanzlicht nahe der Kuppelmitte -
+ *    suggeriert eine gewoelbte, nicht flache Oberflaeche.
+ * 3. Ein Schlagschatten (drop-shadow-Filter) auf die gesamte Gruppe, der
+ *    nach unten auf die Fassade/Saeulen faellt - "erdet" das Dach optisch,
+ *    statt dass es kontaktlos darueber schwebt.
+ */
 export function RoofStructure({ width, sides = 8, className = '' }) {
   const ribCount = Math.max(4, Math.min(sides, 12));
   const ribs = Array.from({ length: ribCount }, (_, i) => i / (ribCount - 1));
   return (
     <div
       className={`pointer-events-none absolute left-1/2 -translate-x-1/2 ${className}`}
-      style={{ width: `${width}px`, aspectRatio: '1000 / 230' }}
+      style={{ width: `${width}px`, aspectRatio: '1000 / 230', filter: 'drop-shadow(0 14px 18px hsl(217 48% 12% / 0.35))' }}
       aria-hidden="true"
     >
       <svg viewBox="0 0 1000 230" width="100%" height="100%" preserveAspectRatio="none">
         <defs>
-          <linearGradient id="rs-roof-glass" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(206 48% 90%)" stopOpacity="0.92" />
-            <stop offset="52%" stopColor={IVORY} stopOpacity="0.97" />
-            <stop offset="100%" stopColor={GOLD_LIGHT} stopOpacity="0.4" />
+          <radialGradient id="rs-roof-glass" cx="50%" cy="4%" r="95%">
+            <stop offset="0%" stopColor="hsl(48 70% 96%)" stopOpacity="0.98" />
+            <stop offset="18%" stopColor={IVORY} stopOpacity="0.97" />
+            <stop offset="55%" stopColor="hsl(206 44% 87%)" stopOpacity="0.93" />
+            <stop offset="100%" stopColor={GOLD_LIGHT} stopOpacity="0.55" />
+          </radialGradient>
+          <linearGradient id="rs-roof-fascia" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={GOLD_LIGHT} />
+            <stop offset="45%" stopColor={GOLD} />
+            <stop offset="100%" stopColor={GOLD_DEEP} />
           </linearGradient>
         </defs>
         {/* flache Kuppelflaeche - bewusst niedrig, keine Kathedrale */}
-        <path d="M14 215 Q500 18 986 215 Q500 178 14 215 Z" fill="url(#rs-roof-glass)" stroke={GOLD} strokeWidth="2" />
+        <path d="M14 208 Q500 18 986 208 Q500 172 14 208 Z" fill="url(#rs-roof-glass)" />
         {/* Rippen entlang der Saeulenpositionen */}
         {ribs.map((t, i) => {
           const x = 14 + t * 972;
-          const y = 215 - Math.sin(t * Math.PI) * 197;
+          const y = 208 - Math.sin(t * Math.PI) * 190;
           return (
             <path
               key={i}
-              d={`M500 34 Q${(500 + x) / 2} ${(34 + y) / 2 - 10} ${x} 215`}
+              d={`M500 30 Q${(500 + x) / 2} ${(30 + y) / 2 - 10} ${x} 208`}
               fill="none"
-              stroke={GOLD}
-              strokeWidth="1.1"
-              opacity="0.45"
+              stroke={GOLD_DEEP}
+              strokeWidth="1.3"
+              opacity="0.4"
             />
           );
         })}
-        {/* Traufband am Dachfuss */}
-        <ellipse cx="500" cy="215" rx="472" ry="17" fill="none" stroke={GOLD} strokeWidth="2.5" opacity="0.65" />
+        {/* Glanzlicht - deutet die gewoelbte Oberflaeche an, statt einer flachen Fuellung */}
+        <ellipse cx="500" cy="58" rx="220" ry="26" fill="hsl(48 90% 98%)" opacity="0.5" />
+        {/* Traufband/Gesims MIT eigener Hoehe - gibt der Kante echte Dicke statt
+            einer Linie bei null Hoehe. Oben hell (Licht von oben), unten
+            dunkel (Eigenschatten der Unterseite). */}
+        <path d="M14 208 Q500 172 986 208 L986 224 Q500 188 14 224 Z" fill="url(#rs-roof-fascia)" />
+        <ellipse cx="500" cy="208" rx="472" ry="17" fill="none" stroke={GOLD_LIGHT} strokeWidth="1.5" opacity="0.8" />
       </svg>
     </div>
   );
