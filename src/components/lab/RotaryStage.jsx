@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 import FaceOrnament from '@/components/lab/FaceOrnament';
 import FadeIn from '@/components/FadeIn';
-import { BuildingBase, RoofStructure, RoofCrown, ArchitecturalLighting } from '@/components/lab/Architecture';
+import ArchitectureGL from '@/components/lab/ArchitectureGL';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -245,19 +245,16 @@ export default function RotaryStage({
   const closeRefs = useRef([]);
   const shellRefs = useRef([]);
   const columnRefs = useRef([]);
-  const roofWrapRef = useRef(null);
-  const baseWrapRef = useRef(null);
+  const glWrapRef = useRef(null);
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
-  // wirkt nur auf die Ausdehnung in Drehrichtung. stageW ist die volle
-  // Buehnenbreite (sticky.clientWidth) - fuer Dach/Sockel, die den ganzen
-  // sichtbaren Faecher aus vorderer und beiden Nachbar-Facetten umfassen
-  // sollen, nicht nur eine einzelne Facette. cube.w allein waere hierfuer
-  // zu schmal: der auf dem Bildschirm sichtbare Faecher ist durch die
-  // perspektivische Projektion breiter als eine einzelne flache Facette,
-  // aber ein 3D-Kreisdurchmesser im Raum der drehenden Koerper laesst sich
-  // nicht direkt in Bildschirm-Pixel umrechnen (andere Massstabsebene) -
-  // die tatsaechliche Buehnenbreite ist der verlaessliche Bezug.
-  const [cube, setCube] = useState({ w: 0, h: 0, stageW: 0 });
+  // wirkt nur auf die Ausdehnung in Drehrichtung. stageW/stageH sind die
+  // volle Buehnengroesse (sticky.clientWidth/-Height) - fuer die echte
+  // WebGL-Kamera in ArchitectureGL, deren Sichtfeld exakt dem CSS
+  // perspective-Wert der Buehne entsprechen muss, damit Dach und Sockel bei
+  // jedem Rotationswinkel korrekt zur drehenden Facetten-Trommel passen
+  // (eine flache 2D-Naeherung kann das nur fuer die Frontflaeche - siehe
+  // Architecture.jsx-Kommentar; die neue WebGL-Version ersetzt sie).
+  const [cube, setCube] = useState({ w: 0, h: 0, stageW: 0, stageH: 0 });
   // Synchron initialisieren, nicht erst im Effect: sonst montiert das Handy
   // fuer einen Frame die Buehne, bevor sie wieder abgeschaltet wird.
   const abfrage = (q) => typeof window !== 'undefined' && window.matchMedia(q).matches;
@@ -331,7 +328,7 @@ export default function RotaryStage({
       // senkrechter Drehachse die Breite, sonst die Hoehe.
       depth = bodyRadius(lateral ? w : h, sides) * 2;
       flaecheW = w;
-      setCube({ w, h, stageW: sticky.clientWidth });
+      setCube({ w, h, stageW: sticky.clientWidth, stageH: sticky.clientHeight });
 
       // setCube loest ein Neurendern aus, und das schreibt die Flaechenbreite
       // aus dem Zustand zurueck - also auch ueber eine bereits aufgegangene
@@ -362,8 +359,7 @@ export default function RotaryStage({
       // Dach/Sockel gehoeren zum geschlossenen Baukoerper - steht eine
       // Facette einzeln aufgeklappt (volle Breite, kein Gebaeude-Kontext
       // mehr sichtbar), stoeren sie nur und werden ausgeblendet.
-      if (roofWrapRef.current) roofWrapRef.current.style.visibility = offen ? 'hidden' : 'visible';
-      if (baseWrapRef.current) baseWrapRef.current.style.visibility = offen ? 'hidden' : 'visible';
+      if (glWrapRef.current) glWrapRef.current.style.visibility = offen ? 'hidden' : 'visible';
 
       // Huelle: immer vorhanden, immer geschlossen. Zwei Pixel nach innen
       // versetzt - lagen Huelle und Inhaltsseite auf exakt derselben Ebene,
@@ -709,23 +705,31 @@ export default function RotaryStage({
     ? { ...faceStyle, transformStyle: 'preserve-3d', transition: 'width 420ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 420ms cubic-bezier(0.4, 0, 0.2, 1)' }
     : { ...faceStyle, transformStyle: 'preserve-3d' };
 
-  // Dach und Sockel stehen fest (drehen NICHT mit) und rahmen die Buehne wie
-  // eine Rotunde um eine drehbare Vitrine. Beide sitzen als Kinder von
-  // sticky, im selben Koordinatenraum wie die Facetten-Trommel - nicht als
-  // separate Bloecke davor/danach mit geschaetztem Ueberlapp. Die Trommel
-  // (cube.h hoch) steht per Flexbox vertikal zentriert in sticky; der Rand
-  // links/rechts davon (per crossFill kontrolliert, siehe RotaryStage-Prop)
-  // ist exakt bekannt: (100% - cube.h) / 2. Dach/Sockel fuellen genau diesen
-  // Rand, mit ein paar zusaetzlichen Pixeln Overlap in die Trommel hinein -
-  // damit stossen sie tatsaechlich an die Facettenkante, statt mit Luft
-  // davor zu schweben.
-  const kantenUeberlapp = 22;
-  const randHoehe = cube.h ? `calc((100% - ${cube.h}px) / 2 + ${kantenUeberlapp}px)` : '0px';
-
-  // Dach/Sockel sollen den ganzen sichtbaren Faecher aus vorderer und
-  // beiden Nachbar-Facetten umfassen, nicht nur die vordere Facette allein
-  // (cube.w) - siehe Kommentar bei stageW oben.
-  const aussenDurchmesser = cube.stageW ? cube.stageW * 0.94 : cube.w;
+  // Dach und Sockel: echtes WebGL statt flacher SVG-Naeherung (siehe
+  // ArchitectureGL.jsx). perspektivePx muss exakt dem CSS perspective-Wert
+  // von sticky (weiter unten) entsprechen, circumRadius dem tatsaechlichen
+  // 3D-Umkreisradius der Trommel (derselbe Wert, der auch die Saeulen
+  // positioniert) - nur so projiziert die WebGL-Kamera deckungsgleich mit
+  // der CSS-3D-Buehne.
+  const perspektivePx = lateral ? 2600 : 1250;
+  const facettenRadius = cube.w && cube.h ? bodyRadius(lateral ? cube.w : cube.h, sides) : 0;
+  const circumRadius = facettenRadius / Math.cos(Math.PI / sides);
+  const drumHalfHeight = cube.h / 2;
+  // Der Koerper (boxRef) traegt selbst translateZ(-facettenRadius), damit
+  // seine Frontflaeche auf z = 0 zu liegen kommt - die eigentliche
+  // Drehachse aller Facetten/Saeulen sitzt also nicht bei z = 0, sondern
+  // bei z = -facettenRadius. Ein Test, Dach/Sockel exakt auf diese Achse
+  // zu zentrieren, sah geometrisch stimmig aus (deckt sich mit dem
+  // Saeulenradius), verschob die Kuppel/den Sockel aber sichtbar naeher
+  // zur Bildmitte: Y-Positionen sind unter reiner Y-Rotation invariant,
+  // aber ihre Bildschirm-Projektion haengt von der Kamera-Distanz ab -
+  // bei z = -facettenRadius (weiter weg) faellt dieselbe Weltmasse
+  // kleiner aus als bei z = 0, wo die jeweils aktive Frontflaeche
+  // unverzerrt (1:1) liegt. Da genau diese Frontflaeche lesbar bleiben
+  // muss, bleibt z = 0 die richtige Referenztiefe fuer Dach/Sockel; das
+  // Ausbauchen nach vorn wird stattdessen ueber den Radius selbst
+  // (domeBaseScale in ArchitectureGL) eingedaemmt.
+  const centerOffsetZ = 0;
 
   return (
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
@@ -748,20 +752,13 @@ export default function RotaryStage({
           // dann kaum noch - die Rolle laege flach wie verschobene Platten
           // statt sich sichtbar zu kruemmen. Massgeblich ist die Flaechen-
           // groesse, und die haengt nur an der Achse.
-          perspective: lateral ? '2600px' : '1250px',
+          perspective: `${perspektivePx}px`,
           perspectiveOrigin: '50% 50%',
         }}
       >
         <div ref={backdropRef} className="absolute inset-0">
           <RotatingBackdrop />
         </div>
-
-        {cube.h > 0 && (
-          <div ref={roofWrapRef} className="pointer-events-none absolute left-0 right-0 top-0" style={{ height: randHoehe }}>
-            <RoofStructure width={aussenDurchmesser} sides={sides} className="bottom-0" />
-            <RoofCrown width={aussenDurchmesser} className="top-0" />
-          </div>
-        )}
 
         <div
           ref={boxRef}
@@ -894,16 +891,24 @@ export default function RotaryStage({
           ))}
         </div>
 
-        {cube.h > 0 && (
-          <div ref={baseWrapRef} className="pointer-events-none absolute left-0 right-0 bottom-0" style={{ height: randHoehe }}>
-            {/* top-0, nicht bottom-0: die Plattform (oberer Rand der SVG)
-                soll an der Facettenkante anliegen (= oben in diesem
-                Randbereich), die Stufen darunter laufen frei nach unten
-                aus - nicht umgekehrt. */}
-            <BuildingBase width={aussenDurchmesser} className="top-0" />
+        {/* Echtes 3D-Dach+Sockel, ein einzelner WebGL-Layer ueber der
+            gesamten Buehne (siehe ArchitectureGL.jsx). Nach box im DOM,
+            damit er an der Nahtstelle ueber die Saeulenkoepfe/-fuesse
+            zeichnet. Wird wie Huelle/Saeulen ausgeblendet, wenn eine
+            Facette einzeln aufgeklappt ist. */}
+        {cube.h > 0 && circumRadius > 0 && (
+          <div ref={glWrapRef} className="absolute inset-0">
+            <ArchitectureGL
+              stageW={cube.stageW}
+              stageH={cube.stageH}
+              perspectivePx={perspektivePx}
+              circumRadius={circumRadius}
+              drumHalfHeight={drumHalfHeight}
+              centerOffsetZ={centerOffsetZ}
+              sides={sides}
+            />
           </div>
         )}
-        {cube.w > 0 && <ArchitecturalLighting width={aussenDurchmesser} />}
       </div>
     </div>
   );
