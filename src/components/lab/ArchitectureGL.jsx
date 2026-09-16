@@ -528,29 +528,12 @@ function buildDome(circumRadius, heightBudget, sides) {
   const trimBot = new THREE.Mesh(new THREE.LatheGeometry(trimBotProfile, 64), trimMat);
   group.add(trimBot);
 
-  // Bekroenung: schlanke Laterne mit Ring, sehr kompakt.
-  const finialGroup = new THREE.Group();
-  const poleH = domeH * 0.55;
-  const pole = new THREE.Mesh(
-    new THREE.CylinderGeometry(circumRadius * 0.006, circumRadius * 0.006, poleH, 12),
-    new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.6, roughness: 0.3 })
-  );
-  pole.position.y = domeH + poleH / 2;
-  finialGroup.add(pole);
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(circumRadius * 0.028, circumRadius * 0.006, 12, 24),
-    new THREE.MeshStandardMaterial({ color: BRASS_LIGHT, metalness: 0.6, roughness: 0.25 })
-  );
-  ring.position.y = domeH + poleH + circumRadius * 0.028;
-  ring.rotation.x = Math.PI / 2;
-  finialGroup.add(ring);
-  const orb = new THREE.Mesh(
-    new THREE.SphereGeometry(circumRadius * 0.012, 16, 16),
-    new THREE.MeshStandardMaterial({ color: BRASS_DEEP, metalness: 0.5, roughness: 0.4 })
-  );
-  orb.position.y = ring.position.y;
-  finialGroup.add(orb);
-  group.add(finialGroup);
+  // Die fruehere Bekroenung (Stab/Ring/Kugel) hier ersatzlos entfernt: die
+  // UN-Flagge (siehe buildDomeRibs, FRONT-Layer, position.y = domeH) sitzt
+  // an derselben Stelle und uebernimmt jetzt deren Rolle als Kuppelspitzen-
+  // Ornament. Beide gleichzeitig ergaben zwei uebereinanderliegende
+  // Stangen - der laengere, statische Stab dieser Bekroenung ragte dabei
+  // sichtbar ueber die (viel kuerzere) Flagge hinaus bis zum Buehnenrand.
 
   return group;
 }
@@ -674,12 +657,12 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
 // Sockel-Oberflaeche (y = 0 in diesem Koordinatensystem).
 function buildBaseRing(circumRadius, columnCapWidth) {
   const group = new THREE.Group();
-  // Noch einmal deutlich breiter (2.0x -> 3.5x der Kapitellbreite) - eine
-  // Saeule nahe der Kamera (vorderer Bildbereich) wird perspektivisch
-  // groesser projiziert als eine seitliche, brauchte also mehr Marmorflaeche
-  // um sich, um komplett darauf zu stehen statt mit dem Kapitell aufs Mosaik
-  // ueberzugreifen. midR in buildBase wurde dafuer auf 1.35x erweitert.
-  const band = Math.max(columnCapWidth * 3.5, circumRadius * 0.18);
+  // Zwischen den beiden vorherigen Werten eingependelt (2.0x war zu knapp
+  // fuer die vordere/kameranahe Saeule, 3.5x liess die Plattform an den
+  // Seiten sichtbar ellipsenhaft/zu grosszuegig wirken statt kreisrund -
+  // ein EINZELNER 3D-Radius kann wegen der Perspektive nie fuer alle
+  // Blickwinkel gleichzeitig exakt passen, das ist hier der Kompromiss).
+  const band = Math.max(columnCapWidth * 2.6, circumRadius * 0.13);
   // Volle Scheibe statt schmalem Ring: `inner` haengt NICHT mehr an band -
   // eine breitere band (fuer eine breitere Aussenkante) hätte sonst auch
   // die Innenkante weiter nach innen gezogen und dort ein Loch aufgerissen,
@@ -945,14 +928,22 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     setColumns(degs, colRadius, pivotZ) {
       const { columns, ribs, renderer, scene, camera } = stateRef.current;
       if (!columns || !renderer) return;
-      // Kein Opacity-Fade mehr: der war selbst als sichtbares "Verblassen"
-      // beim Ein-/Austritt an der Kantenabschneidung wahrnehmbar, so schmal
-      // das Fenster auch war. Die Inhaltsflaechen schneiden an genau
-      // derselben Schwelle (CULL_DEG, siehe faceRefs-Schleife oben) schon
-      // seit jeher hart per visibility um - ohne dass das je als Problem
-      // auffiel. Saeule und Rippe jetzt exakt genauso: harter Schnitt bei
-      // cullDeg, synchron mit ihrer Flaeche, keine Zwischenstufe.
-      const fade = 1;
+      // Opacity-Fade statt hartem Schnitt: ein frueherer Versuch entfernte
+      // den Fade komplett (harter visibility-Wechsel wie bei den Inhalts-
+      // flaechen) - auf Wunsch jetzt zurueck, aber diesmal an die inzwischen
+      // sauber kalibrierten Cutoff-Winkel (cullDeg/ribCut, nah an der
+      // echten 90-Grad-Kante) gekoppelt statt an einen frueheren, zu weit
+      // aussen liegenden Wert. Saeule/Rippe loesen sich so ueber die letzten
+      // Grad vor ihrem jeweiligen Cutoff weich auf, statt schlagartig zu
+      // verschwinden - genau dort, wo sie ohnehin schon stark schraeg
+      // projiziert und kaum noch als eigenstaendiges Element lesbar sind.
+      const fadeSpan = 6;
+      const fadeFor = (absDeg, cut) => {
+        const start = cut - fadeSpan;
+        if (absDeg <= start) return 1;
+        if (absDeg >= cut) return 0;
+        return 1 - (absDeg - start) / fadeSpan;
+      };
       // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei beta = k*step
       // (in Grad) aufgebaut - siehe dortige Schleife, mit x=+r*sin(beta).
       // Die Saeule dagegen nutzt x=-colRadius*sin(deg) (siehe unten, aus der
@@ -989,19 +980,21 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
         const absDeg = Math.abs(deg);
-        const hidden = absDeg >= cullDeg;
+        const fade = fadeFor(absDeg, cullDeg);
+        const hidden = fade <= 0;
         col.visible = !hidden;
         // Zugehoerige Rippe (gleicher Index s, siehe buildDomeRibs) im
         // selben Takt ein-/ausblenden - sonst haengt eine goldene Rippe
         // sichtbar in der Luft, obwohl ihre Saeule schon ausgeblendet ist.
         const rib = ribs?.children[s];
         if (rib) {
-          const ribHidden = absDeg >= ribCut;
+          const ribFade = fadeFor(absDeg, ribCut);
+          const ribHidden = ribFade <= 0;
           rib.visible = !ribHidden;
           if (!ribHidden) {
             rib.rotation.y = ((-deg - s * step) * Math.PI) / 180;
             const ribMats = rib.userData.mats;
-            if (ribMats) ribMats.forEach((m) => { m.opacity = fade; });
+            if (ribMats) ribMats.forEach((m) => { m.opacity = ribFade; });
             const flagPivot = rib.userData.flagPivot;
             if (flagPivot) {
               const phase = s * 1.3;
