@@ -81,11 +81,14 @@ const MARBLE_VEIN = '#a89a80';
 const COL_GOLD = 0xc9973a;
 const COL_STONE = 0xd9cbaa;
 
-// Sockel-Oberflaeche: glatter, heller Elfenbein-Marmor statt des vorherigen
-// blau-weissen Maeander-Mosaiks - auf Wunsch ein ruhiger, "old money"-Sockel,
-// der die Architektur traegt statt selbst Aufmerksamkeit zu ziehen. Nur sehr
-// zurueckhaltende Aderung, keine starken Venen, kein Muster. Per Canvas
-// erzeugt, da keine externen Bild-Assets zur Verfuegung stehen.
+// Sockel-Oberflaeche: heller Elfenbein-Marmor aus konzentrisch angeordneten
+// Einzelplatten statt einer durchgehenden Flaeche - liest wie eine echte
+// Steinverkleidung aus zugeschnittenen Bloecken, nicht wie ein digitales
+// Material. cols laeuft um den Umfang (U, per tex.repeat mehrfach
+// wiederholt), rows liegt entlang des Sockelprofils (V, ueber alle drei
+// Stufen aus baseLatheProfile hinweg). Nur sehr zurueckhaltende Aderung
+// zusaetzlich, keine starken Venen. Per Canvas erzeugt, da keine externen
+// Bild-Assets zur Verfuegung stehen.
 function buildBaseMarbleTexture() {
   const size = 1024;
   const canvas = document.createElement('canvas');
@@ -103,7 +106,47 @@ function buildBaseMarbleTexture() {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, size, size);
 
-  // Eine Handvoll weicher, unregelmaessiger Adern statt eines Musters -
+  // Bloecke: eigene, leicht unterschiedlich helle Platte je Zelle
+  // (deterministisch gemischt wie beim fruehereren Mosaik-Raster, kein
+  // echter Zufall) plus Fuge (dunkle Kontur) und Fase (helle Kante oben/
+  // links, dunkle Kante unten/rechts - simuliert Licht von oben). Die Fase
+  // macht jeden Block als eigenen kleinen Koerper mit eigener Schattierung
+  // lesbar, nicht nur als gemalte Trennlinie.
+  const cols = 6, rows = 6;
+  const cw = size / cols, ch = size / rows;
+  const palette = [QUARTZ, '#efe6d2', '#e8ddc4', '#f2ead6', '#e3d7bd', '#f6efdf'];
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const x0 = gx * cw, y0 = gy * ch;
+      const idx = (gx * 3 + gy * 5 + ((gx ^ gy) % 3)) % palette.length;
+      ctx.fillStyle = palette[idx];
+      ctx.fillRect(x0, y0, cw, ch);
+    }
+  }
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const x0 = gx * cw, y0 = gy * ch;
+      ctx.lineWidth = size * 0.006;
+      ctx.strokeStyle = 'rgba(110,98,76,0.5)';
+      ctx.strokeRect(x0 + ctx.lineWidth / 2, y0 + ctx.lineWidth / 2, cw - ctx.lineWidth, ch - ctx.lineWidth);
+      ctx.lineWidth = size * 0.004;
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.beginPath();
+      ctx.moveTo(x0, y0 + ch);
+      ctx.lineTo(x0, y0);
+      ctx.lineTo(x0 + cw, y0);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(80,70,52,0.45)';
+      ctx.beginPath();
+      ctx.moveTo(x0 + cw, y0);
+      ctx.lineTo(x0 + cw, y0 + ch);
+      ctx.lineTo(x0, y0 + ch);
+      ctx.stroke();
+    }
+  }
+
+  // Eine Handvoll weicher, unregelmaessiger Adern ueber das gesamte
+  // Block-Raster hinweg statt eines Musters -
   // deterministisch (feste Kontrollpunkte, kein echter Zufall), aber in
   // Richtung/Kruemmung variiert genug, um als natuerlicher Stein statt als
   // wiederholtes Motiv zu wirken. ctx.filter (Weichzeichner) macht sie
@@ -457,23 +500,44 @@ function domeLatheProfile(circumRadius, domeH, steps = 10) {
 }
 
 // Profilkurve fuer buildBase's LatheGeometry UND fuer den unsichtbaren
-// Sockel-Verdeckungskoerper - dieselbe dreistufige Form (Kranz/Wulst/Fuss),
-// aus buildBase() herausgezogen, damit beide exakt uebereinstimmen.
+// Sockel-Verdeckungskoerper - aus buildBase() herausgezogen, damit beide
+// exakt uebereinstimmen.
+//
+// Echte rechtwinklige Stufen (senkrechter Setzstufen-Abschnitt, dann
+// waagerechter Trittstufen-Abschnitt) statt der vorherigen durchgehenden
+// Schraeg-Rampe - wie bei einer klassischen Tempel-Krepis (Stylobat). Der
+// Unterschied ist kein Stil-Detail: eine schraege Flaeche hat ueberall
+// dieselbe, gleichmaessig geneigte Normale und schattiert deshalb auch
+// gleichmaessig - liest als eine einzige geneigte Rampe, nicht als
+// gestufter Steinsockel. Eine waagerechte Trittstufe (Normale zeigt nach
+// oben, faengt Licht von oben) neben einer senkrechten Setzstufe (Normale
+// zeigt seitlich, liegt oft im Schlagschatten der Stufe darueber) erzeugt
+// den Hell/Dunkel-Kontrast einer echten Treppe automatisch ueber die
+// vorhandene Beleuchtung (siehe addLights) - keine gemalte Schattierung
+// noetig, nur die richtige Geometrie.
 function baseLatheProfile(circumRadius, heightBudget) {
   const topR = circumRadius;
-  const midR = circumRadius * 1.35;
   const botR = circumRadius * 1.65;
-  const tier1 = heightBudget * 0.13;
-  const tier2 = heightBudget * 0.155;
-  const tier3 = heightBudget * 0.18;
+  const stepR = (botR - topR) / 3;
+  const r1 = topR + stepR;
+  const r2 = topR + stepR * 2;
+  // Gleiche Gesamthoehe wie die vorherige Rampe (0.13+0.155+0.18 von
+  // heightBudget), nur auf drei gleich hohe Setzstufen aufgeteilt - echte
+  // Treppenstufen sind gleich hoch, eine aufsteigende Folge wie zuvor
+  // (als Rampen-Neigungswinkel gedacht) ergibt hier keinen Sinn mehr.
+  const stepY = (heightBudget * (0.13 + 0.155 + 0.18)) / 3;
+  const y1 = -stepY;
+  const y2 = -stepY * 2;
+  const y3 = -stepY * 3;
   return [
     new THREE.Vector2(topR, 0),
-    new THREE.Vector2(topR, -tier1 * 0.7),
-    new THREE.Vector2(midR, -tier1),
-    new THREE.Vector2(midR, -tier1 - tier2 * 0.7),
-    new THREE.Vector2(botR, -tier1 - tier2),
-    new THREE.Vector2(botR, -tier1 - tier2 - tier3),
-    new THREE.Vector2(topR * 0.001, -tier1 - tier2 - tier3),
+    new THREE.Vector2(topR, y1),
+    new THREE.Vector2(r1, y1),
+    new THREE.Vector2(r1, y2),
+    new THREE.Vector2(r2, y2),
+    new THREE.Vector2(r2, y3),
+    new THREE.Vector2(botR, y3),
+    new THREE.Vector2(topR * 0.001, y3),
   ];
 }
 
@@ -763,19 +827,21 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   // Saeulen) statt vorher *0.93 - die Plattformkante muss exakt dort
   // sitzen, wo die Saeulenfuesse ankommen, nicht knapp daneben.
   const topR = circumRadius;
-  // Weiter nach aussen gerueckt (1.18/1.38 -> 1.35/1.65), um Platz fuer eine
-  // deutlich breitere weisse Marmorflaeche zu schaffen (siehe buildBaseRing)
-  // - eine Saeule nahe der Kamera wirkt durch die Perspektive groesser
-  // projiziert als eine seitliche, brauchte also mehr radialen Puffer, als
-  // die vorherigen, engeren Stufen hergaben.
-  const midR = circumRadius * 1.35;
+  // Weiter nach aussen gerueckt (1.18/1.38 -> 1.65 als aeusserste Kante), um
+  // Platz fuer eine deutlich breitere weisse Marmorflaeche zu schaffen
+  // (siehe buildBaseRing) - eine Saeule nahe der Kamera wirkt durch die
+  // Perspektive groesser projiziert als eine seitliche, brauchte also mehr
+  // radialen Puffer, als die vorherigen, engeren Stufen hergaben. Dieselben
+  // Werte wie in baseLatheProfile() - siehe dort fuer die eigentliche
+  // Stufen-Geometrie (echte Setz-/Trittstufen statt Rampe).
   const botR = circumRadius * 1.65;
-  // Stufenhoehen an heightBudget (drumHalfHeight) gebunden, nicht an
-  // circumRadius - siehe Kommentar in buildDome zur selben Falle bei der
-  // Traufband-Lippe.
-  const tier1 = heightBudget * 0.13;
-  const tier2 = heightBudget * 0.155;
-  const tier3 = heightBudget * 0.18;
+  const stepR = (botR - topR) / 3;
+  const r1 = topR + stepR;
+  const r2 = topR + stepR * 2;
+  const stepY = (heightBudget * (0.13 + 0.155 + 0.18)) / 3;
+  const y1 = -stepY;
+  const y2 = -stepY * 2;
+  const y3 = -stepY * 3;
 
   const geo = new THREE.LatheGeometry(baseLatheProfile(circumRadius, heightBudget), 64);
   // Glatter Elfenbein-Marmor statt des vorherigen blau-weissen Mosaiks -
@@ -789,11 +855,6 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   });
   group.add(new THREE.Mesh(geo, mat));
 
-  // Frueher sass hier ein dunkelblauer Navy-Kragen an der obersten Stufe -
-  // wirkte als eigenstaendiger dunkler Ring unpassend/unharmonisch neben
-  // dem Mosaikboden und wurde ersatzlos entfernt; die Fliesenstufe selbst
-  // geht jetzt direkt in die Goldkante am Rand ueber.
-
   // Goldkante am Plattformrand.
   const rimGeo = new THREE.TorusGeometry(topR, circumRadius * 0.006, 10, 64);
   const rimMat = new THREE.MeshStandardMaterial({ color: BRASS_LIGHT, metalness: 0.6, roughness: 0.25 });
@@ -804,14 +865,18 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   // Marmor-Umrandung um die Saeulenfuesse, edler als das nackte Fliesenfeld.
   group.add(buildBaseRing(topR, columnCapWidth || circumRadius * 0.1));
 
-  // Mittlere Stufenkante: dezente Messinglinie.
-  const midEdge = new THREE.Mesh(
-    new THREE.TorusGeometry(midR, circumRadius * 0.003, 8, 64),
-    new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.35, transparent: true, opacity: 0.7 })
-  );
-  midEdge.rotation.x = Math.PI / 2;
-  midEdge.position.y = -tier1 - tier2;
-  group.add(midEdge);
+  // Dezente Messinglinie an der Vorderkante jeder Trittstufe (wo Tritt- auf
+  // Setzstufe trifft) - markiert die beiden inneren Stufenkanten klar, ohne
+  // dass Messing die Flaeche dominiert. Bei drei echten Stufen (siehe
+  // baseLatheProfile) liest eine einzelne Kante nicht mehr als "die
+  // Sockelstufe", sondern es braucht eine je Absatz.
+  const stepEdgeMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.35, transparent: true, opacity: 0.7 });
+  [[r1, y1], [r2, y2]].forEach(([r, y]) => {
+    const edge = new THREE.Mesh(new THREE.TorusGeometry(r, circumRadius * 0.003, 8, 64), stepEdgeMat);
+    edge.rotation.x = Math.PI / 2;
+    edge.position.y = y;
+    group.add(edge);
+  });
 
   // Aeusserste Plattformkante: duenner Navy-Ring statt Messing - fasst die
   // gesamte Sockel-Silhouette klar ein, ohne dass noch mehr Messing die
@@ -821,7 +886,7 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
     new THREE.MeshStandardMaterial({ color: NAVY, metalness: 0.15, roughness: 0.4 })
   );
   botEdge.rotation.x = Math.PI / 2;
-  botEdge.position.y = -tier1 - tier2 - tier3;
+  botEdge.position.y = y3;
   group.add(botEdge);
 
   return group;
@@ -1057,14 +1122,25 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     }
 
     // Unsichtbare "Schatten"-Koerper: schreiben nur in den Tiefenpuffer
-    // (colorWrite: false), zeichnen also selbst nie etwas - sorgen aber
+    // (colorWrite: false), zeichnen also selbst nie Farbe - sorgen aber
     // dafuer, dass Saeulen/Rippen, die dahinter liegen, beim Tiefentest
-    // durchfallen (siehe setColumns). Eigenes, opakes Material (nicht
-    // transparent): laeuft dadurch in Three.js' OPAQUE-Renderqueue, die vor
-    // der TRANSPARENT-Queue (Saeulen/Rippen) gezeichnet wird - der
-    // Tiefenpuffer ist also schon gefuellt, wenn Saeulen/Rippen getestet
-    // werden. DoubleSide, damit die Tiefe unabhaengig von der Blickrichtung
-    // auf die Flaeche entsteht.
+    // durchfallen (siehe setColumns). DoubleSide, damit die Tiefe
+    // unabhaengig von der Blickrichtung auf die Flaeche entsteht.
+    //
+    // WICHTIG: renderOrder auf diesen Meshes (siehe unten, -1) ist kein
+    // Detail, sondern die Voraussetzung dafuer, dass das ueberhaupt
+    // funktioniert. colorWrite:false schreibt NUR Tiefe - es kann keine
+    // bereits gezeichnete Saeulen-Farbe im Nachhinein wieder loeschen. Faellt
+    // eine Saeule VOR ihrem Verdeckungskoerper in der Zeichenreihenfolge,
+    // steht ihre Farbe schon im Puffer, wenn der (dann zu spaete)
+    // Tiefen-Test des Verdeckungskoerpers laeuft - der aktualisiert dann nur
+    // noch die Tiefe, die Saeule bleibt sichtbar stehen. Alle Meshes hier
+    // sind opak (kein transparent:true mehr, seit auch Saeulen/Rippen
+    // wieder undurchsichtig sind) und landen damit in DERSELBEN Three.js-
+    // Renderqueue wie Saeulen/Rippen - die Queue sortiert dort NICHT
+    // verlaesslich nach Tiefe (anders als die fruehere TRANSPARENT-Queue),
+    // sondern u.a. nach Material/Programm. Nur ein expliziter, niedrigerer
+    // renderOrder erzwingt "Verdeckungskoerper zuerst".
     const occMat = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide });
 
     // Kuppel- und Sockelform als Verdeckungskoerper: dieselbe Profilkurve
@@ -1078,6 +1154,7 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       occMat
     );
     domeOcc.position.set(0, drumHalfHeight, centerOffsetZ);
+    domeOcc.renderOrder = -1;
     scene.add(domeOcc);
 
     const baseOcc = new THREE.Mesh(
@@ -1085,6 +1162,7 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       occMat
     );
     baseOcc.position.set(0, -drumHalfHeight, centerOffsetZ);
+    baseOcc.renderOrder = -1;
     scene.add(baseOcc);
 
     // Eine Wand-Ebene je Seite, an derselben Stelle wie die jeweilige
@@ -1096,6 +1174,7 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     const wallGeo = new THREE.PlaneGeometry(1, 1);
     const walls = Array.from({ length: sides }, () => {
       const wall = new THREE.Mesh(wallGeo, occMat);
+      wall.renderOrder = -1;
       scene.add(wall);
       return wall;
     });
