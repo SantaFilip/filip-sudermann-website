@@ -791,12 +791,16 @@ export default function RotaryStage({
               style={colStyle}
               aria-hidden="true"
             >
+              {/* Kapitell: als Halbzylinder-Kappe gerundet (border-radius
+                  50% oben) statt eines flachen Blocks - deutet den runden
+                  Querschnitt der Saeule an, die "zur Haelfte aus der
+                  Wandkante hervorragt". */}
               <div
                 style={{
                   width: `${colCapW}px`,
                   height: `${colCapH}px`,
-                  borderRadius: '3px',
-                  background: 'linear-gradient(180deg, hsl(45 68% 74%), hsl(42 58% 51%) 55%, hsl(36 55% 38%))',
+                  borderRadius: '50% 50% 4px 4px / 65% 65% 8px 8px',
+                  background: 'linear-gradient(90deg, hsl(36 45% 42%) 0%, hsl(45 68% 78%) 38%, hsl(48 75% 88%) 50%, hsl(42 58% 60%) 68%, hsl(36 50% 36%) 100%)',
                   boxShadow: '0 1px 0 hsl(36 55% 30% / 0.6)',
                   flexShrink: 0,
                 }}
@@ -805,29 +809,31 @@ export default function RotaryStage({
                 style={{
                   width: `${colW}px`,
                   flex: 1,
-                  borderRadius: '2px',
-                  // Warmer Stein statt poliertes Metall: gedeckte Elfenbein-
-                  // Toene, keine grellen Glanzlichter. Die feine, sich
-                  // wiederholende Kannelur (klassische Saeulen-Riffelung)
-                  // bricht die Flaeche zusaetzlich - ohne sie liest eine
-                  // breite, einfarbige Flaeche als plumpe Wand statt als
-                  // Saeule.
-                  background: `
-                    repeating-linear-gradient(90deg,
-                      hsl(35 20% 78%) 0px, hsl(38 26% 85%) 3px,
-                      hsl(42 32% 90%) 6px, hsl(38 26% 85%) 9px),
-                    linear-gradient(90deg, hsl(35 20% 70%) 0%, hsl(40 30% 88%) 28%, hsl(42 30% 90%) 50%, hsl(38 24% 82%) 74%, hsl(34 18% 62%) 100%)
-                  `,
-                  backgroundBlendMode: 'soft-light, normal',
-                  boxShadow: 'inset 0 0 0 1px hsl(38 20% 55% / 0.3)',
+                  // Zylinder-Schattierung statt Kannelur: eine glatte Kurve
+                  // aus Kernschatten - Glanzlicht - Kernschatten, wie Licht,
+                  // das um einen runden Querschnitt wandert. Asymmetrisch
+                  // (Glanzlicht nicht mittig, sondern bei ~38%) - die
+                  // Saeule liest dadurch als halb aus der Wand heraustretend
+                  // statt als frei stehender, symmetrisch beleuchteter
+                  // Rundstab.
+                  background: `linear-gradient(90deg,
+                    hsl(35 22% 46%) 0%,
+                    hsl(37 26% 62%) 14%,
+                    hsl(42 34% 82%) 30%,
+                    hsl(48 42% 94%) 42%,
+                    hsl(45 36% 88%) 52%,
+                    hsl(40 28% 74%) 68%,
+                    hsl(36 24% 56%) 88%,
+                    hsl(34 22% 44%) 100%)`,
+                  boxShadow: 'inset 0 0 0 1px hsl(38 20% 40% / 0.25)',
                 }}
               />
               <div
                 style={{
                   width: `${colCapW}px`,
                   height: `${colCapH}px`,
-                  borderRadius: '3px',
-                  background: 'linear-gradient(180deg, hsl(36 55% 38%), hsl(42 58% 51%) 55%, hsl(45 68% 74%))',
+                  borderRadius: '4px 4px 50% 50% / 8px 8px 65% 65%',
+                  background: 'linear-gradient(90deg, hsl(36 45% 42%) 0%, hsl(45 68% 78%) 38%, hsl(48 75% 88%) 50%, hsl(42 58% 60%) 68%, hsl(36 50% 36%) 100%)',
                   boxShadow: '0 -1px 0 hsl(36 55% 30% / 0.6)',
                   flexShrink: 0,
                 }}
