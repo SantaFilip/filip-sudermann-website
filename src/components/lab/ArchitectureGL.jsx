@@ -549,10 +549,13 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       if (!columns || !renderer) return;
       // Statt eines harten visible=false-Umschaltens (ein sichtbares
       // "Despawnen" der Saeule mitten im Bild) blendet ein Opacity-Fade
-      // ueber ein paar Grad vor der eigentlichen Kantenabschneidung aus -
-      // die Saeule loest sich unauffaellig auf, statt schlagartig zu
-      // verschwinden.
-      const fadeSpan = 16;
+      // kurz vor der eigentlichen Kantenabschneidung aus - die Saeule loest
+      // sich unauffaellig auf, statt schlagartig zu verschwinden. Bewusst
+      // schmal (5 statt vorher 16 Grad): ein breites Fenster bedeutete, dass
+      // die Saeule ueber einen laengeren Dreh-/Zeitraum sichtbar halbtrans-
+      // parent/"blass" wirkte, obwohl ihre Nachbarflaechen noch gut lesbar
+      // waren - genau das wurde als "Saeule verblasst" gemeldet.
+      const fadeSpan = 5;
       const fadeStart = cullDeg - fadeSpan;
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
