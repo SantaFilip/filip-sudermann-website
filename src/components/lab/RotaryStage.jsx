@@ -414,7 +414,12 @@ export default function RotaryStage({
         }
         face.style.visibility = 'visible';
         face.style.transform = `${turn(deg)} translateZ(${radius}px)`;
-        applyShade(face, deg);
+        // KEIN applyShade hier (anders als shell): der brightness()-Filter
+        // erzwingt eine eigene Rasterisierungs-Ebene (siehe Kommentar bei
+        // applyShade oben) - auf Lesetext las sich das als leichte
+        // Unschaerfe, kombiniert mit dem abgedunkelten Ton an den Raendern
+        // wirkten die Randfolien dadurch "blasser" als die Frontflaeche.
+        // Inhalt muss ueberall gleich scharf/lesbar bleiben.
 
         const auf = offen && i === offeneFlaeche;
 
@@ -662,26 +667,6 @@ export default function RotaryStage({
   const colCapW = Math.round(colW * 1.3);
   const colCapH = Math.max(14, Math.round(colW * 0.4));
 
-  const faceStyle = {
-    width: cube.w ? `${cube.w}px` : '100%',
-    height: cube.h ? `${cube.h}px` : '94vh',
-    background: 'hsl(var(--card))',
-    // Auf dem Handy fuellt die Seite den Bildschirm - ein Rahmen waere dort
-    // nur eine Linie am Displayrand und kostet sichtbare Flaeche.
-    border: mobile ? 'none' : '1px solid hsl(var(--border))',
-    boxShadow: mobile
-      ? 'none'
-      : '0 0 0 1px hsl(var(--accent) / 0.18), 0 30px 70px -30px hsl(217 62% 12% / 0.45)',
-    backfaceVisibility: 'hidden',
-    willChange: 'transform, filter',
-  };
-
-  // Nur Breite und Versatz animieren. Die Drehung wird pro Frame gesetzt; ein
-  // Uebergang darauf liefe der Position hinterher.
-  const inhaltStyle = expandTo
-    ? { ...faceStyle, transformStyle: 'preserve-3d', transition: 'width 420ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 420ms cubic-bezier(0.4, 0, 0.2, 1)' }
-    : { ...faceStyle, transformStyle: 'preserve-3d' };
-
   // Dach und Sockel: echtes WebGL statt flacher SVG-Naeherung (siehe
   // ArchitectureGL.jsx). perspektivePx muss exakt dem CSS perspective-Wert
   // von sticky (weiter unten) entsprechen, circumRadius dem tatsaechlichen
@@ -727,6 +712,65 @@ export default function RotaryStage({
   // ohne Puffer blieb ein Haarriss-Ueberlapp an den hoechsten Buchstaben.
   const drumHeightScale = ((perspektivePx + facettenRadius) / perspektivePx) * 1.04;
   const effectiveDrumHalfHeight = drumHalfHeight * drumHeightScale;
+
+  // Der Kompensations-Trick oben gleicht nur EINEN Fall exakt aus: die
+  // Frontflaeche bei deg = 0 (z = 0, unverzerrte 1:1-Projektion). Jede
+  // andere sichtbare Flaeche steht bereits selbst schraeg (z < 0, durch die
+  // eigene Rotation), ihre projizierte Hoehe schrumpft dadurch natuerlich
+  // mit dem Drehwinkel - waehrend Dach/Sockel als feste Geometrie konstant
+  // gross bleiben. Ergebnis: an der Frontflaeche schliesst alles buendig,
+  // an den Seitenflaechen oeffnet sich eine Luecke zwischen Folienkante und
+  // Dach-/Sockelrand, die mit dem Winkel waechst (Hintergrund blitzt durch).
+  // Da Y-Rotation die Hoehe eines Punkts nicht veraendert, nur seine Tiefe,
+  // gilt fuer JEDE Flaeche bei JEDEM Winkel: ihre Tiefe liegt IMMER
+  // zwischen z = 0 (Front) und z = -facettenRadius (90 Grad - exakt die
+  // Tiefe, auf der auch Dach/Sockel sitzen). Skaliert man die Folienhoehe
+  // selbst um denselben Faktor wie Dach/Sockel (drumHeightScale), erreicht
+  // ihre Projektion bei 90 Grad exakt die von Dach/Sockel (beide auf
+  // derselben Tiefe) - und uebertrifft sie bei jedem flacheren Winkel, weil
+  // die Folie dort naeher an der Kamera liegt als Dach/Sockel. Die Luecke
+  // ist damit fuer den gesamten sichtbaren Drehbereich geschlossen, nicht
+  // nur zufaellig an einem Punkt. FitToFace schneidet ueberschuessige Hoehe
+  // nie zu (MAX_SCALE = 1, skaliert nur runter) - der Inhalt bleibt also
+  // unverzerrt, die Flaeche bekommt nur mehr Luft oben/unten.
+  const faceHeightBoost = drumHeightScale;
+  const boostedFaceH = cube.h ? Math.round(cube.h * faceHeightBoost) : cube.h;
+  const faceVOffset = cube.h ? -(boostedFaceH - cube.h) / 2 : 0;
+
+
+  const faceStyle = {
+    width: cube.w ? `${cube.w}px` : '100%',
+    height: cube.h ? `${cube.h}px` : '94vh',
+    background: 'hsl(var(--card))',
+    // Auf dem Handy fuellt die Seite den Bildschirm - ein Rahmen waere dort
+    // nur eine Linie am Displayrand und kostet sichtbare Flaeche.
+    border: mobile ? 'none' : '1px solid hsl(var(--border))',
+    boxShadow: mobile
+      ? 'none'
+      : '0 0 0 1px hsl(var(--accent) / 0.18), 0 30px 70px -30px hsl(217 62% 12% / 0.45)',
+    backfaceVisibility: 'hidden',
+    willChange: 'transform, filter',
+  };
+
+  // Nur Breite und Versatz animieren. Die Drehung wird pro Frame gesetzt; ein
+  // Uebergang darauf liefe der Position hinterher.
+  //
+  // Hoehe/marginTop ueberschreiben faceStyle bewusst: die Inhaltsflaeche
+  // braucht die hochskalierte (boostedFaceH) Hoehe, um bei jedem
+  // Rotationswinkel bis an Dach/Sockel zu reichen (siehe Kommentar bei
+  // faceHeightBoost oben) - die Huelle (shell, nutzt faceStyle direkt)
+  // bleibt bei cube.h, sie hat keine Lesbarkeits-/Anschluss-Anforderung.
+  // marginTop haelt die vergroesserte Flaeche exakt um dieselbe Mitte
+  // zentriert wie zuvor (die auch fuer Saeulen/Dach/Sockel gilt).
+  const inhaltBase = {
+    ...faceStyle,
+    height: cube.h ? `${boostedFaceH}px` : faceStyle.height,
+    marginTop: `${faceVOffset}px`,
+    transformStyle: 'preserve-3d',
+  };
+  const inhaltStyle = expandTo
+    ? { ...inhaltBase, transition: 'width 420ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 420ms cubic-bezier(0.4, 0, 0.2, 1)' }
+    : inhaltBase;
 
   return (
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
