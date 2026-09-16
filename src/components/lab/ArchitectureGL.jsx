@@ -11,23 +11,26 @@ import * as THREE from 'three';
  * rotierenden Trommel wird durch die echte 3D-Perspektive der Buehne (CSS
  * `perspective`) anders verkleinert/verschoben projiziert.
  *
- * Saeulen waren zunaechst noch eigene CSS-3D-Elemente (rotierten mit der
- * Trommel mit, wie die Facetten selbst) - technisch exakt, aber als
- * eigenstaendige DOM-Ebene neben dieser WebGL-Ebene fuer Dach/Sockel: zwei
- * getrennte Rendering-Schichten, die der Browser nur uebereinanderlegt
- * (Compositing), nicht in einem gemeinsamen Tiefenpuffer gegenseitig
- * verdecken kann. Jede Kalibrierung von Radius/Hoehe blieb Annaeherung.
+ * ZWEI getrennte WebGL-Layer statt einem, bewusst:
+ * - ArchitectureBackGL (Dach + Sockel): statisch, dreht nicht mit. Sitzt im
+ *   DOM VOR der Facetten-Trommel - liegt also HINTER dem Inhalt. Jede
+ *   Inhaltsflaeche (undurchsichtiger CSS-Hintergrund) deckt sie vollstaendig
+ *   ab, egal was auf dieser Ebene passiert. Frueher lebten Dach/Sockel in
+ *   derselben Ebene wie die Saeulen, NACH der Trommel im DOM (vor dem
+ *   Inhalt) - Kuppel-Silhouette und Sockel-Flaeche reichen aber ueber die
+ *   ganze Buehnenbreite, nicht nur bis zur Saeule, und konnten so (z.B. bei
+ *   bestimmten Material-/Transparenz-Einstellungen) sichtbar ueber den
+ *   Inhalt blenden.
+ * - ArchitectureFrontGL (Saeulen + Rippen): dynamisch, dreht mit der
+ *   Trommel mit (siehe setColumns). Sitzt NACH der Trommel im DOM, liegt
+ *   also VOR dem Inhalt - das ist beabsichtigt: Saeulen markieren die
+ *   Nahtstelle zwischen zwei Facetten und muessen dort immer sichtbar
+ *   bleiben, auch wenn die Facette direkt dahinter liegt.
  *
- * Jetzt leben Saeulen, Dach UND Sockel im selben WebGL-Scene-Graph - der
- * Browser/Three.js sortiert sie automatisch korrekt gegeneinander (echter
- * Tiefenpuffer). Nur die Inhaltsflaechen (Text, Bilder, Buttons) bleiben
- * CSS-3D-DOM - die muessen lesbar, scharf und interaktiv bleiben (Formulare,
- * Akkordeons, Calendly-Widget), das leistet WebGL nicht sinnvoll. Die
- * Saeulen sitzen an der Nahtstelle zwischen zwei Facetten und muessen daher
- * praktisch immer VOR dem Inhalt liegen, nie dahinter - das ist die einzige
- * Tiefenbeziehung, die zwischen der WebGL- und der DOM-Ebene ueberhaupt
- * vorkommt, und die feste Zeichenreihenfolge (dieser Layer nach der Buehne
- * im DOM) bildet sie korrekt ab.
+ * Beide Layer teilen sich Kamera-Mathematik und Weltkoordinaten (siehe
+ * unten), sind aber zwei unabhaengige WebGL-Kontexte/Canvases - fuer die
+ * Achte-Geometrie hier vernachlaessigbare Mehrkosten, dafuer strukturell
+ * garantiert: nichts vom Dach/Sockel kann je wieder vor den Inhalt geraten.
  *
  * Kamera-Kalibrierung: CSS `perspective: Dpx` mit `perspective-origin: 50%
  * 50%` entspricht einer Kamera im Abstand D (in denselben Pixeln) von der
@@ -47,13 +50,11 @@ import * as THREE from 'three';
  */
 
 const IVORY = 0xf7f0e0;
-const IVORY_DARK = 0xc9b898;
 const GOLD = 0xc9973a;
 const GOLD_LIGHT = 0xe8c97a;
 const GOLD_DEEP = 0x8a6423;
 const NAVY = 0x142a4d;
 const STONE = 0xd9cbaa;
-const MARBLE = 0xf4f1ea;
 const GLASS_BLUE = 0xcfe6f2;
 const TILE_BLUE = '#2e5c96';
 const TILE_BLUE_PALE = '#8fb3da';
@@ -153,6 +154,24 @@ function buildEnvTexture() {
   return tex;
 }
 
+function addLights(scene, circumRadius, perspectivePx) {
+  scene.environment = buildEnvTexture();
+  scene.add(new THREE.AmbientLight(0xfff4e0, 0.85));
+  const sun = new THREE.DirectionalLight(0xfff8ec, 1.15);
+  sun.position.set(circumRadius * 0.6, circumRadius * 1.4, perspectivePx * 0.5);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xaad4ff, 0.35);
+  fill.position.set(-circumRadius, circumRadius * 0.3, perspectivePx * 0.2);
+  scene.add(fill);
+  // Von unten aufhellend: die Kuppel-Unterseite (die dem Betrachter
+  // meist zugewandte Flaeche) zeigt nach unten und bekommt von sun/fill
+  // (beide oberhalb) kaum Licht ab - wirkte dadurch dunkel/schmutzig statt
+  // wie helles Glas.
+  const upfill = new THREE.DirectionalLight(0xdcebf7, 0.5);
+  upfill.position.set(circumRadius * 0.3, -circumRadius * 0.8, perspectivePx * 0.4);
+  scene.add(upfill);
+}
+
 function buildDome(circumRadius, heightBudget, sides) {
   const group = new THREE.Group();
   // domeH/fasciaH haengen an heightBudget (drumHalfHeight - der
@@ -179,21 +198,11 @@ function buildDome(circumRadius, heightBudget, sides) {
   const domeGeo = new THREE.LatheGeometry(profile, 64);
   // Kein `transmission`: ohne Environment-Map sampelt MeshPhysicalMaterial
   // dafuer den (leeren) Canvas-Hintergrund und faerbt die Kuppel unkontrolliert.
-  // `FrontSide` blendet die von der Kamera abgewandte Rueckseite komplett
-  // aus (frueher liess `DoubleSide` + `transparent` die Rueckseite durch die
-  // Vorderseite scheinen - zwei ueberlagerte Halbtransparenz-Flaechen statt
-  // einer festen Kappe, wirkte schwebend statt aufliegend). Da FrontSide die
-  // Rueckseite ohnehin wegschneidet, ist maessige Transparenz jetzt gefahrlos
-  // moeglich - kombiniert mit einer Environment-Map (siehe buildEnvTexture)
-  // fuer echte Spiegelungen liest das jetzt als Glas, nicht nur als glaenzend
-  // lackierte Flaeche.
-  // Undurchsichtig: `transparent:true` liess die Kuppel (deren Silhouette
-  // auch ueber den seitlichen Folien liegt, nicht nur der mittleren) einen
-  // helllblauen Schleier ueber den Inhalt darunter legen - die Randfolien
-  // wirkten dadurch blasser/verwaschener als die mittlere. Der Glas-
-  // Eindruck kommt jetzt allein aus Reflexion (envMap, hoher Clearcoat) -
-  // reales Glas unter Kunstlicht wirkt ohnehin oft eher spiegelnd-opak als
-  // durchsichtig.
+  // Undurchsichtig: `transparent:true` legte einen hellblauen Schleier ueber
+  // alles unter der Kuppel-Silhouette. Der Glas-Eindruck kommt jetzt allein
+  // aus Reflexion (envMap, hoher Clearcoat) - reales Glas unter Kunstlicht
+  // wirkt ohnehin oft eher spiegelnd-opak. `FrontSide` blendet die von der
+  // Kamera abgewandte Rueckseite komplett aus.
   const domeMat = new THREE.MeshPhysicalMaterial({
     color: GLASS_BLUE,
     metalness: 0.1,
@@ -251,11 +260,11 @@ function buildDome(circumRadius, heightBudget, sides) {
 // verjuengender Steg (der "Kegel mit Giebel zur Kuppelspitze"), der der
 // Kuppel-Profilkurve EXAKT folgt (dieselben r/y-Werte wie oben) - die
 // Rippe liegt dadurch garantiert genau auf der Kuppelflaeche, ohne Spalt
-// oder Durchdringung. Separat von buildDome, weil sie (anders als Dach/
-// Sockel) mit den Saeulen mitdrehen muss - siehe deren dynamische Rotation
-// in setColumns() weiter unten. Breite an der Traufe an der Kapitellbreite
-// orientiert (columnCapWidth), damit sie optisch aus dem Saeulenkopf
-// herauswaechst statt beliebig duenn/dick anzusetzen.
+// oder Durchdringung. Lebt im FRONT-Layer (mit den Saeulen), weil sie mit
+// ihnen mitdrehen muss - siehe deren dynamische Rotation in setColumns().
+// Breite an der Traufe an der Kapitellbreite orientiert (columnCapWidth),
+// damit sie optisch aus dem Saeulenkopf herauswaechst statt beliebig duenn/
+// dick anzusetzen.
 function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   const group = new THREE.Group();
   const domeH = heightBudget * 0.55;
@@ -408,7 +417,7 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
 
 // Eine Saeule: Kapitell (oben), Schaft, Basis (unten) - rotationssymmetrisch,
 // daher genuegt ein Cylinder statt der frueheren CSS-Gradient-Attrappe fuer
-// den Rundungs-Eindruck. Echtes Licht (siehe Scene-Lights) uebernimmt die
+// den Rundungs-Eindruck. Echtes Licht (siehe addLights) uebernimmt die
 // Schattierung, die vorher per Hand als Farbverlauf nachgestellt wurde.
 // totalHeight ist die volle Spanne, die die Saeule (Schaft + beide Kappen
 // zusammen) einnehmen darf - exakt drumHalfHeight*2, damit ihr Fuss genau
@@ -446,8 +455,85 @@ function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   return group;
 }
 
-const ArchitectureGL = forwardRef(function ArchitectureGL(
-  { stageW, stageH, perspectivePx, circumRadius, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92 },
+function makeCamera(stageW, stageH, perspectivePx) {
+  const fovRad = 2 * Math.atan(stageH / 2 / perspectivePx);
+  const camera = new THREE.PerspectiveCamera((fovRad * 180) / Math.PI, stageW / stageH, 1, perspectivePx * 3);
+  camera.position.set(0, 0, perspectivePx);
+  camera.lookAt(0, 0, 0);
+  return camera;
+}
+
+function makeRenderer(stageW, stageH, container) {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(stageW, stageH);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.domElement.style.position = 'absolute';
+  renderer.domElement.style.inset = '0';
+  container.appendChild(renderer.domElement);
+  return renderer;
+}
+
+function disposeScene(scene, renderer, container) {
+  scene.traverse((obj) => {
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) {
+      if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+      else obj.material.dispose();
+    }
+  });
+  if (renderer.domElement.parentNode === container) {
+    container.removeChild(renderer.domElement);
+  }
+  renderer.dispose();
+}
+
+// Dach + Sockel: statisch, dreht nicht mit. Muss im DOM VOR der
+// Facetten-Trommel stehen (siehe RotaryStage) - liegt damit HINTER dem
+// Inhalt, der ihn so immer vollstaendig verdeckt, egal was auf dieser
+// Ebene passiert.
+export const ArchitectureBackGL = React.memo(function ArchitectureBackGL({
+  stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colCapWidth,
+}) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !stageW || !stageH || !ringRadius) return;
+
+    const scene = new THREE.Scene();
+    const camera = makeCamera(stageW, stageH, perspectivePx);
+    const renderer = makeRenderer(stageW, stageH, container);
+    addLights(scene, ringRadius, perspectivePx);
+
+    const dome = buildDome(ringRadius, drumHalfHeight, sides);
+    dome.position.set(0, drumHalfHeight, centerOffsetZ);
+    scene.add(dome);
+
+    const base = buildBase(ringRadius, drumHalfHeight, colCapWidth);
+    base.position.set(0, -drumHalfHeight, centerOffsetZ);
+    scene.add(base);
+
+    renderer.render(scene, camera);
+
+    return () => disposeScene(scene, renderer, container);
+  }, [stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ, sides, colCapWidth]);
+
+  return (
+    <div
+      ref={containerRef}
+      data-architecture-gl="back"
+      className="pointer-events-none absolute inset-0"
+      aria-hidden="true"
+    />
+  );
+});
+
+// Saeulen + Rippen: dreht mit der Trommel mit. Muss im DOM NACH der
+// Facetten-Trommel stehen - liegt damit VOR dem Inhalt, das ist hier
+// beabsichtigt: Saeulen markieren die Nahtstelle zwischen zwei Facetten und
+// muessen dort sichtbar bleiben, auch wenn die Facette direkt dahinter liegt.
+const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
+  { stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92 },
   ref
 ) {
   const containerRef = useRef(null);
@@ -510,61 +596,19 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !stageW || !stageH || !circumRadius || !ringRadius) return;
+    if (!container || !stageW || !stageH || !ringRadius) return;
 
     const scene = new THREE.Scene();
-    const fovRad = 2 * Math.atan(stageH / 2 / perspectivePx);
-    const camera = new THREE.PerspectiveCamera((fovRad * 180) / Math.PI, stageW / stageH, 1, perspectivePx * 3);
-    camera.position.set(0, 0, perspectivePx);
-    camera.lookAt(0, 0, 0);
+    const camera = makeCamera(stageW, stageH, perspectivePx);
+    const renderer = makeRenderer(stageW, stageH, container);
+    addLights(scene, ringRadius, perspectivePx);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(stageW, stageH);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.domElement.style.position = 'absolute';
-    renderer.domElement.style.inset = '0';
-    container.appendChild(renderer.domElement);
-
-    // Environment-Map fuer echte Spiegelungen auf Kuppel/Marmor - ohne sie
-    // hat MeshPhysicalMaterial nichts zu reflektieren und wirkt trotz
-    // Glas-Setup nur wie eine matte, dunkle Flaeche (besonders die
-    // Kuppel-Unterseite, die kaum Direktlicht abbekommt).
-    scene.environment = buildEnvTexture();
-
-    scene.add(new THREE.AmbientLight(0xfff4e0, 0.85));
-    const sun = new THREE.DirectionalLight(0xfff8ec, 1.15);
-    sun.position.set(circumRadius * 0.6, circumRadius * 1.4, perspectivePx * 0.5);
-    scene.add(sun);
-    const fill = new THREE.DirectionalLight(0xaad4ff, 0.35);
-    fill.position.set(-circumRadius, circumRadius * 0.3, perspectivePx * 0.2);
-    scene.add(fill);
-    // Von unten aufhellend: die Kuppel-Unterseite (die dem Betrachter
-    // meist zugewandte Flaeche) zeigt nach unten und bekommt von sun/fill
-    // (beide oberhalb) kaum Licht ab - wirkte dadurch dunkel/schmutzig statt
-    // wie helles Glas.
-    const upfill = new THREE.DirectionalLight(0xdcebf7, 0.5);
-    upfill.position.set(circumRadius * 0.3, -circumRadius * 0.8, perspectivePx * 0.4);
-    scene.add(upfill);
-
-    // Dach/Sockel sitzen auf derselben Drehachse (centerOffsetZ) und mit
-    // demselben Radius (ringRadius) wie die Saeulen - keine unabhaengig
-    // "passend" geschaetzte Groesse mehr, sondern exakt derselbe Kreis, auf
-    // dem auch die Saeulenkoepfe/-fuesse liegen. Zwei identische 3D-Punkte
-    // fallen unter jeder Kamera/Projektion zusammen - das haelt auch bei
-    // Rotation und aus jedem Blickwinkel, nicht nur zufaellig von vorne.
-    const dome = buildDome(ringRadius, drumHalfHeight, sides);
-    dome.position.set(0, drumHalfHeight, centerOffsetZ);
-    scene.add(dome);
-
-    // Rippen als eigene Gruppe, Kind von `dome` (erbt dessen Position),
-    // aber mit eigener Rotation - sie muessen sich mit den Saeulen
-    // mitdrehen (siehe setColumns), waehrend Dach/Sockel selbst fest stehen.
+    // Rippen sitzen an derselben Stelle, an der (im Back-Layer) der Dach-
+    // Ansatz waere - selbe Position wie dort `dome.position` gesetzt wird,
+    // nur hier ohne die Kuppel selbst.
     const ribs = buildDomeRibs(ringRadius, drumHalfHeight, sides, colCapWidth);
-    dome.add(ribs);
-
-    const base = buildBase(ringRadius, drumHalfHeight, colCapWidth);
-    base.position.set(0, -drumHalfHeight, centerOffsetZ);
-    scene.add(base);
+    ribs.position.set(0, drumHalfHeight, centerOffsetZ);
+    scene.add(ribs);
 
     const columns = [];
     if (colWidth) {
@@ -579,29 +623,19 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
     stateRef.current = { renderer, scene, camera, columns, ribs };
 
     return () => {
-      scene.traverse((obj) => {
-        if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) {
-          if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
-          else obj.material.dispose();
-        }
-      });
-      if (renderer.domElement.parentNode === container) {
-        container.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
+      disposeScene(scene, renderer, container);
       stateRef.current = {};
     };
-  }, [stageW, stageH, perspectivePx, circumRadius, ringRadius, drumHalfHeight, centerOffsetZ, sides, colWidth, colCapWidth, colCapHeight]);
+  }, [stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ, sides, colWidth, colCapWidth, colCapHeight]);
 
   return (
     <div
       ref={containerRef}
-      data-architecture-gl=""
+      data-architecture-gl="front"
       className="pointer-events-none absolute inset-0"
       aria-hidden="true"
     />
   );
 });
 
-export default ArchitectureGL;
+export default ArchitectureFrontGL;

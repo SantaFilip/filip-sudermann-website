@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 import FaceOrnament from '@/components/lab/FaceOrnament';
 import FadeIn from '@/components/FadeIn';
-import ArchitectureGL from '@/components/lab/ArchitectureGL';
+import ArchitectureGL, { ArchitectureBackGL } from '@/components/lab/ArchitectureGL';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -757,6 +757,26 @@ export default function RotaryStage({
           <RotatingBackdrop />
         </div>
 
+        {/* Dach+Sockel: eigener, statischer WebGL-Layer VOR der Trommel im
+            DOM - liegt damit HINTER dem Inhalt. Der undurchsichtige
+            Facetten-Hintergrund deckt ihn dadurch immer vollstaendig ab,
+            unabhaengig davon, was auf dieser Ebene passiert (siehe
+            ArchitectureGL.jsx). Nur die Saeulen (weiter unten, NACH der
+            Trommel) duerfen vor dem Inhalt liegen - sie markieren die
+            Nahtstelle zwischen zwei Facetten. */}
+        {cube.h > 0 && ringRadius > 0 && (
+          <ArchitectureBackGL
+            stageW={cube.stageW}
+            stageH={cube.stageH}
+            perspectivePx={perspektivePx}
+            ringRadius={ringRadius}
+            drumHalfHeight={effectiveDrumHalfHeight}
+            centerOffsetZ={centerOffsetZ}
+            sides={sides}
+            colCapWidth={colCapW}
+          />
+        )}
+
         <div
           ref={boxRef}
           className="relative"
@@ -828,13 +848,14 @@ export default function RotaryStage({
           ))}
         </div>
 
-        {/* Echtes 3D-Rahmengeruest (Saeulen+Dach+Sockel), ein einzelner
-            WebGL-Layer ueber der gesamten Buehne (siehe ArchitectureGL.jsx).
-            Nach box im DOM, damit er vor den Inhaltsflaechen zeichnet -
-            Saeulen sitzen an der Nahtstelle zwischen zwei Facetten und
-            muessen praktisch immer vor dem Inhalt liegen. Wird wie die
-            Huelle ausgeblendet, wenn eine Facette einzeln aufgeklappt ist. */}
-        {cube.h > 0 && circumRadius > 0 && (
+        {/* Echtes 3D-Rahmengeruest: nur noch Saeulen+Rippen, eigener WebGL-
+            Layer NACH box im DOM (siehe ArchitectureGL.jsx - Dach/Sockel
+            sitzen als eigener Layer VOR box, siehe oben). Saeulen sitzen an
+            der Nahtstelle zwischen zwei Facetten und muessen praktisch immer
+            vor dem Inhalt liegen - anders als Dach/Sockel, die nichts vor
+            dem Inhalt zu suchen haben. Wird wie die Huelle ausgeblendet,
+            wenn eine Facette einzeln aufgeklappt ist. */}
+        {cube.h > 0 && ringRadius > 0 && (
           // pointer-events-none: ohne das faengt dieser volle Wrapper (liegt
           // ueber der gesamten Buehne, spaeter im DOM als der Klick-Faenger
           // der Facetten) jeden Klick/Drag ab, bevor er das Overlay
@@ -847,7 +868,6 @@ export default function RotaryStage({
               stageW={cube.stageW}
               stageH={cube.stageH}
               perspectivePx={perspektivePx}
-              circumRadius={circumRadius}
               ringRadius={ringRadius}
               drumHalfHeight={effectiveDrumHalfHeight}
               centerOffsetZ={centerOffsetZ}
