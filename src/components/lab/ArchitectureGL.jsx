@@ -657,12 +657,13 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
 // Sockel-Oberflaeche (y = 0 in diesem Koordinatensystem).
 function buildBaseRing(circumRadius, columnCapWidth) {
   const group = new THREE.Group();
-  // Zwischen den beiden vorherigen Werten eingependelt (2.0x war zu knapp
-  // fuer die vordere/kameranahe Saeule, 3.5x liess die Plattform an den
-  // Seiten sichtbar ellipsenhaft/zu grosszuegig wirken statt kreisrund -
-  // ein EINZELNER 3D-Radius kann wegen der Perspektive nie fuer alle
-  // Blickwinkel gleichzeitig exakt passen, das ist hier der Kompromiss).
-  const band = Math.max(columnCapWidth * 2.6, circumRadius * 0.13);
+  // Wieder der grosszuegige Wert (3.5x) - der deckt die vordere/kamera-
+  // nahe Saeule sicher komplett ab. Dass das an den seitlichen Raendern zu
+  // grosszuegig wirkte, wird jetzt NICHT mehr ueber einen kleineren
+  // (kreisrunden) Radius geloest, sondern die Platte am Ende dieser
+  // Funktion gezielt links/rechts gestaucht (echte Ellipse) - siehe
+  // group.scale.x weiter unten.
+  const band = Math.max(columnCapWidth * 3.5, circumRadius * 0.18);
   // Volle Scheibe statt schmalem Ring: `inner` haengt NICHT mehr an band -
   // eine breitere band (fuer eine breitere Aussenkante) hätte sonst auch
   // die Innenkante weiter nach innen gezogen und dort ein Loch aufgerissen,
@@ -713,6 +714,14 @@ function buildBaseRing(circumRadius, columnCapWidth) {
     edge.position.y = stepH;
     group.add(edge);
   });
+
+  // Rundes Massband, aber bewusst zur echten Ellipse gestaucht: links/
+  // rechts (Weltachse X, dort stehen die seitlichen Saeulen) enger als
+  // vorne/hinten (Z, dort steht die kameranahe Saeule und braucht die
+  // volle Breite von band). Ein einzelner Kreisradius konnte wegen der
+  // Perspektive nie beides gleichzeitig treffen - die Stauchung loest das,
+  // ohne den grosszuegigen band-Wert fuer die Front aufzugeben.
+  group.scale.x = 0.78;
 
   return group;
 }
