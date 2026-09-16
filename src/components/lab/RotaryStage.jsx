@@ -411,7 +411,13 @@ export default function RotaryStage({
       // die Kantenabschneidung (CULL_DEG) je Saeule.
       const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.03;
       const colDegs = Array.from({ length: sides }, (_, s) => kuerzesterWeg(p - s + 0.5) * step);
-      architectureRef.current?.setColumns(colDegs, colRadius, -radius);
+      // faceDegs: derselbe Winkel wie fuer Huelle/Inhaltsflaeche je Seite
+      // (siehe shellRefs/faceRefs weiter unten) - ArchitectureGL braucht sie,
+      // um unsichtbare Wand-Ebenen an genau denselben Stellen zu platzieren,
+      // damit Saeulen/Rippen dahinter echt (pixelgenau) verdeckt werden
+      // koennen, siehe setColumns() in ArchitectureGL.jsx.
+      const faceDegs = Array.from({ length: sides }, (_, s) => kuerzesterWeg(p - s) * step);
+      architectureRef.current?.setColumns(colDegs, colRadius, -radius, radius, faceDegs);
 
       // Inhaltsseiten darueber.
       faceRefs.current.forEach((face, i) => {
@@ -951,18 +957,6 @@ export default function RotaryStage({
               colWidth={colW}
               colCapWidth={colCapW}
               colCapHeight={colCapH}
-              // Frueher grosszuegiger als CULL_DEG (Saeulen sollten laenger
-              // sichtbar bleiben als die Inhaltsflaechen, die bei diesem
-              // Winkel unlesbar werden) - dadurch konnte eine Saeule aber
-              // sichtbar bleiben, obwohl BEIDE Nachbarflaechen (die sie
-              // eigentlich an ihrer Nahtstelle markiert) schon ausgeblendet
-              // waren, und driftete dann quer ueber eine voellig andere,
-              // noch sichtbare Flaeche - eine "verwaiste" Saeule mitten im
-              // Bild. cullDeg jetzt exakt wie bei den Flaechen: die Saeule
-              // verschwindet nie spaeter als ihre eigenen Nachbarn. Der
-              // sanfte Fade (siehe setColumns) sorgt weiterhin dafuer, dass
-              // das Verschwinden selbst nicht als Ruck sichtbar wird.
-              cullDeg={CULL_DEG}
             />
           </div>
         )}

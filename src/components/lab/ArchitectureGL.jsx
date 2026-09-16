@@ -23,9 +23,14 @@ import * as THREE from 'three';
  *   Inhalt blenden.
  * - ArchitectureFrontGL (Saeulen + Rippen): dynamisch, dreht mit der
  *   Trommel mit (siehe setColumns). Sitzt NACH der Trommel im DOM, liegt
- *   also VOR dem Inhalt - das ist beabsichtigt: Saeulen markieren die
- *   Nahtstelle zwischen zwei Facetten und muessen dort immer sichtbar
- *   bleiben, auch wenn die Facette direkt dahinter liegt.
+ *   also VOR dem Inhalt - noetig, damit eine Saeule ueberhaupt vor einer
+ *   Facette gezeichnet werden KANN. Ob sie es an einer bestimmten Stelle
+ *   tatsaechlich tut, entscheidet aber nicht mehr die DOM-Reihenfolge
+ *   allein: unsichtbare "Schatten"-Koerper (Kuppel-/Sockelform + eine
+ *   Wand-Ebene je Seite, siehe setColumns) sorgen dafuer, dass der WebGL-
+ *   Tiefenpuffer Saeulen/Rippen pixelgenau ausblendet, sobald sie hinter
+ *   einer Facette oder dem Dach liegen wuerden - echte Verdeckung statt
+ *   pauschalem "immer vorne".
  *
  * Beide Layer teilen sich Kamera-Mathematik und Weltkoordinaten (siehe
  * unten), sind aber zwei unabhaengige WebGL-Kontexte/Canvases - fuer die
@@ -62,12 +67,12 @@ const BRASS_LIGHT = 0xceac78;
 const BRASS_DEEP = 0x7a5f3c;
 const NAVY = 0x0c1a32;
 const GLASS = 0xf0f1ea;
-// Sockel-Mosaik: Quarz (helles Weiss) und Lapislazuli (kraeftiges Blau) -
-// auf Wunsch statt des vorherigen zurueckhaltenden Kalkstein-Musters.
+// Sockel-Marmor: warmes Elfenbein/Creme statt des vorherigen blau-weissen
+// Mosaiks - auf Wunsch ein "premium, old money"-Sockel ohne Musterunruhe.
+// MARBLE_VEIN ist die sehr zurueckhaltende Aderung darauf, kein Muster.
 const QUARTZ = '#f6f4ee';
 const QUARTZ_DEEP = '#e6e1d3';
-const LAPIS = '#1f4d8c';
-const LAPIS_DEEP = '#15335e';
+const MARBLE_VEIN = '#a89a80';
 
 // Nur fuer die Saeulen: auf Wunsch zurueck auf den urspruenglichen,
 // kraeftigeren Goldton (statt des gedaempften BRASS) - Dach/Gebaelk/Sockel
@@ -76,11 +81,12 @@ const LAPIS_DEEP = '#15335e';
 const COL_GOLD = 0xc9973a;
 const COL_STONE = 0xd9cbaa;
 
-// Sockel-Mosaik: klassisches Maeanderband (griechischer Schluesselmaeander)
-// in Lapislazuli-Blau auf hellem Quarz-Grund - auf Wunsch statt des
-// vorherigen zurueckhaltenden Kalkstein-Musters. Per Canvas erzeugt, da
-// keine externen Bild-Assets zur Verfuegung stehen.
-function buildTileTexture() {
+// Sockel-Oberflaeche: glatter, heller Elfenbein-Marmor statt des vorherigen
+// blau-weissen Maeander-Mosaiks - auf Wunsch ein ruhiger, "old money"-Sockel,
+// der die Architektur traegt statt selbst Aufmerksamkeit zu ziehen. Nur sehr
+// zurueckhaltende Aderung, keine starken Venen, kein Muster. Per Canvas
+// erzeugt, da keine externen Bild-Assets zur Verfuegung stehen.
+function buildBaseMarbleTexture() {
   const size = 1024;
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -88,97 +94,50 @@ function buildTileTexture() {
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
 
-  // Grundflaeche: Quarz-Weiss mit sehr leichtem radialen Verlauf statt
-  // reiner Flatcolor - liest als polierter Stein, nicht als digitale Flaeche.
+  // Grundflaeche: warmes Elfenbein mit leichtem radialen Verlauf statt
+  // reiner Flatcolor - liest als polierter Naturstein, nicht als digitale
+  // Flaeche.
   const bgGrad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.75);
   bgGrad.addColorStop(0, QUARTZ);
   bgGrad.addColorStop(1, QUARTZ_DEEP);
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, size, size);
 
-  // Vier verschiedene Motive statt eines einzelnen, sich wiederholenden
-  // Kringels - zwei Schluesselmaeander-Varianten, ein Rautenkreuz und ein
-  // schlichter Rahmen. Deterministisch (kein echter Zufall, reproduzierbar)
-  // aber unregelmaessig genug pro Zelle gemischt und gedreht, um als
-  // komplexes Mosaik statt als ein einzelnes wiederholtes Motiv zu wirken -
-  // wie echtes Fliesenmosaik aus mehreren Formen zusammengesetzt.
-  const cells = 8;
-  const cell = size / cells;
-  ctx.lineCap = 'square';
-  ctx.lineJoin = 'miter';
-
-  const drawKey = (s) => {
+  // Eine Handvoll weicher, unregelmaessiger Adern statt eines Musters -
+  // deterministisch (feste Kontrollpunkte, kein echter Zufall), aber in
+  // Richtung/Kruemmung variiert genug, um als natuerlicher Stein statt als
+  // wiederholtes Motiv zu wirken. ctx.filter (Weichzeichner) macht sie
+  // diffus statt hart gezeichnet - echte Marmoradern haben keine scharfe
+  // Kante.
+  ctx.filter = `blur(${size * 0.01}px)`;
+  ctx.strokeStyle = MARBLE_VEIN;
+  ctx.lineCap = 'round';
+  const veins = [
+    [[-40, 120], [260, 60], [520, 260], [860, 140], [1100, 300]],
+    [[-60, 640], [220, 720], [480, 560], [780, 700], [1080, 600]],
+    [[120, -40], [200, 320], [80, 680], [260, 1000], [180, 1080]],
+    [[900, -60], [820, 300], [980, 620], [860, 900], [940, 1100]],
+    [[-40, 900], [320, 860], [640, 960], [960, 880], [1100, 940]],
+  ];
+  veins.forEach((pts, vi) => {
+    ctx.globalAlpha = 0.14 - vi * 0.012;
+    ctx.lineWidth = size * (0.006 - vi * 0.0006);
     ctx.beginPath();
-    ctx.moveTo(s * 0.16, s * 0.86);
-    ctx.lineTo(s * 0.16, s * 0.16);
-    ctx.lineTo(s * 0.86, s * 0.16);
-    ctx.lineTo(s * 0.86, s * 0.52);
-    ctx.lineTo(s * 0.48, s * 0.52);
-    ctx.stroke();
-  };
-  const drawDoubleKey = (s) => {
-    ctx.beginPath();
-    ctx.moveTo(s * 0.14, s * 0.86);
-    ctx.lineTo(s * 0.14, s * 0.14);
-    ctx.lineTo(s * 0.5, s * 0.14);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(s * 0.86, s * 0.14);
-    ctx.lineTo(s * 0.86, s * 0.86);
-    ctx.lineTo(s * 0.5, s * 0.86);
-    ctx.stroke();
-  };
-  const drawDiamond = (s) => {
-    ctx.beginPath();
-    ctx.moveTo(s * 0.5, s * 0.15);
-    ctx.lineTo(s * 0.85, s * 0.5);
-    ctx.lineTo(s * 0.5, s * 0.85);
-    ctx.lineTo(s * 0.15, s * 0.5);
-    ctx.closePath();
-    ctx.stroke();
-  };
-  const drawFrame = (s) => {
-    ctx.strokeRect(s * 0.24, s * 0.24, s * 0.52, s * 0.52);
-  };
-  const motifs = [drawKey, drawDoubleKey, drawDiamond, drawFrame];
-
-  for (let gy = 0; gy < cells; gy++) {
-    for (let gx = 0; gx < cells; gx++) {
-      const x0 = gx * cell, y0 = gy * cell;
-      const idx = (gx * 3 + gy * 5 + ((gx ^ gy) % 3)) % motifs.length;
-      const rot = ((gx + gy * 2) % 4) * (Math.PI / 2);
-      ctx.save();
-      ctx.translate(x0 + cell / 2, y0 + cell / 2);
-      ctx.rotate(rot);
-      ctx.translate(-cell / 2, -cell / 2);
-      ctx.strokeStyle = LAPIS;
-      ctx.lineWidth = cell * (idx === 3 ? 0.09 : 0.13);
-      motifs[idx](cell);
-      ctx.restore();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+      const my = (pts[i][1] + pts[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
     }
-  }
-
-  // Duenne Fugenlinien im tieferen Blau, kaum sichtbar - deutet einzelne
-  // Mosaiksteine an, ohne das Maeanderband zu uebertoenen.
-  ctx.strokeStyle = LAPIS_DEEP;
-  ctx.globalAlpha = 0.18;
-  ctx.lineWidth = size * 0.0015;
-  for (let i = 0; i <= cells; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * cell, 0);
-    ctx.lineTo(i * cell, size);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, i * cell);
-    ctx.lineTo(size, i * cell);
-    ctx.stroke();
-  }
+  });
+  ctx.filter = 'none';
   ctx.globalAlpha = 1;
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(5, 1.1);
+  tex.repeat.set(3, 1);
   tex.anisotropy = 8;
   tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -361,7 +320,7 @@ function buildFlagMesh(code, tangentDir, scale) {
   // als Fahne, bleibt aber unabhaengig vom Bildschirm-Seitenverhaeltnis im
   // sichtbaren Bereich.
   const poleH = scale * 0.6;
-  const poleMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.55, roughness: 0.3, transparent: true });
+  const poleMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.55, roughness: 0.3 });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(scale * 0.045, scale * 0.045, poleH, 8), poleMat);
   pole.position.set(0, poleH / 2, 0);
   group.add(pole);
@@ -478,6 +437,46 @@ function domeProfileYFraction(t) {
   return 1 - Math.pow(t, 1.25);
 }
 
+// Kuppelhoehe als Anteil des vertikalen Hoehenbudgets - von buildDome,
+// buildDomeRibs UND dem unsichtbaren Verdeckungskoerper in
+// ArchitectureFrontGL (siehe dort) gemeinsam genutzt, damit alle drei exakt
+// dieselbe Kuppel beschreiben.
+const DOME_HEIGHT_FRACTION = 0.58;
+
+// Profilkurve fuer buildDome's LatheGeometry UND (mit denselben Argumenten)
+// fuer den unsichtbaren Kuppel-Verdeckungskoerper - ein einzelner
+// Kontrollpunkt-Satz, damit beide garantiert exakt dieselbe Form haben.
+function domeLatheProfile(circumRadius, domeH, steps = 10) {
+  const profile = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const r = i === 0 ? 0.001 : circumRadius * t;
+    profile.push(new THREE.Vector2(r, domeH * domeProfileYFraction(t)));
+  }
+  return profile;
+}
+
+// Profilkurve fuer buildBase's LatheGeometry UND fuer den unsichtbaren
+// Sockel-Verdeckungskoerper - dieselbe dreistufige Form (Kranz/Wulst/Fuss),
+// aus buildBase() herausgezogen, damit beide exakt uebereinstimmen.
+function baseLatheProfile(circumRadius, heightBudget) {
+  const topR = circumRadius;
+  const midR = circumRadius * 1.35;
+  const botR = circumRadius * 1.65;
+  const tier1 = heightBudget * 0.13;
+  const tier2 = heightBudget * 0.155;
+  const tier3 = heightBudget * 0.18;
+  return [
+    new THREE.Vector2(topR, 0),
+    new THREE.Vector2(topR, -tier1 * 0.7),
+    new THREE.Vector2(midR, -tier1),
+    new THREE.Vector2(midR, -tier1 - tier2 * 0.7),
+    new THREE.Vector2(botR, -tier1 - tier2),
+    new THREE.Vector2(botR, -tier1 - tier2 - tier3),
+    new THREE.Vector2(topR * 0.001, -tier1 - tier2 - tier3),
+  ];
+}
+
 function buildDome(circumRadius, heightBudget, sides) {
   const group = new THREE.Group();
   // domeH/fasciaH haengen an heightBudget (drumHalfHeight - der
@@ -492,7 +491,7 @@ function buildDome(circumRadius, heightBudget, sides) {
   // Palette und dem glaesernen Material (siehe domeMat unten) traegt eine
   // steilere Kuppel jetzt eher, wirkt eher wie ein Kuppelbau als wie eine
   // flache Scheibe.
-  const domeH = heightBudget * 0.58;
+  const domeH = heightBudget * DOME_HEIGHT_FRACTION;
   // Gebaelk/Entablature statt duenner Lippe: haengt bewusst unter den
   // Dachrand (y = 0, die Wandkante) hinein, ist also der einzige Teil der
   // Kuppel, der ueberhaupt in den Bereich der Anzeigetafel hineinragt. Bei
@@ -505,14 +504,7 @@ function buildDome(circumRadius, heightBudget, sides) {
   // frueheren 5 festen Punkte) - glattere Kurve, und garantiert exakt
   // dieselbe Kruemmung wie der Kamm in buildDomeRibs, der dieselbe Funktion
   // nutzt.
-  const profileSteps = 10;
-  const profile = [];
-  for (let i = 0; i <= profileSteps; i++) {
-    const t = i / profileSteps;
-    const r = i === 0 ? 0.001 : circumRadius * t;
-    profile.push(new THREE.Vector2(r, domeH * domeProfileYFraction(t)));
-  }
-  const domeGeo = new THREE.LatheGeometry(profile, 64);
+  const domeGeo = new THREE.LatheGeometry(domeLatheProfile(circumRadius, domeH, 10), 64);
   // Kein `transmission`: ohne Environment-Map sampelt MeshPhysicalMaterial
   // dafuer den (leeren) Canvas-Hintergrund und faerbt die Kuppel unkontrolliert.
   // Undurchsichtig: `transparent:true` legte einen hellblauen Schleier ueber
@@ -593,7 +585,7 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   const group = new THREE.Group();
   // Muss exakt mit domeH aus buildDome() uebereinstimmen (siehe Kommentar
   // dort) - sonst driften Kamm und Kuppelflaeche auseinander.
-  const domeH = heightBudget * 0.58;
+  const domeH = heightBudget * DOME_HEIGHT_FRACTION;
   const capW = columnCapWidth || circumRadius * 0.09;
   const halfAngle = Math.max(0.012, capW / 2 / circumRadius);
   const steps = 14;
@@ -644,11 +636,7 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geo.setIndex(indices);
     geo.computeVertexNormals();
-    // Eigenes Material je Kamm (nicht geteilt): jeder Kamm muss unabhaengig
-    // ein-/ausgeblendet werden koennen, synchron mit seiner Saeule (siehe
-    // setColumns) - sonst wuerde ein Kamm ohne zugehoerige, laengst
-    // ausgeblendete Saeule weiter voll sichtbar in der Luft haengen.
-    const ridgeMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
+    const ridgeMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide });
     const ridge = new THREE.Mesh(geo, ridgeMat);
 
     // Kegel auf der Saeulenspitze: Basis sitzt exakt auf der Saeulenachse
@@ -659,7 +647,7 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     const basePt = new THREE.Vector3(
       circumRadius * Math.sin(beta), 0, circumRadius * Math.cos(beta)
     );
-    const coneMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.62, roughness: 0.26, transparent: true });
+    const coneMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.62, roughness: 0.26 });
     const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 20), coneMat);
     cone.position.copy(basePt).addScaledVector(up, coneHeight / 2);
 
@@ -789,23 +777,14 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   const tier2 = heightBudget * 0.155;
   const tier3 = heightBudget * 0.18;
 
-  const profile = [
-    new THREE.Vector2(topR, 0),
-    new THREE.Vector2(topR, -tier1 * 0.7),
-    new THREE.Vector2(midR, -tier1),
-    new THREE.Vector2(midR, -tier1 - tier2 * 0.7),
-    new THREE.Vector2(botR, -tier1 - tier2),
-    new THREE.Vector2(botR, -tier1 - tier2 - tier3),
-    new THREE.Vector2(topR * 0.001, -tier1 - tier2 - tier3),
-  ];
-  const geo = new THREE.LatheGeometry(profile, 64);
-  // Antikes griechisch-chinesisches Fliesenmuster (Maeander auf Creme,
-  // blaue Kachelfelder) statt reinem Ivory-Ton - siehe buildTileTexture().
+  const geo = new THREE.LatheGeometry(baseLatheProfile(circumRadius, heightBudget), 64);
+  // Glatter Elfenbein-Marmor statt des vorherigen blau-weissen Mosaiks -
+  // siehe buildBaseMarbleTexture().
   const mat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    map: buildTileTexture(),
+    map: buildBaseMarbleTexture(),
     metalness: 0.05,
-    roughness: 0.6,
+    roughness: 0.45,
     side: THREE.DoubleSide,
   });
   group.add(new THREE.Mesh(geo, mat));
@@ -861,11 +840,8 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
 function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   const group = new THREE.Group();
   const shaftHeight = Math.max(1, totalHeight - colCapHeight * 2);
-  // transparent von Anfang an: setColumns() blendet Saeulen nahe der
-  // Kantenabschneidung sanft aus (Opacity-Fade) statt sie hart zu
-  // verstecken - ein ploetzliches Verschwinden war als "Despawn" sichtbar.
-  const shaftMat = new THREE.MeshStandardMaterial({ color: COL_STONE, metalness: 0.05, roughness: 0.5, transparent: true });
-  const capMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.5, roughness: 0.3, transparent: true });
+  const shaftMat = new THREE.MeshStandardMaterial({ color: COL_STONE, metalness: 0.05, roughness: 0.5 });
+  const capMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.5, roughness: 0.3 });
 
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(colWidth / 2, colWidth / 2, shaftHeight, 24), shaftMat);
   group.add(shaft);
@@ -966,7 +942,7 @@ export const ArchitectureBackGL = React.memo(function ArchitectureBackGL({
 // beabsichtigt: Saeulen markieren die Nahtstelle zwischen zwei Facetten und
 // muessen dort sichtbar bleiben, auch wenn die Facette direkt dahinter liegt.
 const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
-  { stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92, ribCullDeg },
+  { stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight },
   ref
 ) {
   const containerRef = useRef(null);
@@ -976,68 +952,75 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     // Von RotaryStage bei jedem Tick aufgerufen (gsap-Ticker, ~60fps) - mit
     // denselben live berechneten Werten, die vorher direkt auf die CSS-
     // Saeulen-transforms geschrieben wurden. degs: Grad je Saeule (gleiche
-    // Formel wie zuvor: kuerzesterWeg(p - s + 0.5) * step).
-    setColumns(degs, colRadius, pivotZ) {
-      const { columns, ribs, renderer, scene, camera } = stateRef.current;
+    // Formel wie zuvor: kuerzesterWeg(p - s + 0.5) * step). apothem/faceDegs:
+    // dieselbe Rechnung wie fuer die Huelle (shellRefs) in RotaryStage - ein
+    // Winkel je Seite, an derselben Stelle wie die Inhaltsflaeche/Huelle.
+    //
+    // Sichtbarkeit ueber ECHTE Tiefenpruefung statt Winkel-Cutoff oder
+    // manuellem Ein-/Ausblenden: Saeulen und Rippen bleiben immer `visible`
+    // und werden einfach jeden Frame an ihre Weltposition gesetzt - der
+    // WebGL-Tiefenpuffer entscheidet pixelgenau, was sichtbar bleibt, GENAU
+    // wie bei jedem anderen 3D-Koerper. Zwei Gruppen unsichtbarer
+    // "Schatten"-Koerper sorgen dafuer, dass das nicht nur zwischen Saeulen
+    // untereinander funktioniert, sondern auch gegen die Waende (Inhalt) und
+    // das Dach: eine Kopie der Kuppel-/Sockelform (siehe Mount-Effekt, baut
+    // nur Tiefe, keine Farbe) und pro Seite eine Wand-Ebene an derselben
+    // Position wie die jeweilige Inhaltsflaeche/Huelle. Eine Saeule oder
+    // Rippe, die hinter einer dieser unsichtbaren Formen liegt, faellt beim
+    // Tiefentest durch und wird dort einfach nicht gezeichnet - der
+    // durchsichtige Canvas-Hintergrund gibt an genau dieser Stelle die
+    // dahinterliegende (in Wahrheit naehere) Flaeche/Kuppel frei. Kein
+    // Despawn, kein Verblassen, kein Neigungs-Grenzwert - nur echte
+    // Verdeckung, pixelgenau statt objektweise.
+    setColumns(degs, colRadius, pivotZ, apothem, faceDegs) {
+      const { columns, ribs, walls, renderer, scene, camera } = stateRef.current;
       if (!columns || !renderer) return;
       const step = 360 / sides;
       const t = performance.now() / 1000;
 
-      // Sichtbarkeit ueber echte Verdeckung statt festem Winkel oder Fade:
-      // eine Saeule verschwindet nicht bei einem willkuerlichen Gradwert,
-      // sondern GENAU dann, wenn ihre direkte Nachbarsaeule (45 Grad
-      // entfernt im Ring) auf dem Bildschirm an derselben Stelle steht UND
-      // naeher an der Kamera ist - das physische Kriterium fuer "wird
-      // verdeckt". Kein Despawn nach Gefuehl, kein Verblassen - nur echte
-      // Verdeckung durch ein anderes Bauteil. Dieselbe Perspektiv-Projektion
-      // wie die CSS-Buehne: screenX = x * perspektivePx / (perspektivePx - z).
-      // Fuer ein konvexes Vieleck (das Oktagon) reicht der Vergleich mit nur
-      // den beiden direkten Nachbarn - Saeulen weiter im Ruecken werden
-      // kaskadierend von IHREN Nachbarn verdeckt, exakt wie bei einem
-      // echten konvexen Koerper.
-      const proj = columns.map((col, s) => {
+      columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
         const rad = (deg * Math.PI) / 180;
-        const x = -colRadius * Math.sin(rad);
-        const z = colRadius * Math.cos(rad) + pivotZ;
-        const scale = perspectivePx / (perspectivePx - z);
-        return { deg, x, z, screenX: x * scale, halfW: (colWidth / 2) * scale };
-      });
+        col.position.set(-colRadius * Math.sin(rad), 0, colRadius * Math.cos(rad) + pivotZ);
 
-      columns.forEach((col, s) => {
-        const me = proj[s];
-        const nLeft = proj[(s - 1 + sides) % sides];
-        const nRight = proj[(s + 1) % sides];
-        const coveredBy = (o) => o.z > me.z && Math.abs(me.screenX - o.screenX) < me.halfW + o.halfW;
-        const hidden = coveredBy(nLeft) || coveredBy(nRight);
-        col.visible = !hidden;
         // Zugehoerige Rippe (gleicher Index s, siehe buildDomeRibs) im
-        // selben Takt ein-/ausblenden - sonst haengt eine goldene Rippe
-        // sichtbar in der Luft, obwohl ihre Saeule schon verdeckt ist.
+        // selben Takt mitdrehen.
         const rib = ribs?.children[s];
         if (rib) {
-          rib.visible = !hidden;
-          if (!hidden) {
-            // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei
-            // beta = k*step (in Grad) aufgebaut, mit x=+r*sin(beta). Die
-            // Saeule dagegen nutzt x=-colRadius*sin(deg) - ENTGEGENGESETZTES
-            // Vorzeichen. Die noetige Zielausrichtung fuer die Rippe ist
-            // deshalb beta=-deg (numerisch verifiziert).
-            rib.rotation.y = ((-me.deg - s * step) * Math.PI) / 180;
-            const flagPivot = rib.userData.flagPivot;
-            if (flagPivot) {
-              // Wind-Animation: Grund-Schwingung plus kleinere, schnellere
-              // Flatterbewegung, je Saeule phasenverschoben (sonst wehen
-              // alle acht Flaggen synchron).
-              const phase = s * 1.3;
-              flagPivot.rotation.y = Math.sin(t * 1.6 + phase) * 0.18 + Math.sin(t * 4.1 + phase * 1.7) * 0.06;
-            }
+          // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei
+          // beta = k*step (in Grad) aufgebaut, mit x=+r*sin(beta). Die
+          // Saeule dagegen nutzt x=-colRadius*sin(deg) - ENTGEGENGESETZTES
+          // Vorzeichen. Die noetige Zielausrichtung fuer die Rippe ist
+          // deshalb beta=-deg (numerisch verifiziert).
+          rib.rotation.y = ((-deg - s * step) * Math.PI) / 180;
+          const flagPivot = rib.userData.flagPivot;
+          if (flagPivot) {
+            // Wind-Animation: Grund-Schwingung plus kleinere, schnellere
+            // Flatterbewegung, je Saeule phasenverschoben (sonst wehen alle
+            // acht Flaggen synchron).
+            const phase = s * 1.3;
+            flagPivot.rotation.y = Math.sin(t * 1.6 + phase) * 0.18 + Math.sin(t * 4.1 + phase * 1.7) * 0.06;
           }
         }
-        if (!hidden) {
-          col.position.set(me.x, 0, me.z);
-        }
       });
+
+      // Unsichtbare Wand-Ebenen: eine je Seite, exakt an der Position/
+      // Ausrichtung der jeweiligen Inhaltsflaeche/Huelle (dieselbe Formel
+      // wie fuer Saeulen oben, nur mit apothem statt colRadius und ohne den
+      // 0.5-Schritt-Versatz). edgeLen ist die tatsaechliche Kantenlaenge des
+      // Vielecks bei diesem Apothem (Umkehrung von bodyRadius in
+      // RotaryStage).
+      if (walls) {
+        const edgeLen = 2 * apothem * Math.tan(Math.PI / sides);
+        walls.forEach((wall, s) => {
+          const deg = faceDegs?.[s] ?? 0;
+          const rad = (deg * Math.PI) / 180;
+          wall.position.set(-apothem * Math.sin(rad), 0, apothem * Math.cos(rad) + pivotZ);
+          wall.rotation.y = -rad;
+          wall.scale.set(edgeLen, drumHalfHeight * 2, 1);
+        });
+      }
+
       // UN-Flagge auf der Kuppelspitze: eigener Wind-Schwung, unabhaengig
       // von den Saeulen-Phasen (kein s-Index vorhanden).
       const unFlagPivot = ribs?.userData.unFlagPivot;
@@ -1073,8 +1056,52 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       }
     }
 
+    // Unsichtbare "Schatten"-Koerper: schreiben nur in den Tiefenpuffer
+    // (colorWrite: false), zeichnen also selbst nie etwas - sorgen aber
+    // dafuer, dass Saeulen/Rippen, die dahinter liegen, beim Tiefentest
+    // durchfallen (siehe setColumns). Eigenes, opakes Material (nicht
+    // transparent): laeuft dadurch in Three.js' OPAQUE-Renderqueue, die vor
+    // der TRANSPARENT-Queue (Saeulen/Rippen) gezeichnet wird - der
+    // Tiefenpuffer ist also schon gefuellt, wenn Saeulen/Rippen getestet
+    // werden. DoubleSide, damit die Tiefe unabhaengig von der Blickrichtung
+    // auf die Flaeche entsteht.
+    const occMat = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide });
+
+    // Kuppel- und Sockelform als Verdeckungskoerper: dieselbe Profilkurve
+    // wie im Back-Layer (buildDome/buildBase, siehe domeLatheProfile/
+    // baseLatheProfile), nur ohne Material/Rippen-Details - eine Saeule/
+    // Rippe auf der Gebaeuderueckseite, die hinter der eigentlichen (im
+    // Back-Layer sichtbaren) Kuppel-/Sockelflaeche liegt, wird dadurch
+    // korrekt verdeckt statt ueber sie hinweg gezeichnet.
+    const domeOcc = new THREE.Mesh(
+      new THREE.LatheGeometry(domeLatheProfile(ringRadius, drumHalfHeight * DOME_HEIGHT_FRACTION, 10), 48),
+      occMat
+    );
+    domeOcc.position.set(0, drumHalfHeight, centerOffsetZ);
+    scene.add(domeOcc);
+
+    const baseOcc = new THREE.Mesh(
+      new THREE.LatheGeometry(baseLatheProfile(ringRadius, drumHalfHeight), 48),
+      occMat
+    );
+    baseOcc.position.set(0, -drumHalfHeight, centerOffsetZ);
+    scene.add(baseOcc);
+
+    // Eine Wand-Ebene je Seite, an derselben Stelle wie die jeweilige
+    // Inhaltsflaeche/Huelle (siehe RotaryStage: shellRefs/faceRefs) - deckt
+    // eine Saeule/Rippe ab, sobald eine Facette naeher an der Kamera steht.
+    // Position/Skalierung werden jeden Frame in setColumns() gesetzt (dort
+    // stehen die aktuellen Drehwinkel zur Verfuegung); hier nur einmalig
+    // angelegt.
+    const wallGeo = new THREE.PlaneGeometry(1, 1);
+    const walls = Array.from({ length: sides }, () => {
+      const wall = new THREE.Mesh(wallGeo, occMat);
+      scene.add(wall);
+      return wall;
+    });
+
     renderer.render(scene, camera);
-    stateRef.current = { renderer, scene, camera, columns, ribs };
+    stateRef.current = { renderer, scene, camera, columns, ribs, walls };
 
     return () => {
       disposeScene(scene, renderer, container);
