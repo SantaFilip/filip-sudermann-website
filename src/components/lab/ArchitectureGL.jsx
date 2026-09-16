@@ -53,6 +53,67 @@ const GOLD_LIGHT = 0xe8c97a;
 const GOLD_DEEP = 0x8a6423;
 const NAVY = 0x142a4d;
 const STONE = 0xd9cbaa;
+const MARBLE = 0xf4f1ea;
+const GLASS_BLUE = 0xcfe6f2;
+const TILE_BLUE = '#2e5c96';
+const TILE_BLUE_PALE = '#8fb3da';
+const TILE_CREAM = '#f4ecd8';
+
+// Helles, blau-weisses Fliesenmuster fuer den Sockel: griechisches
+// Maeanderband (antik) auf cremefarbenem Grund, im Rhythmus blauer
+// Kachelfelder wie chinesisches Blauweiss-Porzellan - per Canvas erzeugt,
+// da keine externen Bild-Assets zur Verfuegung stehen.
+function buildTileTexture() {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = TILE_CREAM;
+  ctx.fillRect(0, 0, size, size);
+
+  const cell = size / 8;
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const x = col * cell;
+      const y = row * cell;
+      if ((row + col) % 2 === 0) {
+        ctx.fillStyle = TILE_BLUE_PALE + '2a';
+        ctx.fillRect(x, y, cell, cell);
+      }
+    }
+  }
+
+  // Griechischer Maeander (Greek key), laufend um jede Kachelreihe.
+  ctx.strokeStyle = TILE_BLUE;
+  ctx.lineWidth = cell * 0.12;
+  ctx.lineCap = 'square';
+  ctx.lineJoin = 'miter';
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const x = col * cell;
+      const y = row * cell;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.moveTo(cell * 0.18, cell * 0.82);
+      ctx.lineTo(cell * 0.18, cell * 0.18);
+      ctx.lineTo(cell * 0.82, cell * 0.18);
+      ctx.lineTo(cell * 0.82, cell * 0.48);
+      ctx.lineTo(cell * 0.48, cell * 0.48);
+      ctx.lineTo(cell * 0.48, cell * 0.82);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(10, 2);
+  if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
 
 function buildDome(circumRadius, heightBudget, sides) {
   const group = new THREE.Group();
@@ -79,23 +140,25 @@ function buildDome(circumRadius, heightBudget, sides) {
   ];
   const domeGeo = new THREE.LatheGeometry(profile, 64);
   // Kein `transmission`: ohne Environment-Map sampelt MeshPhysicalMaterial
-  // dafuer den (leeren) Canvas-Hintergrund und faerbt die Kuppel kalt-blau
-  // statt warm-ivory. Undurchsichtig + clearcoat wirkt als festes Dach mit
-  // Glanz statt als Glas: `transparent`/DoubleSide liess vorher die
-  // Rueckseite der Kuppel durch die Vorderseite hindurchscheinen (zwei
-  // ueberlagerte, halbtransparente Flaechen statt einer festen Kappe) - wirkt
-  // dadurch schwebend statt aufliegend. `FrontSide` blendet ausserdem die von
-  // der Kamera abgewandte Rueckseite komplett aus, es ist wirklich nur die
-  // kameraseitige Haelfte zu sehen.
+  // dafuer den (leeren) Canvas-Hintergrund und faerbt die Kuppel unkontrolliert.
+  // Undurchsichtig + hoher clearcoat + kuehler Blauton wirkt als modernes
+  // Glasdach mit Glanz, ohne die fruehere Transparenz-Geisterhaftigkeit:
+  // `transparent`/DoubleSide liess vorher die Rueckseite der Kuppel durch die
+  // Vorderseite hindurchscheinen (zwei ueberlagerte, halbtransparente
+  // Flaechen statt einer festen Kappe) - wirkte dadurch schwebend statt
+  // aufliegend. `FrontSide` blendet die von der Kamera abgewandte
+  // Rueckseite komplett aus, es ist wirklich nur die kameraseitige Haelfte
+  // zu sehen.
   const domeMat = new THREE.MeshPhysicalMaterial({
-    color: IVORY,
-    metalness: 0.04,
-    roughness: 0.22,
+    color: GLASS_BLUE,
+    metalness: 0.06,
+    roughness: 0.1,
     transparent: false,
     opacity: 1,
     side: THREE.FrontSide,
-    clearcoat: 0.6,
-    clearcoatRoughness: 0.15,
+    clearcoat: 0.9,
+    clearcoatRoughness: 0.08,
+    reflectivity: 0.5,
   });
   const dome = new THREE.Mesh(domeGeo, domeMat);
   group.add(dome);
@@ -110,24 +173,6 @@ function buildDome(circumRadius, heightBudget, sides) {
   const fasciaMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.55, roughness: 0.35, side: THREE.DoubleSide });
   const fascia = new THREE.Mesh(fasciaGeo, fasciaMat);
   group.add(fascia);
-
-  // Rippen: rein dekorativ, feste Winkel (das Dach dreht nicht mit der
-  // Trommel mit - eine Synchronisierung mit den Saeulen ergibt keinen Sinn,
-  // die Trommel dreht sich kontinuierlich weiter).
-  const ribMat = new THREE.LineBasicMaterial({ color: GOLD_DEEP, transparent: true, opacity: 0.55 });
-  for (let i = 0; i < sides; i++) {
-    const angle = (i / sides) * Math.PI * 2;
-    const pts = [];
-    const steps = 12;
-    for (let s = 0; s <= steps; s++) {
-      const t = s / steps;
-      const r = t * circumRadius;
-      const y = domeH * (1 - Math.pow(t, 1.5));
-      pts.push(new THREE.Vector3(Math.cos(angle) * r, y, Math.sin(angle) * r));
-    }
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    group.add(new THREE.Line(geo, ribMat));
-  }
 
   // Bekroenung: schlanke Laterne mit Ring, sehr kompakt.
   const finialGroup = new THREE.Group();
@@ -156,7 +201,96 @@ function buildDome(circumRadius, heightBudget, sides) {
   return group;
 }
 
-function buildBase(circumRadius, heightBudget) {
+// Goldene Rippen: kein duenner Strich mehr, sondern ein massiver, sich
+// verjuengender Steg (der "Kegel mit Giebel zur Kuppelspitze"), der der
+// Kuppel-Profilkurve EXAKT folgt (dieselben r/y-Werte wie oben) - die
+// Rippe liegt dadurch garantiert genau auf der Kuppelflaeche, ohne Spalt
+// oder Durchdringung. Separat von buildDome, weil sie (anders als Dach/
+// Sockel) mit den Saeulen mitdrehen muss - siehe deren dynamische Rotation
+// in setColumns() weiter unten. Breite an der Traufe an der Kapitellbreite
+// orientiert (columnCapWidth), damit sie optisch aus dem Saeulenkopf
+// herauswaechst statt beliebig duenn/dick anzusetzen.
+function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
+  const group = new THREE.Group();
+  const domeH = heightBudget * 0.55;
+  const halfAngle = Math.max(0.012, (columnCapWidth || circumRadius * 0.09) / 2 / circumRadius);
+  const ribMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide });
+  const steps = 14;
+  const raise = 1.006; // minimal ueber die Kuppelflaeche angehoben, gegen Z-Fighting
+
+  for (let i = 0; i < sides; i++) {
+    const beta = (i / sides) * Math.PI * 2;
+    const positions = [];
+    const indices = [];
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps; // 0 = Kuppelspitze, 1 = Traufe/Saeulenkopf
+      const r = t * circumRadius * raise;
+      const y = domeH * (1 - Math.pow(t, 1.5));
+      const wa = halfAngle * t; // an der Spitze auf einen Punkt zulaufend
+      const bL = beta - wa;
+      const bR = beta + wa;
+      positions.push(r * Math.sin(bL), y, r * Math.cos(bL));
+      positions.push(r * Math.sin(bR), y, r * Math.cos(bR));
+      if (s > 0) {
+        const a = (s - 1) * 2;
+        const b = a + 1;
+        const c = a + 2;
+        const d = a + 3;
+        indices.push(a, b, c, b, d, c);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+    group.add(new THREE.Mesh(geo, ribMat));
+  }
+
+  return group;
+}
+
+// Marmor-Umrandung: deckt genau das Band zwischen der Sockel-Kante
+// (circumRadius, dort steht die Saeule mit ihrem Zentrum) und dem
+// aeussersten Saeulenrand (Kapitellbreite) ab - liegt flach auf der
+// Sockel-Oberflaeche (y = 0 in diesem Koordinatensystem).
+function buildBaseRing(circumRadius, columnCapWidth) {
+  const group = new THREE.Group();
+  const band = Math.max(columnCapWidth * 1.2, circumRadius * 0.065);
+  const inner = Math.max(0.01, circumRadius - band);
+  const outer = circumRadius + band;
+  const lift = circumRadius * 0.001; // sichtbar ueber der Fliese, gegen Z-Fighting
+  const geo = new THREE.RingGeometry(inner, outer, 64, 1);
+  // Deutlich heller/reiner Weiss als der cremefarbene Fliesengrund, mit
+  // Glanz statt Kachelmuster - sonst verschwimmt die "Umrandung" optisch
+  // mit dem Fliesenfeld statt sich abzuheben.
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: 0xfbfaf6,
+    metalness: 0.02,
+    roughness: 0.12,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.2,
+    side: THREE.DoubleSide,
+  });
+  const ring = new THREE.Mesh(geo, mat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = lift;
+  group.add(ring);
+
+  // Duenne Goldkanten an beiden Raendern der Marmor-Umrandung - grenzt sie
+  // klar vom Fliesenfeld ab, statt nur uebers Material zu wirken.
+  [inner, outer].forEach((r) => {
+    const edgeGeo = new THREE.TorusGeometry(r, circumRadius * 0.0025, 8, 64);
+    const edgeMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.55, roughness: 0.3 });
+    const edge = new THREE.Mesh(edgeGeo, edgeMat);
+    edge.rotation.x = Math.PI / 2;
+    edge.position.y = lift;
+    group.add(edge);
+  });
+
+  return group;
+}
+
+function buildBase(circumRadius, heightBudget, columnCapWidth) {
   const group = new THREE.Group();
   // topR = circumRadius (hier: der Ring-Radius, exakt derselbe wie bei den
   // Saeulen) statt vorher *0.93 - die Plattformkante muss exakt dort
@@ -181,7 +315,15 @@ function buildBase(circumRadius, heightBudget) {
     new THREE.Vector2(topR * 0.001, -tier1 - tier2 - tier3),
   ];
   const geo = new THREE.LatheGeometry(profile, 64);
-  const mat = new THREE.MeshStandardMaterial({ color: IVORY, metalness: 0.08, roughness: 0.55, side: THREE.DoubleSide });
+  // Antikes griechisch-chinesisches Fliesenmuster (Maeander auf Creme,
+  // blaue Kachelfelder) statt reinem Ivory-Ton - siehe buildTileTexture().
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    map: buildTileTexture(),
+    metalness: 0.05,
+    roughness: 0.6,
+    side: THREE.DoubleSide,
+  });
   group.add(new THREE.Mesh(geo, mat));
 
   // Navy-Kragen an der obersten Stufe, wo die Saeulen stehen.
@@ -197,6 +339,9 @@ function buildBase(circumRadius, heightBudget) {
   const rim = new THREE.Mesh(rimGeo, rimMat);
   rim.rotation.x = Math.PI / 2;
   group.add(rim);
+
+  // Marmor-Umrandung um die Saeulenfuesse, edler als das nackte Fliesenfeld.
+  group.add(buildBaseRing(topR, columnCapWidth || circumRadius * 0.1));
 
   // Stufenkanten in Gold, dezent.
   [midR, botR].forEach((r) => {
@@ -260,7 +405,7 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
     // Saeulen-transforms geschrieben wurden. degs: Grad je Saeule (gleiche
     // Formel wie zuvor: kuerzesterWeg(p - s + 0.5) * step).
     setColumns(degs, colRadius, pivotZ) {
-      const { columns, renderer, scene, camera } = stateRef.current;
+      const { columns, ribs, renderer, scene, camera } = stateRef.current;
       if (!columns || !renderer) return;
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
@@ -276,6 +421,16 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
           col.position.set(-colRadius * Math.sin(rad), 0, colRadius * Math.cos(rad) + pivotZ);
         }
       });
+      // Rippen (Kegel-Giebel Saeule->Kuppelspitze) drehen als starre Gruppe
+      // mit - alle Saeulen liegen jederzeit exakt `step` Grad auseinander,
+      // nur ihre gemeinsame Phase verschiebt sich mit der Rotation. Rippe k
+      // steht bei festem Basiswinkel k*step (gleiche sin/cos-Konvention wie
+      // die Saeulen); rotiert man die ganze Gruppe um -degs[0], fallen alle
+      // Rippen exakt auf die aktuellen Saeulenpositionen (hergeleitet:
+      // fuer degK = (p-k+0.5)*step und Basiswinkel k*step kuerzt sich der
+      // Index k komplett heraus, uebrig bleibt -degs[0] fuer jede Rippe
+      // gleichermassen).
+      if (ribs) ribs.rotation.y = (-(degs[0] ?? 0) * Math.PI) / 180;
       renderer.render(scene, camera);
     },
   }));
@@ -315,7 +470,13 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
     dome.position.set(0, drumHalfHeight, centerOffsetZ);
     scene.add(dome);
 
-    const base = buildBase(ringRadius, drumHalfHeight);
+    // Rippen als eigene Gruppe, Kind von `dome` (erbt dessen Position),
+    // aber mit eigener Rotation - sie muessen sich mit den Saeulen
+    // mitdrehen (siehe setColumns), waehrend Dach/Sockel selbst fest stehen.
+    const ribs = buildDomeRibs(ringRadius, drumHalfHeight, sides, colCapWidth);
+    dome.add(ribs);
+
+    const base = buildBase(ringRadius, drumHalfHeight, colCapWidth);
     base.position.set(0, -drumHalfHeight, centerOffsetZ);
     scene.add(base);
 
@@ -329,7 +490,7 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
     }
 
     renderer.render(scene, camera);
-    stateRef.current = { renderer, scene, camera, columns };
+    stateRef.current = { renderer, scene, camera, columns, ribs };
 
     return () => {
       scene.traverse((obj) => {
