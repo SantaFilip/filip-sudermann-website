@@ -980,91 +980,62 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     setColumns(degs, colRadius, pivotZ) {
       const { columns, ribs, renderer, scene, camera } = stateRef.current;
       if (!columns || !renderer) return;
-      // Opacity-Fade statt hartem Schnitt: ein frueherer Versuch entfernte
-      // den Fade komplett (harter visibility-Wechsel wie bei den Inhalts-
-      // flaechen) - auf Wunsch jetzt zurueck, aber diesmal an die inzwischen
-      // sauber kalibrierten Cutoff-Winkel (cullDeg/ribCut, nah an der
-      // echten 90-Grad-Kante) gekoppelt statt an einen frueheren, zu weit
-      // aussen liegenden Wert. 6 Grad Fenster war noch immer als deutliches
-      // "Verblassen" wahrnehmbar (die Aenderung pro Grad war zu gross) - auf
-      // 16 Grad gestreckt macht die Opacity-Aenderung pro Frame/Grad viel
-      // kleiner, liest sich dadurch eher als allmaehliches Aufloesen denn
-      // als sichtbarer Effekt.
-      const fadeSpan = 16;
-      const fadeFor = (absDeg, cut) => {
-        const start = cut - fadeSpan;
-        if (absDeg <= start) return 1;
-        if (absDeg >= cut) return 0;
-        return 1 - (absDeg - start) / fadeSpan;
-      };
-      // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei beta = k*step
-      // (in Grad) aufgebaut - siehe dortige Schleife, mit x=+r*sin(beta).
-      // Die Saeule dagegen nutzt x=-colRadius*sin(deg) (siehe unten, aus der
-      // CSS-Rotationsmatrix) - ENTGEGENGESETZTES Vorzeichen. Die noetige
-      // Zielausrichtung fuer die Rippe ist deshalb NICHT beta=deg, sondern
-      // beta=-deg (numerisch verifiziert gegen die alte, gemeinsame
-      // Gruppenrotation -degs[0], die genau das fuer k=0 ergab). Frueher
-      // wurde EINE gemeinsame Rotation (-degs[0]) auf die ganze Gruppe
-      // angewandt, aus der Annahme, dass k*step-degs[0] fuer alle k gleich
-      // -degs[k] ist - das gilt aber nur, solange kuerzesterWeg() fuer keine
-      // der Saeulen auf den "anderen" Zweig des Kreises wechselt. Genau an
-      // der Kantenabschneidung (nahe cullDeg) kann das fuer eine einzelne
-      // Saeule zuerst passieren, wodurch NUR ihre Rippe kurzzeitig an der
-      // falschen Position sass. Jede Rippe bekommt jetzt ihre EIGENE exakte
-      // Rotation statt der Annahme.
       const step = 360 / sides;
-      // Wind-Animation der Flaggen: eine sanfte Grund-Schwingung plus eine
-      // schnellere, kleinere Flatterbewegung, je Saeule phasenverschoben
-      // (sonst wehen alle acht Flaggen exakt synchron - liest als ein
-      // einziges starres Objekt statt als Stoff im Wind). performance.now()
-      // statt eines mitgefuehrten Zaehlers: setColumns laeuft ohnehin jeden
-      // GSAP-Tick, ein echter Zeitwert macht die Geschwindigkeit unabhaengig
-      // von der tatsaechlichen Framerate.
       const t = performance.now() / 1000;
-      // Rippen (Kegel+Kamm+Flagge) sitzen auf der STATISCHEN Kuppel (Back-
-      // Layer) - die dreht selbst nicht mit und hat eine feste, begrenzte
-      // Silhouette aus der festen Kameraperspektive. Ihr eigener Cutoff
-      // (ribCullDeg, enger als cullDeg) muss daher niedriger liegen: bei
-      // einem breiteren Saeulen-/Flaechen-Cutoff (siehe CULL_DEG in
-      // RotaryStage.jsx) rotierte eine Rippe sonst weiter herum, als die
-      // Kuppel-Silhouette sie noch optisch traegt - sie schwebte sichtbar
-      // frei im Himmel, ohne erkennbare Verbindung zur Kuppelflaeche.
-      const ribCut = ribCullDeg ?? Math.min(cullDeg, 93);
-      columns.forEach((col, s) => {
+
+      // Sichtbarkeit ueber echte Verdeckung statt festem Winkel oder Fade:
+      // eine Saeule verschwindet nicht bei einem willkuerlichen Gradwert,
+      // sondern GENAU dann, wenn ihre direkte Nachbarsaeule (45 Grad
+      // entfernt im Ring) auf dem Bildschirm an derselben Stelle steht UND
+      // naeher an der Kamera ist - das physische Kriterium fuer "wird
+      // verdeckt". Kein Despawn nach Gefuehl, kein Verblassen - nur echte
+      // Verdeckung durch ein anderes Bauteil. Dieselbe Perspektiv-Projektion
+      // wie die CSS-Buehne: screenX = x * perspektivePx / (perspektivePx - z).
+      // Fuer ein konvexes Vieleck (das Oktagon) reicht der Vergleich mit nur
+      // den beiden direkten Nachbarn - Saeulen weiter im Ruecken werden
+      // kaskadierend von IHREN Nachbarn verdeckt, exakt wie bei einem
+      // echten konvexen Koerper.
+      const proj = columns.map((col, s) => {
         const deg = degs[s] ?? 0;
-        const absDeg = Math.abs(deg);
-        const fade = fadeFor(absDeg, cullDeg);
-        const hidden = fade <= 0;
+        const rad = (deg * Math.PI) / 180;
+        const x = -colRadius * Math.sin(rad);
+        const z = colRadius * Math.cos(rad) + pivotZ;
+        const scale = perspectivePx / (perspectivePx - z);
+        return { deg, x, z, screenX: x * scale, halfW: (colWidth / 2) * scale };
+      });
+
+      columns.forEach((col, s) => {
+        const me = proj[s];
+        const nLeft = proj[(s - 1 + sides) % sides];
+        const nRight = proj[(s + 1) % sides];
+        const coveredBy = (o) => o.z > me.z && Math.abs(me.screenX - o.screenX) < me.halfW + o.halfW;
+        const hidden = coveredBy(nLeft) || coveredBy(nRight);
         col.visible = !hidden;
         // Zugehoerige Rippe (gleicher Index s, siehe buildDomeRibs) im
         // selben Takt ein-/ausblenden - sonst haengt eine goldene Rippe
-        // sichtbar in der Luft, obwohl ihre Saeule schon ausgeblendet ist.
+        // sichtbar in der Luft, obwohl ihre Saeule schon verdeckt ist.
         const rib = ribs?.children[s];
         if (rib) {
-          const ribFade = fadeFor(absDeg, ribCut);
-          const ribHidden = ribFade <= 0;
-          rib.visible = !ribHidden;
-          if (!ribHidden) {
-            rib.rotation.y = ((-deg - s * step) * Math.PI) / 180;
-            const ribMats = rib.userData.mats;
-            if (ribMats) ribMats.forEach((m) => { m.opacity = ribFade; });
+          rib.visible = !hidden;
+          if (!hidden) {
+            // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei
+            // beta = k*step (in Grad) aufgebaut, mit x=+r*sin(beta). Die
+            // Saeule dagegen nutzt x=-colRadius*sin(deg) - ENTGEGENGESETZTES
+            // Vorzeichen. Die noetige Zielausrichtung fuer die Rippe ist
+            // deshalb beta=-deg (numerisch verifiziert).
+            rib.rotation.y = ((-me.deg - s * step) * Math.PI) / 180;
             const flagPivot = rib.userData.flagPivot;
             if (flagPivot) {
+              // Wind-Animation: Grund-Schwingung plus kleinere, schnellere
+              // Flatterbewegung, je Saeule phasenverschoben (sonst wehen
+              // alle acht Flaggen synchron).
               const phase = s * 1.3;
               flagPivot.rotation.y = Math.sin(t * 1.6 + phase) * 0.18 + Math.sin(t * 4.1 + phase * 1.7) * 0.06;
             }
           }
         }
         if (!hidden) {
-          const rad = (deg * Math.PI) / 180;
-          // CSS `rotateY(-deg) translateZ(colRadius)`: nach der CSS-
-          // Rotationsmatrix (rechtshaendig, aber Y zeigt in CSS nach unten)
-          // ergibt das x = -colRadius*sin(deg), z = colRadius*cos(deg) -
-          // NICHT +sin(deg), das hatte Saeulen mittig auf die Facetten statt
-          // auf die Nahtstellen gesetzt.
-          col.position.set(-colRadius * Math.sin(rad), 0, colRadius * Math.cos(rad) + pivotZ);
-          const mats = col.userData.mats;
-          if (mats) mats.forEach((m) => { m.opacity = fade; });
+          col.position.set(me.x, 0, me.z);
         }
       });
       // UN-Flagge auf der Kuppelspitze: eigener Wind-Schwung, unabhaengig
