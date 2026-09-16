@@ -96,24 +96,65 @@ function buildTileTexture() {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, size, size);
 
-  // Maeanderband: ein sich wiederholendes, gestuftes Schluesselmotiv in
-  // Lapislazuli-Blau, Zelle fuer Zelle in einem 8x8-Raster.
+  // Vier verschiedene Motive statt eines einzelnen, sich wiederholenden
+  // Kringels - zwei Schluesselmaeander-Varianten, ein Rautenkreuz und ein
+  // schlichter Rahmen. Deterministisch (kein echter Zufall, reproduzierbar)
+  // aber unregelmaessig genug pro Zelle gemischt und gedreht, um als
+  // komplexes Mosaik statt als ein einzelnes wiederholtes Motiv zu wirken -
+  // wie echtes Fliesenmosaik aus mehreren Formen zusammengesetzt.
   const cells = 8;
   const cell = size / cells;
-  ctx.strokeStyle = LAPIS;
-  ctx.lineWidth = cell * 0.16;
   ctx.lineCap = 'square';
   ctx.lineJoin = 'miter';
+
+  const drawKey = (s) => {
+    ctx.beginPath();
+    ctx.moveTo(s * 0.16, s * 0.86);
+    ctx.lineTo(s * 0.16, s * 0.16);
+    ctx.lineTo(s * 0.86, s * 0.16);
+    ctx.lineTo(s * 0.86, s * 0.52);
+    ctx.lineTo(s * 0.48, s * 0.52);
+    ctx.stroke();
+  };
+  const drawDoubleKey = (s) => {
+    ctx.beginPath();
+    ctx.moveTo(s * 0.14, s * 0.86);
+    ctx.lineTo(s * 0.14, s * 0.14);
+    ctx.lineTo(s * 0.5, s * 0.14);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(s * 0.86, s * 0.14);
+    ctx.lineTo(s * 0.86, s * 0.86);
+    ctx.lineTo(s * 0.5, s * 0.86);
+    ctx.stroke();
+  };
+  const drawDiamond = (s) => {
+    ctx.beginPath();
+    ctx.moveTo(s * 0.5, s * 0.15);
+    ctx.lineTo(s * 0.85, s * 0.5);
+    ctx.lineTo(s * 0.5, s * 0.85);
+    ctx.lineTo(s * 0.15, s * 0.5);
+    ctx.closePath();
+    ctx.stroke();
+  };
+  const drawFrame = (s) => {
+    ctx.strokeRect(s * 0.24, s * 0.24, s * 0.52, s * 0.52);
+  };
+  const motifs = [drawKey, drawDoubleKey, drawDiamond, drawFrame];
+
   for (let gy = 0; gy < cells; gy++) {
     for (let gx = 0; gx < cells; gx++) {
       const x0 = gx * cell, y0 = gy * cell;
-      ctx.beginPath();
-      ctx.moveTo(x0 + cell * 0.16, y0 + cell * 0.86);
-      ctx.lineTo(x0 + cell * 0.16, y0 + cell * 0.16);
-      ctx.lineTo(x0 + cell * 0.86, y0 + cell * 0.16);
-      ctx.lineTo(x0 + cell * 0.86, y0 + cell * 0.52);
-      ctx.lineTo(x0 + cell * 0.48, y0 + cell * 0.52);
-      ctx.stroke();
+      const idx = (gx * 3 + gy * 5 + ((gx ^ gy) % 3)) % motifs.length;
+      const rot = ((gx + gy * 2) % 4) * (Math.PI / 2);
+      ctx.save();
+      ctx.translate(x0 + cell / 2, y0 + cell / 2);
+      ctx.rotate(rot);
+      ctx.translate(-cell / 2, -cell / 2);
+      ctx.strokeStyle = LAPIS;
+      ctx.lineWidth = cell * (idx === 3 ? 0.09 : 0.13);
+      motifs[idx](cell);
+      ctx.restore();
     }
   }
 
@@ -720,8 +761,10 @@ function buildBaseRing(circumRadius, columnCapWidth) {
   // vorne/hinten (Z, dort steht die kameranahe Saeule und braucht die
   // volle Breite von band). Ein einzelner Kreisradius konnte wegen der
   // Perspektive nie beides gleichzeitig treffen - die Stauchung loest das,
-  // ohne den grosszuegigen band-Wert fuer die Front aufzugeben.
-  group.scale.x = 0.78;
+  // ohne den grosszuegigen band-Wert fuer die Front aufzugeben. 0.78 war zu
+  // aggressiv - liess Saeulen bei mittleren Winkeln (nicht ganz vorne, nicht
+  // ganz seitlich) wieder ueber den Rand hinausragen. 0.9 ist zurueckhaltender.
+  group.scale.x = 0.9;
 
   return group;
 }
@@ -942,11 +985,12 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       // flaechen) - auf Wunsch jetzt zurueck, aber diesmal an die inzwischen
       // sauber kalibrierten Cutoff-Winkel (cullDeg/ribCut, nah an der
       // echten 90-Grad-Kante) gekoppelt statt an einen frueheren, zu weit
-      // aussen liegenden Wert. Saeule/Rippe loesen sich so ueber die letzten
-      // Grad vor ihrem jeweiligen Cutoff weich auf, statt schlagartig zu
-      // verschwinden - genau dort, wo sie ohnehin schon stark schraeg
-      // projiziert und kaum noch als eigenstaendiges Element lesbar sind.
-      const fadeSpan = 6;
+      // aussen liegenden Wert. 6 Grad Fenster war noch immer als deutliches
+      // "Verblassen" wahrnehmbar (die Aenderung pro Grad war zu gross) - auf
+      // 16 Grad gestreckt macht die Opacity-Aenderung pro Frame/Grad viel
+      // kleiner, liest sich dadurch eher als allmaehliches Aufloesen denn
+      // als sichtbarer Effekt.
+      const fadeSpan = 16;
       const fadeFor = (absDeg, cut) => {
         const start = cut - fadeSpan;
         if (absDeg <= start) return 1;
