@@ -919,13 +919,18 @@ export default function RotaryStage({
               colWidth={colW}
               colCapWidth={colCapW}
               colCapHeight={colCapH}
-              // Bewusst groesszuegiger als CULL_DEG (das Mass fuer die
-              // Inhaltsflaechen, die bei diesem Winkel unlesbar wuerden):
-              // Saeulen haben keine Lesbarkeits-Grenze, sie duerfen laenger
-              // sichtbar bleiben und sich sanft ausblenden (siehe Fade in
-              // setColumns), statt schon abzureissen, waehrend der
-              // sichtbare Gebaeude-Faecher sie eigentlich noch zeigen wuerde.
-              cullDeg={CULL_DEG + 35}
+              // Frueher grosszuegiger als CULL_DEG (Saeulen sollten laenger
+              // sichtbar bleiben als die Inhaltsflaechen, die bei diesem
+              // Winkel unlesbar werden) - dadurch konnte eine Saeule aber
+              // sichtbar bleiben, obwohl BEIDE Nachbarflaechen (die sie
+              // eigentlich an ihrer Nahtstelle markiert) schon ausgeblendet
+              // waren, und driftete dann quer ueber eine voellig andere,
+              // noch sichtbare Flaeche - eine "verwaiste" Saeule mitten im
+              // Bild. cullDeg jetzt exakt wie bei den Flaechen: die Saeule
+              // verschwindet nie spaeter als ihre eigenen Nachbarn. Der
+              // sanfte Fade (siehe setColumns) sorgt weiterhin dafuer, dass
+              // das Verschwinden selbst nicht als Ruck sichtbar wird.
+              cullDeg={CULL_DEG}
             />
           </div>
         )}
