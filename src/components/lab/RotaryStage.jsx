@@ -244,8 +244,8 @@ export default function RotaryStage({
   const overlayRefs = useRef([]);
   const closeRefs = useRef([]);
   const shellRefs = useRef([]);
-  const columnRefs = useRef([]);
   const glWrapRef = useRef(null);
+  const architectureRef = useRef(null);
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
   // wirkt nur auf die Ausdehnung in Drehrichtung. stageW/stageH sind die
   // volle Buehnengroesse (sticky.clientWidth/-Height) - fuer die echte
@@ -389,17 +389,15 @@ export default function RotaryStage({
       // Kamera aus verdeckt. Ein minimaler Vorsprung (3%) reicht gegen
       // Z-Fighting an der Kante - 12% (voriger Wert) liess die Saeule
       // sichtbar vor der Wand schweben statt darin zu sitzen.
+      // Saeulen sind echte WebGL-Geometrie (ArchitectureGL) - dieselbe
+      // Rechnung wie vorher fuer die CSS-transforms, nur als Argumente an
+      // die imperative setColumns()-Methode statt als style.transform. Das
+      // Aus-/Einblenden beim Aufklappen (offen) passiert schon eine Ebene
+      // hoeher ueber glWrapRef.style.visibility, siehe oben - hier nur noch
+      // die Kantenabschneidung (CULL_DEG) je Saeule.
       const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.03;
-      columnRefs.current.forEach((col, s) => {
-        if (!col) return;
-        const deg = kuerzesterWeg(p - s + 0.5) * step;
-        const hidden = offen || Math.abs(deg) > CULL_DEG;
-        col.style.visibility = hidden ? 'hidden' : 'visible';
-        if (!hidden) {
-          col.style.transform = `${turn(deg)} translateZ(${colRadius}px)`;
-          applyShade(col, deg);
-        }
-      });
+      const colDegs = Array.from({ length: sides }, (_, s) => kuerzesterWeg(p - s + 0.5) * step);
+      architectureRef.current?.setColumns(colDegs, colRadius, -radius);
 
       // Inhaltsseiten darueber.
       faceRefs.current.forEach((face, i) => {
@@ -655,35 +653,14 @@ export default function RotaryStage({
   // Luecke zur Wand (Parallaxe zwischen der flachen Facette und der
   // ebenfalls flachen Saeule an ihrer Kante). Eine breite Saeule ueberdeckt
   // die Nahtstelle stattdessen grosszuegig auf beiden Seiten.
+  //
+  // Saeulen selbst sind jetzt echte WebGL-Geometrie (siehe ArchitectureGL),
+  // nicht mehr eigene CSS-3D-Elemente - nur die Masse (in denselben CSS-
+  // Pixel-Einheiten wie der Rest der Buehne) werden hier noch gebraucht, um
+  // die Saeulen-Meshes in passender Groesse aufzubauen.
   const colW = Math.max(34, Math.round((cube.w || 0) * 0.095));
   const colCapW = Math.round(colW * 1.3);
   const colCapH = Math.max(14, Math.round(colW * 0.4));
-  const colStyle = lateral
-    ? {
-        position: 'absolute',
-        left: '50%',
-        top: 0,
-        width: `${colW}px`,
-        height: cube.h ? `${cube.h}px` : '94vh',
-        marginLeft: `${-colW / 2}px`,
-        backfaceVisibility: 'hidden',
-        willChange: 'transform, filter',
-        // Ohne das faengt die breite, weit vorne liegende Saeule den
-        // Ziehen-Overlay der Facette darunter ab - Rotation per Drag liess
-        // sich seit den breiteren Saeulen nicht mehr auslösen.
-        pointerEvents: 'none',
-      }
-    : {
-        position: 'absolute',
-        left: 0,
-        top: '50%',
-        width: cube.w ? `${cube.w}px` : '100%',
-        height: `${colW}px`,
-        marginTop: `${-colW / 2}px`,
-        backfaceVisibility: 'hidden',
-        willChange: 'transform, filter',
-        pointerEvents: 'none',
-      };
 
   const faceStyle = {
     width: cube.w ? `${cube.w}px` : '100%',
@@ -780,66 +757,6 @@ export default function RotaryStage({
             />
           ))}
 
-          {/* Saeulen: drehen mit dem Koerper, eine je Nahtstelle zwischen
-              zwei Facetten - siehe Positionierung in apply(). */}
-          {Array.from({ length: sides }, (_, s) => (
-            <div
-              key={`col-${s}`}
-              ref={(el) => { columnRefs.current[s] = el; }}
-              className="absolute flex flex-col items-center"
-              style={colStyle}
-              aria-hidden="true"
-            >
-              {/* Kapitell: als Halbzylinder-Kappe gerundet (border-radius
-                  50% oben) statt eines flachen Blocks - deutet den runden
-                  Querschnitt der Saeule an, die "zur Haelfte aus der
-                  Wandkante hervorragt". */}
-              <div
-                style={{
-                  width: `${colCapW}px`,
-                  height: `${colCapH}px`,
-                  borderRadius: '50% 50% 4px 4px / 65% 65% 8px 8px',
-                  background: 'linear-gradient(90deg, hsl(36 45% 42%) 0%, hsl(45 68% 78%) 38%, hsl(48 75% 88%) 50%, hsl(42 58% 60%) 68%, hsl(36 50% 36%) 100%)',
-                  boxShadow: '0 1px 0 hsl(36 55% 30% / 0.6)',
-                  flexShrink: 0,
-                }}
-              />
-              <div
-                style={{
-                  width: `${colW}px`,
-                  flex: 1,
-                  // Zylinder-Schattierung statt Kannelur: eine glatte Kurve
-                  // aus Kernschatten - Glanzlicht - Kernschatten, wie Licht,
-                  // das um einen runden Querschnitt wandert. Asymmetrisch
-                  // (Glanzlicht nicht mittig, sondern bei ~38%) - die
-                  // Saeule liest dadurch als halb aus der Wand heraustretend
-                  // statt als frei stehender, symmetrisch beleuchteter
-                  // Rundstab.
-                  background: `linear-gradient(90deg,
-                    hsl(35 22% 46%) 0%,
-                    hsl(37 26% 62%) 14%,
-                    hsl(42 34% 82%) 30%,
-                    hsl(48 42% 94%) 42%,
-                    hsl(45 36% 88%) 52%,
-                    hsl(40 28% 74%) 68%,
-                    hsl(36 24% 56%) 88%,
-                    hsl(34 22% 44%) 100%)`,
-                  boxShadow: 'inset 0 0 0 1px hsl(38 20% 40% / 0.25)',
-                }}
-              />
-              <div
-                style={{
-                  width: `${colCapW}px`,
-                  height: `${colCapH}px`,
-                  borderRadius: '4px 4px 50% 50% / 8px 8px 65% 65%',
-                  background: 'linear-gradient(90deg, hsl(36 45% 42%) 0%, hsl(45 68% 78%) 38%, hsl(48 75% 88%) 50%, hsl(42 58% 60%) 68%, hsl(36 50% 36%) 100%)',
-                  boxShadow: '0 -1px 0 hsl(36 55% 30% / 0.6)',
-                  flexShrink: 0,
-                }}
-              />
-            </div>
-          ))}
-
           {panels.map((panel, i) => (
             <div
               key={i}
@@ -891,14 +808,16 @@ export default function RotaryStage({
           ))}
         </div>
 
-        {/* Echtes 3D-Dach+Sockel, ein einzelner WebGL-Layer ueber der
-            gesamten Buehne (siehe ArchitectureGL.jsx). Nach box im DOM,
-            damit er an der Nahtstelle ueber die Saeulenkoepfe/-fuesse
-            zeichnet. Wird wie Huelle/Saeulen ausgeblendet, wenn eine
-            Facette einzeln aufgeklappt ist. */}
+        {/* Echtes 3D-Rahmengeruest (Saeulen+Dach+Sockel), ein einzelner
+            WebGL-Layer ueber der gesamten Buehne (siehe ArchitectureGL.jsx).
+            Nach box im DOM, damit er vor den Inhaltsflaechen zeichnet -
+            Saeulen sitzen an der Nahtstelle zwischen zwei Facetten und
+            muessen praktisch immer vor dem Inhalt liegen. Wird wie die
+            Huelle ausgeblendet, wenn eine Facette einzeln aufgeklappt ist. */}
         {cube.h > 0 && circumRadius > 0 && (
           <div ref={glWrapRef} className="absolute inset-0">
             <ArchitectureGL
+              ref={architectureRef}
               stageW={cube.stageW}
               stageH={cube.stageH}
               perspectivePx={perspektivePx}
@@ -906,6 +825,10 @@ export default function RotaryStage({
               drumHalfHeight={drumHalfHeight}
               centerOffsetZ={centerOffsetZ}
               sides={sides}
+              colWidth={colW}
+              colCapWidth={colCapW}
+              colCapHeight={colCapH}
+              cullDeg={CULL_DEG}
             />
           </div>
         )}

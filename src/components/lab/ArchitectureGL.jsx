@@ -1,33 +1,49 @@
-import React, { useEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import * as THREE from 'three';
 
 /**
- * Echtes 3D-Dach und -Sockel per WebGL, als Ersatz fuer die fruehere flache
- * SVG-Naeherung (siehe Architecture.jsx - bleibt als toter Code vorerst
- * nicht stehen, wird durch diese Datei ersetzt).
+ * Echtes 3D-Rahmengeruest (Saeulen, Dach, Sockel) per WebGL, als Ersatz fuer
+ * die fruehere flache SVG-Naeherung (siehe Architecture.jsx - entfernt).
  *
- * Der Kern des Problems, das die SVG-Version nie loesen konnte: eine flache
- * 2D-Ellipse kann nur fuer EINE Kamera-Perspektive kalibriert werden - meist
- * die Frontflaeche. Jede andere sichtbare Facette der rotierenden Trommel
- * wird durch die echte 3D-Perspektive der Buehne (CSS `perspective`)
- * anders verkleinert/verschoben projiziert, und die flache Naeherung macht
- * diese Verzerrung nicht mit. Ergebnis: an der Frontflaeche sitzt Dach/
- * Sockel buendig, an den Seiten klafft eine Luecke.
+ * Der Kern des Problems, das eine reine SVG/CSS-Naeherung nie loesen konnte:
+ * eine flache 2D-Ellipse kann nur fuer EINE Kamera-Perspektive kalibriert
+ * werden - meist die Frontflaeche. Jede andere sichtbare Facette der
+ * rotierenden Trommel wird durch die echte 3D-Perspektive der Buehne (CSS
+ * `perspective`) anders verkleinert/verschoben projiziert.
  *
- * Die Loesung ist keine bessere 2D-Naeherung, sondern ECHTE 3D-Geometrie,
- * gerendert mit einer Kamera, die exakt dieselbe Projektion nutzt wie die
- * CSS-3D-Buehne (gleicher Blickwinkel, gleiche "Brennweite"). Ein echter
- * Kreis (der Dachrand/die Sockel-Plattform) ist rotationssymmetrisch - er
- * passt sich der drehenden Trommel bei JEDEM Winkel automatisch an, weil
- * beide von derselben Kamera unter denselben Gesetzen projiziert werden.
+ * Saeulen waren zunaechst noch eigene CSS-3D-Elemente (rotierten mit der
+ * Trommel mit, wie die Facetten selbst) - technisch exakt, aber als
+ * eigenstaendige DOM-Ebene neben dieser WebGL-Ebene fuer Dach/Sockel: zwei
+ * getrennte Rendering-Schichten, die der Browser nur uebereinanderlegt
+ * (Compositing), nicht in einem gemeinsamen Tiefenpuffer gegenseitig
+ * verdecken kann. Jede Kalibrierung von Radius/Hoehe blieb Annaeherung.
  *
- * CSS `perspective: Dpx` mit `perspective-origin: 50% 50%` entspricht einer
- * Kamera im Abstand D (in denselben Pixeln) von der z=0-Ebene, die genau
- * geradeaus blickt. Das vertikale Sichtfeld daraus:
+ * Jetzt leben Saeulen, Dach UND Sockel im selben WebGL-Scene-Graph - der
+ * Browser/Three.js sortiert sie automatisch korrekt gegeneinander (echter
+ * Tiefenpuffer). Nur die Inhaltsflaechen (Text, Bilder, Buttons) bleiben
+ * CSS-3D-DOM - die muessen lesbar, scharf und interaktiv bleiben (Formulare,
+ * Akkordeons, Calendly-Widget), das leistet WebGL nicht sinnvoll. Die
+ * Saeulen sitzen an der Nahtstelle zwischen zwei Facetten und muessen daher
+ * praktisch immer VOR dem Inhalt liegen, nie dahinter - das ist die einzige
+ * Tiefenbeziehung, die zwischen der WebGL- und der DOM-Ebene ueberhaupt
+ * vorkommt, und die feste Zeichenreihenfolge (dieser Layer nach der Buehne
+ * im DOM) bildet sie korrekt ab.
+ *
+ * Kamera-Kalibrierung: CSS `perspective: Dpx` mit `perspective-origin: 50%
+ * 50%` entspricht einer Kamera im Abstand D (in denselben Pixeln) von der
+ * z=0-Ebene, die geradeaus blickt. Vertikales Sichtfeld daraus:
  *   fovDeg = 2 * atan((stageHoehe / 2) / D) * 180/PI
- * Damit Geometrie, die bei y = +/- (cube.h/2) in "CSS-Pixel-Einheiten"
- * platziert wird, exakt an der Kante der Facetten-Trommel ankommt, die im
- * selben Pixel-Massstab per CSS transform positioniert ist.
+ * Geometrie, die in "CSS-Pixel-Einheiten" platziert wird, landet damit exakt
+ * da, wo das CSS-Gegenstueck (Facetten-Trommel) im selben Pixel-Massstab
+ * per transform positioniert ist.
+ *
+ * Saeulen-Position: die Trommel rotiert nicht um den Weltursprung, sondern
+ * um einen Punkt bei z = -apothem (das Element `box` traegt selbst
+ * translateZ(-apothem), damit seine Frontflaeche auf z = 0 zu liegen kommt -
+ * jede Facette/Saeule daran haengt an diesem verschobenen Drehpunkt, nicht
+ * am Weltursprung). world_x = colRadius * sin(deg), world_z = colRadius *
+ * cos(deg) + pivotZ (pivotZ = -apothem) - exakt dieselbe Rechnung, die vorher
+ * die CSS-transform-Kette leistete.
  */
 
 const IVORY = 0xf7f0e0;
@@ -36,7 +52,7 @@ const GOLD = 0xc9973a;
 const GOLD_LIGHT = 0xe8c97a;
 const GOLD_DEEP = 0x8a6423;
 const NAVY = 0x142a4d;
-const GLASS = 0xdcebf5;
+const STONE = 0xd9cbaa;
 
 function buildDome(circumRadius, heightBudget, sides) {
   const group = new THREE.Group();
@@ -192,9 +208,67 @@ function buildBase(circumRadius, heightBudget) {
   return group;
 }
 
-export default function ArchitectureGL({ stageW, stageH, perspectivePx, circumRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8 }) {
+// Eine Saeule: Kapitell (oben), Schaft, Basis (unten) - rotationssymmetrisch,
+// daher genuegt ein Cylinder statt der frueheren CSS-Gradient-Attrappe fuer
+// den Rundungs-Eindruck. Echtes Licht (siehe Scene-Lights) uebernimmt die
+// Schattierung, die vorher per Hand als Farbverlauf nachgestellt wurde.
+function buildColumn(colWidth, colCapWidth, colCapHeight, shaftHeight) {
+  const group = new THREE.Group();
+  const shaftMat = new THREE.MeshStandardMaterial({ color: STONE, metalness: 0.05, roughness: 0.5 });
+  const capMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.5, roughness: 0.3 });
+
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(colWidth / 2, colWidth / 2, shaftHeight, 24), shaftMat);
+  group.add(shaft);
+
+  const capTop = new THREE.Mesh(
+    new THREE.CylinderGeometry(colCapWidth / 2, colWidth / 2, colCapHeight, 24),
+    capMat
+  );
+  capTop.position.y = shaftHeight / 2 + colCapHeight / 2;
+  group.add(capTop);
+
+  const capBottom = new THREE.Mesh(
+    new THREE.CylinderGeometry(colWidth / 2, colCapWidth / 2, colCapHeight, 24),
+    capMat
+  );
+  capBottom.position.y = -shaftHeight / 2 - colCapHeight / 2;
+  group.add(capBottom);
+
+  return group;
+}
+
+const ArchitectureGL = forwardRef(function ArchitectureGL(
+  { stageW, stageH, perspectivePx, circumRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92 },
+  ref
+) {
   const containerRef = useRef(null);
   const stateRef = useRef({});
+
+  useImperativeHandle(ref, () => ({
+    // Von RotaryStage bei jedem Tick aufgerufen (gsap-Ticker, ~60fps) - mit
+    // denselben live berechneten Werten, die vorher direkt auf die CSS-
+    // Saeulen-transforms geschrieben wurden. degs: Grad je Saeule (gleiche
+    // Formel wie zuvor: kuerzesterWeg(p - s + 0.5) * step).
+    setColumns(degs, colRadius, pivotZ) {
+      const { columns, renderer, scene, camera } = stateRef.current;
+      if (!columns || !renderer) return;
+      columns.forEach((col, s) => {
+        const deg = degs[s] ?? 0;
+        const hidden = Math.abs(deg) > cullDeg;
+        col.visible = !hidden;
+        if (!hidden) {
+          const rad = (deg * Math.PI) / 180;
+          // CSS `rotateY(-deg) translateZ(colRadius)`: nach der CSS-
+          // Rotationsmatrix (rechtshaendig, aber Y zeigt in CSS nach unten)
+          // ergibt das x = -colRadius*sin(deg), z = colRadius*cos(deg) -
+          // NICHT +sin(deg), das hatte Saeulen mittig auf die Facetten statt
+          // auf die Nahtstellen gesetzt.
+          col.position.set(-colRadius * Math.sin(rad), 0, colRadius * Math.cos(rad) + pivotZ);
+        }
+      });
+      renderer.render(scene, camera);
+    },
+  }));
 
   useEffect(() => {
     const container = containerRef.current;
@@ -238,8 +312,17 @@ export default function ArchitectureGL({ stageW, stageH, perspectivePx, circumRa
     base.position.set(0, -drumHalfHeight, centerOffsetZ);
     scene.add(base);
 
+    const columns = [];
+    if (colWidth) {
+      for (let s = 0; s < sides; s++) {
+        const col = buildColumn(colWidth, colCapWidth, colCapHeight, drumHalfHeight * 2);
+        scene.add(col);
+        columns.push(col);
+      }
+    }
+
     renderer.render(scene, camera);
-    stateRef.current = { renderer, scene, camera };
+    stateRef.current = { renderer, scene, camera, columns };
 
     return () => {
       scene.traverse((obj) => {
@@ -253,8 +336,9 @@ export default function ArchitectureGL({ stageW, stageH, perspectivePx, circumRa
         container.removeChild(renderer.domElement);
       }
       renderer.dispose();
+      stateRef.current = {};
     };
-  }, [stageW, stageH, perspectivePx, circumRadius, drumHalfHeight, centerOffsetZ, sides]);
+  }, [stageW, stageH, perspectivePx, circumRadius, drumHalfHeight, centerOffsetZ, sides, colWidth, colCapWidth, colCapHeight]);
 
   return (
     <div
@@ -264,4 +348,6 @@ export default function ArchitectureGL({ stageW, stageH, perspectivePx, circumRa
       aria-hidden="true"
     />
   );
-}
+});
+
+export default ArchitectureGL;
