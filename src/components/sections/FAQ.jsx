@@ -25,10 +25,10 @@ export default function FAQ() {
             <Accordion type="single" collapsible className="w-full">
               {t.faq.items.map((item, i) => (
                 <AccordionItem key={i} value={`item-${i}`} className="border-border">
-                  <AccordionTrigger className="text-left text-[18px] lg:text-[20px] font-heading font-semibold hover:no-underline py-6">
+                  <AccordionTrigger className="text-left text-[18px] lg:text-[20px] font-heading font-semibold hover:no-underline hover:text-accent transition-colors duration-300 py-7">
                     {item.q}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground leading-relaxed pb-6">
+                  <AccordionContent className="text-muted-foreground leading-relaxed pb-7">
                     {item.a}
                   </AccordionContent>
                 </AccordionItem>

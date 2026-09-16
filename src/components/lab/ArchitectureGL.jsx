@@ -49,76 +49,87 @@ import * as THREE from 'three';
  * die CSS-transform-Kette leistete.
  */
 
-const IVORY = 0xf7f0e0;
-const GOLD = 0xc9973a;
-const GOLD_LIGHT = 0xe8c97a;
-const GOLD_DEEP = 0x8a6423;
-const NAVY = 0x142a4d;
-const STONE = 0xd9cbaa;
-const GLASS_BLUE = 0xcfe6f2;
-const TILE_BLUE = '#2e5c96';
-const TILE_BLUE_PALE = '#8fb3da';
-const TILE_CREAM = '#f4ecd8';
+// Palette an das bestehende Seiten-Theme angelehnt (siehe index.css):
+// Elfenbein/Creme als Koerper, gedaemptes Messing statt glaenzendem Gold,
+// dasselbe Navy wie --foreground, sehr zurueckhaltende Glasfarbe. Gold ist
+// hier bewusst NICHT mehr das dominante Material, sondern nur noch duenne
+// Zierlinien/Kapitelle - "alt-Geld"-Zurueckhaltung statt Palast.
+const IVORY = 0xf2ead9;
+const STONE = 0xece1cb;
+const STONE_DEEP = 0xd9caa9;
+const BRASS = 0xb28f5c;
+const BRASS_LIGHT = 0xceac78;
+const BRASS_DEEP = 0x7a5f3c;
+const NAVY = 0x0c1a32;
+const GLASS = 0xf0f1ea;
+const TILE_LINE = '#c9b78e';
+const TILE_ACCENT = '#a9895a';
+const TILE_BASE = '#efe6d2';
 
-// Helles, blau-weisses Fliesenmuster fuer den Sockel: griechisches
-// Maeanderband (antik) auf cremefarbenem Grund, im Rhythmus blauer
-// Kachelfelder wie chinesisches Blauweiss-Porzellan - per Canvas erzeugt,
-// da keine externen Bild-Assets zur Verfuegung stehen.
+// Sockel-Textur: grossformatige Kalkstein-Platten mit feinen Fugenlinien
+// und einer sehr zurueckhaltenden Messing-Raute an jeder Kreuzung - wie ein
+// Empfangshallen-Boden, nicht wie ein Fliesenmuster. Alles in engen,
+// hellen Steintoenen (kein Blau, kein starker Kontrast) - das Muster soll
+// sich erst bei genauerem Hinsehen zeigen, nicht dominieren. Per Canvas
+// erzeugt, da keine externen Bild-Assets zur Verfuegung stehen.
 function buildTileTexture() {
-  // 1024 statt vorher 512 plus Anisotropie: bei 512 und dichter Wiederholung
-  // (10x) kippte das Muster bei flachem Blickwinkel auf dem Sockel in
-  // grobe, blockige Pixel-Kanten - las sich wie Retro-Konsolen-Grafik statt
-  // hochwertiger Textur.
   const size = 1024;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
-  ctx.fillStyle = TILE_CREAM;
+
+  // Grundflaeche mit sehr leichtem radialen Verlauf statt reiner Flatcolor -
+  // liest als natuerlicher Kalkstein, nicht als digitale Flaeche.
+  const bgGrad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.75);
+  bgGrad.addColorStop(0, TILE_BASE);
+  bgGrad.addColorStop(1, '#e6dabd');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, size, size);
 
-  const cell = size / 6;
-  for (let row = 0; row < 6; row++) {
-    for (let col = 0; col < 6; col++) {
-      const x = col * cell;
-      const y = row * cell;
-      if ((row + col) % 2 === 0) {
-        ctx.fillStyle = TILE_BLUE_PALE + '22';
-        ctx.fillRect(x, y, cell, cell);
-      }
-    }
+  // Grossformatige Plattenfugen: ein einfaches Raster, duenne Linie, kaum
+  // sichtbar - deutet grosse Steinplatten an statt kleiner Kacheln.
+  const grid = size / 4;
+  ctx.strokeStyle = TILE_LINE;
+  ctx.globalAlpha = 0.35;
+  ctx.lineWidth = size * 0.0028;
+  for (let i = 0; i <= 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * grid, 0);
+    ctx.lineTo(i * grid, size);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, i * grid);
+    ctx.lineTo(size, i * grid);
+    ctx.stroke();
   }
+  ctx.globalAlpha = 1;
 
-  // Griechischer Maeander (Greek key), laufend um jede Kachelreihe -
-  // duenner und mit abgerundeten Verbindungen statt harter Miter-Kanten,
-  // wirkt weniger wie ein grob gepixeltes Icon.
-  ctx.strokeStyle = TILE_BLUE;
-  ctx.lineWidth = cell * 0.09;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  for (let row = 0; row < 6; row++) {
-    for (let col = 0; col < 6; col++) {
-      const x = col * cell;
-      const y = row * cell;
-      ctx.save();
-      ctx.translate(x, y);
+  // Feine Messing-Raute an jeder Fugenkreuzung - die einzige Zierde, sehr
+  // klein und zart, wie eine Intarsie in echtem Naturstein.
+  ctx.fillStyle = TILE_ACCENT;
+  ctx.globalAlpha = 0.55;
+  const r = size * 0.01;
+  for (let gy = 0; gy <= 4; gy++) {
+    for (let gx = 0; gx <= 4; gx++) {
+      const cx = gx * grid;
+      const cy = gy * grid;
       ctx.beginPath();
-      ctx.moveTo(cell * 0.18, cell * 0.82);
-      ctx.lineTo(cell * 0.18, cell * 0.18);
-      ctx.lineTo(cell * 0.82, cell * 0.18);
-      ctx.lineTo(cell * 0.82, cell * 0.48);
-      ctx.lineTo(cell * 0.48, cell * 0.48);
-      ctx.lineTo(cell * 0.48, cell * 0.82);
-      ctx.stroke();
-      ctx.restore();
+      ctx.moveTo(cx, cy - r);
+      ctx.lineTo(cx + r, cy);
+      ctx.lineTo(cx, cy + r);
+      ctx.lineTo(cx - r, cy);
+      ctx.closePath();
+      ctx.fill();
     }
   }
+  ctx.globalAlpha = 1;
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(6, 1.3);
+  tex.repeat.set(5, 1.1);
   tex.anisotropy = 8;
   tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -140,12 +151,14 @@ function buildEnvTexture() {
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
+  // Warmes, neutrales Tageslicht statt Himmelblau - passt zur restlichen
+  // Elfenbein/Stein-Palette und faerbt Kuppel/Marmor nicht kuehl an.
   const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, '#bfe0f5');
-  grad.addColorStop(0.42, '#eaf4fb');
-  grad.addColorStop(0.5, '#fff8ea');
+  grad.addColorStop(0, '#f3ecdd');
+  grad.addColorStop(0.42, '#f7f2e6');
+  grad.addColorStop(0.5, '#fffaf0');
   grad.addColorStop(0.58, '#f1e6cf');
-  grad.addColorStop(1, '#cdbd98');
+  grad.addColorStop(1, '#cbb98f');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
   const tex = new THREE.CanvasTexture(canvas);
@@ -156,18 +169,21 @@ function buildEnvTexture() {
 
 function addLights(scene, circumRadius, perspectivePx) {
   scene.environment = buildEnvTexture();
-  scene.add(new THREE.AmbientLight(0xfff4e0, 0.85));
-  const sun = new THREE.DirectionalLight(0xfff8ec, 1.15);
+  scene.add(new THREE.AmbientLight(0xfff4e0, 0.9));
+  const sun = new THREE.DirectionalLight(0xfff8ec, 1.0);
   sun.position.set(circumRadius * 0.6, circumRadius * 1.4, perspectivePx * 0.5);
   scene.add(sun);
-  const fill = new THREE.DirectionalLight(0xaad4ff, 0.35);
+  // Warmes Neutralgrau statt Himmelblau: ein kuehler Fill-Ton faerbte
+  // Elfenbein/Messing sichtbar kalt an - "warmes, neutrales Tageslicht"
+  // statt buntes Studiolicht.
+  const fill = new THREE.DirectionalLight(0xe8e0d0, 0.3);
   fill.position.set(-circumRadius, circumRadius * 0.3, perspectivePx * 0.2);
   scene.add(fill);
   // Von unten aufhellend: die Kuppel-Unterseite (die dem Betrachter
   // meist zugewandte Flaeche) zeigt nach unten und bekommt von sun/fill
   // (beide oberhalb) kaum Licht ab - wirkte dadurch dunkel/schmutzig statt
   // wie helles Glas.
-  const upfill = new THREE.DirectionalLight(0xdcebf7, 0.5);
+  const upfill = new THREE.DirectionalLight(0xf3ead4, 0.45);
   upfill.position.set(circumRadius * 0.3, -circumRadius * 0.8, perspectivePx * 0.4);
   scene.add(upfill);
 }
@@ -180,13 +196,17 @@ function buildDome(circumRadius, heightBudget, sides) {
   // Radius - auf einem breiten, aber niedrigen Bildschirm (breite Fassade,
   // wenig Hoehe) wurde sie riesig und fraess sich sichtbar in die
   // Anzeigetafel darunter, obwohl die Kuppel selbst gar nicht zu breit war.
-  const domeH = heightBudget * 0.55;
-  // Sehr duenn halten: die Lippe haengt bewusst unter den Dachrand (y = 0,
-  // die Wandkante) hinein, ist also der einzige Teil der Kuppel, der
-  // ueberhaupt in den Bereich der Anzeigetafel hineinragt. Bei 9% kam es
-  // auf kurzen/breiten Screens (wenig heightBudget, wenig Innenabstand im
-  // Panel) schon vor, dass sie in die Ueberschrift hineinragte.
-  const fasciaH = heightBudget * 0.02;
+  // Flach gehalten statt hoch gewoelbt - "premium atrium dome", nicht
+  // Zirkuszelt. Ein niedrigeres domeH verkuerzt gleichzeitig automatisch
+  // den Sichtbarkeitsradius der Kuppelsilhouette ueber der Anzeigetafel.
+  const domeH = heightBudget * 0.36;
+  // Gebaelk/Entablature statt duenner Lippe: haengt bewusst unter den
+  // Dachrand (y = 0, die Wandkante) hinein, ist also der einzige Teil der
+  // Kuppel, der ueberhaupt in den Bereich der Anzeigetafel hineinragt. Bei
+  // zu grossem Wert frisst sie sich auf kurzen/breiten Screens (wenig
+  // heightBudget) in die Ueberschrift hinein - 5.5% ist der obere Rand, der
+  // dort noch unauffaellig bleibt.
+  const fasciaH = heightBudget * 0.055;
 
   const profile = [
     new THREE.Vector2(0.001, domeH),
@@ -203,51 +223,75 @@ function buildDome(circumRadius, heightBudget, sides) {
   // aus Reflexion (envMap, hoher Clearcoat) - reales Glas unter Kunstlicht
   // wirkt ohnehin oft eher spiegelnd-opak. `FrontSide` blendet die von der
   // Kamera abgewandte Rueckseite komplett aus.
+  // Zurueckhaltender Glaseindruck statt Hochglanz-Kuppel: niedrigerer
+  // Clearcoat/Reflectivity/envMapIntensity, damit die Flaeche mattes,
+  // leicht gefrostetes Glas zeigt statt eine spiegelnde Blase.
   const domeMat = new THREE.MeshPhysicalMaterial({
-    color: GLASS_BLUE,
-    metalness: 0.1,
-    roughness: 0.05,
+    color: GLASS,
+    metalness: 0.08,
+    roughness: 0.18,
     transparent: false,
     opacity: 1,
     side: THREE.FrontSide,
-    clearcoat: 1,
-    clearcoatRoughness: 0.04,
-    reflectivity: 0.9,
-    envMapIntensity: 1.4,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.22,
+    reflectivity: 0.45,
+    envMapIntensity: 0.7,
   });
   const dome = new THREE.Mesh(domeGeo, domeMat);
   group.add(dome);
 
-  const fasciaProfile = [
-    new THREE.Vector2(circumRadius, 0),
-    new THREE.Vector2(circumRadius * 1.015, -fasciaH * 0.4),
-    new THREE.Vector2(circumRadius * 1.01, -fasciaH),
-    new THREE.Vector2(circumRadius * 0.98, -fasciaH),
+  // Durchgehendes Gebaelk statt duenner Messinglippe: ein klassisches,
+  // dreiteiliges Traufband (Messing-Zierlinie / Steinkoerper / Messing-
+  // Zierlinie) - traegt das Dach sichtbar auf der Wand ab, ohne dass
+  // Messing zur Hauptflaeche wird. Die Steinmasse in der Mitte macht das
+  // Ganze strukturell lesbar ("cleaner continuous entablature/ring").
+  const trimMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.32, side: THREE.DoubleSide });
+  const trimTopProfile = [
+    new THREE.Vector2(circumRadius * 0.996, 0),
+    new THREE.Vector2(circumRadius * 1.02, -fasciaH * 0.09),
+    new THREE.Vector2(circumRadius * 1.02, -fasciaH * 0.17),
+    new THREE.Vector2(circumRadius * 0.998, -fasciaH * 0.21),
   ];
-  const fasciaGeo = new THREE.LatheGeometry(fasciaProfile, 64);
-  const fasciaMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.55, roughness: 0.35, side: THREE.DoubleSide });
-  const fascia = new THREE.Mesh(fasciaGeo, fasciaMat);
-  group.add(fascia);
+  const trimTop = new THREE.Mesh(new THREE.LatheGeometry(trimTopProfile, 64), trimMat);
+  group.add(trimTop);
+
+  const bandMat = new THREE.MeshStandardMaterial({ color: STONE_DEEP, metalness: 0.04, roughness: 0.78, side: THREE.DoubleSide });
+  const bandProfile = [
+    new THREE.Vector2(circumRadius * 1.001, -fasciaH * 0.21),
+    new THREE.Vector2(circumRadius * 1.032, -fasciaH * 0.56),
+    new THREE.Vector2(circumRadius * 1.014, -fasciaH * 0.87),
+  ];
+  const band = new THREE.Mesh(new THREE.LatheGeometry(bandProfile, 64), bandMat);
+  group.add(band);
+
+  const trimBotProfile = [
+    new THREE.Vector2(circumRadius * 1.014, -fasciaH * 0.87),
+    new THREE.Vector2(circumRadius * 1.014, -fasciaH * 0.93),
+    new THREE.Vector2(circumRadius * 0.99, -fasciaH),
+  ];
+  const trimBot = new THREE.Mesh(new THREE.LatheGeometry(trimBotProfile, 64), trimMat);
+  group.add(trimBot);
 
   // Bekroenung: schlanke Laterne mit Ring, sehr kompakt.
   const finialGroup = new THREE.Group();
   const poleH = domeH * 0.55;
   const pole = new THREE.Mesh(
     new THREE.CylinderGeometry(circumRadius * 0.006, circumRadius * 0.006, poleH, 12),
-    new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.6, roughness: 0.3 })
+    new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.6, roughness: 0.3 })
   );
   pole.position.y = domeH + poleH / 2;
   finialGroup.add(pole);
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(circumRadius * 0.028, circumRadius * 0.006, 12, 24),
-    new THREE.MeshStandardMaterial({ color: GOLD_LIGHT, metalness: 0.6, roughness: 0.25 })
+    new THREE.MeshStandardMaterial({ color: BRASS_LIGHT, metalness: 0.6, roughness: 0.25 })
   );
   ring.position.y = domeH + poleH + circumRadius * 0.028;
   ring.rotation.x = Math.PI / 2;
   finialGroup.add(ring);
   const orb = new THREE.Mesh(
     new THREE.SphereGeometry(circumRadius * 0.012, 16, 16),
-    new THREE.MeshStandardMaterial({ color: GOLD_DEEP, metalness: 0.5, roughness: 0.4 })
+    new THREE.MeshStandardMaterial({ color: BRASS_DEEP, metalness: 0.5, roughness: 0.4 })
   );
   orb.position.y = ring.position.y;
   finialGroup.add(orb);
@@ -267,7 +311,9 @@ function buildDome(circumRadius, heightBudget, sides) {
 // dick anzusetzen.
 function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   const group = new THREE.Group();
-  const domeH = heightBudget * 0.55;
+  // Muss exakt mit domeH aus buildDome() uebereinstimmen (siehe Kommentar
+  // dort) - sonst driften Rippe und Kuppelflaeche auseinander.
+  const domeH = heightBudget * 0.36;
   const halfAngle = Math.max(0.012, (columnCapWidth || circumRadius * 0.09) / 2 / circumRadius);
   const steps = 14;
   const raise = 1.006; // minimal ueber die Kuppelflaeche angehoben, gegen Z-Fighting
@@ -301,7 +347,7 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     // ein-/ausgeblendet werden koennen, synchron mit ihrer Saeule (siehe
     // setColumns) - sonst wuerde eine Rippe ohne zugehoerige, laengst
     // ausgeblendete Saeule weiter voll sichtbar in der Luft haengen.
-    const ribMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
+    const ribMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
     group.add(new THREE.Mesh(geo, ribMat));
   }
 
@@ -339,7 +385,7 @@ function buildBaseRing(circumRadius, columnCapWidth) {
   // klar vom Fliesenfeld ab, statt nur uebers Material zu wirken.
   [inner, outer].forEach((r) => {
     const edgeGeo = new THREE.TorusGeometry(r, circumRadius * 0.0025, 8, 64);
-    const edgeMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.55, roughness: 0.3 });
+    const edgeMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.55, roughness: 0.3 });
     const edge = new THREE.Mesh(edgeGeo, edgeMat);
     edge.rotation.x = Math.PI / 2;
     edge.position.y = lift;
@@ -394,7 +440,7 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
 
   // Goldkante am Plattformrand.
   const rimGeo = new THREE.TorusGeometry(topR, circumRadius * 0.006, 10, 64);
-  const rimMat = new THREE.MeshStandardMaterial({ color: GOLD_LIGHT, metalness: 0.6, roughness: 0.25 });
+  const rimMat = new THREE.MeshStandardMaterial({ color: BRASS_LIGHT, metalness: 0.6, roughness: 0.25 });
   const rim = new THREE.Mesh(rimGeo, rimMat);
   rim.rotation.x = Math.PI / 2;
   group.add(rim);
@@ -402,15 +448,25 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   // Marmor-Umrandung um die Saeulenfuesse, edler als das nackte Fliesenfeld.
   group.add(buildBaseRing(topR, columnCapWidth || circumRadius * 0.1));
 
-  // Stufenkanten in Gold, dezent.
-  [midR, botR].forEach((r) => {
-    const edgeGeo = new THREE.TorusGeometry(r, circumRadius * 0.003, 8, 64);
-    const edgeMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.5, roughness: 0.35, transparent: true, opacity: 0.7 });
-    const edge = new THREE.Mesh(edgeGeo, edgeMat);
-    edge.rotation.x = Math.PI / 2;
-    edge.position.y = r === midR ? -tier1 - tier2 : -tier1 - tier2 - tier3;
-    group.add(edge);
-  });
+  // Mittlere Stufenkante: dezente Messinglinie.
+  const midEdge = new THREE.Mesh(
+    new THREE.TorusGeometry(midR, circumRadius * 0.003, 8, 64),
+    new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.35, transparent: true, opacity: 0.7 })
+  );
+  midEdge.rotation.x = Math.PI / 2;
+  midEdge.position.y = -tier1 - tier2;
+  group.add(midEdge);
+
+  // Aeusserste Plattformkante: duenner Navy-Ring statt Messing - fasst die
+  // gesamte Sockel-Silhouette klar ein, ohne dass noch mehr Messing die
+  // Flaeche dominiert ("very thin navy... ring can define the outer edge").
+  const botEdge = new THREE.Mesh(
+    new THREE.TorusGeometry(botR, circumRadius * 0.0022, 8, 64),
+    new THREE.MeshStandardMaterial({ color: NAVY, metalness: 0.15, roughness: 0.4 })
+  );
+  botEdge.rotation.x = Math.PI / 2;
+  botEdge.position.y = -tier1 - tier2 - tier3;
+  group.add(botEdge);
 
   return group;
 }
@@ -432,7 +488,7 @@ function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   // Kantenabschneidung sanft aus (Opacity-Fade) statt sie hart zu
   // verstecken - ein ploetzliches Verschwinden war als "Despawn" sichtbar.
   const shaftMat = new THREE.MeshStandardMaterial({ color: STONE, metalness: 0.05, roughness: 0.5, transparent: true });
-  const capMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.5, roughness: 0.3, transparent: true });
+  const capMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.3, transparent: true });
 
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(colWidth / 2, colWidth / 2, shaftHeight, 24), shaftMat);
   group.add(shaft);

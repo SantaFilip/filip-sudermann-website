@@ -663,9 +663,16 @@ export default function RotaryStage({
   // nicht mehr eigene CSS-3D-Elemente - nur die Masse (in denselben CSS-
   // Pixel-Einheiten wie der Rest der Buehne) werden hier noch gebraucht, um
   // die Saeulen-Meshes in passender Groesse aufzubauen.
-  const colW = Math.max(34, Math.round((cube.w || 0) * 0.095));
-  const colCapW = Math.round(colW * 1.3);
-  const colCapH = Math.max(14, Math.round(colW * 0.4));
+  // Schlanker als zuvor (0.095 -> 0.08), damit die Saeule als elegantes
+  // Architekturelement liest statt als "oversized golden pillar" - aber
+  // nicht duenner: unter diesem Wert klafft bei Nicht-Frontblickwinkeln
+  // wieder die oben beschriebene Nahtstelle sichtbar auf.
+  const colW = Math.max(30, Math.round((cube.w || 0) * 0.08));
+  // Kapitell nur noch dezent ausgestellt (1.3 -> 1.16) - Messing bleibt so
+  // auf "Details an Basis/Kapitell" beschraenkt statt eine breite goldene
+  // Kappe zu bilden.
+  const colCapW = Math.round(colW * 1.16);
+  const colCapH = Math.max(12, Math.round(colW * 0.32));
 
   // Dach und Sockel: echtes WebGL statt flacher SVG-Naeherung (siehe
   // ArchitectureGL.jsx). perspektivePx muss exakt dem CSS perspective-Wert

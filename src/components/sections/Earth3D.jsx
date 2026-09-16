@@ -46,6 +46,7 @@ export default function Earth3D() {
     const earthGeo = new THREE.SphereGeometry(1, 96, 96);
     const earthMat = new THREE.MeshPhongMaterial({
       map: earthMap,
+      color: new THREE.Color(0x3c4658),
       bumpMap: bumpMap,
       bumpScale: 0.05,
       specularMap: specMap,
@@ -84,7 +85,7 @@ export default function Earth3D() {
       { lat: 48.2, lon: 16.4, color: 0xffd24a },
       { lat: 40.7, lon: -74.0, color: 0xffd24a },
       { lat: 34.0, lon: -118.2, color: 0xffd24a },
-      { lat: 51.0, lon: 10.0, color: 0xff3b30 },
+      { lat: 51.0, lon: 10.0, color: 0x8a4a3a },
     ];
     PIN_LOCATIONS.forEach((p) => {
       const pos = latLngToVector3(p.lat, p.lon, 1.018);
@@ -113,8 +114,8 @@ export default function Earth3D() {
       fragmentShader: `
         varying vec3 vNormal;
         void main() {
-          float intensity = pow(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-          gl_FragColor = vec4(0.3, 0.55, 1.0, 1.0) * intensity;
+          float intensity = pow(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.4);
+          gl_FragColor = vec4(0.75, 0.64, 0.44, 1.0) * intensity * 0.55;
         }
       `,
       side: THREE.BackSide,
@@ -124,7 +125,7 @@ export default function Earth3D() {
     const atmosphere = new THREE.Mesh(atmGeo, atmMat);
     scene.add(atmosphere);
 
-    scene.add(new THREE.AmbientLight(0x3a3a4a, 0.7));
+    scene.add(new THREE.AmbientLight(0x4a4438, 0.7));
     const sun = new THREE.DirectionalLight(0xffffff, 1.7);
     sun.position.set(5, 2.5, 4);
     scene.add(sun);

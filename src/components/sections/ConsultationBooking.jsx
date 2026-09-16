@@ -107,7 +107,13 @@ export default function ConsultationBooking() {
           )}
         </AnimatePresence>
 
-        <div className="bg-card border border-border p-2">
+        {/* Architektonischer Rahmen statt nacktem iFrame-Kasten: ein
+            zurueckhaltendes Doppel-Passepartout (aeussere Steinkante,
+            duenne Gold-Zierlinie innen) - liest wie eine in die
+            Architektur eingelassene Tafel, nicht wie ein eingebettetes
+            Drittanbieter-Widget. */}
+        <div className="relative bg-card border border-border p-3 md:p-5">
+          <div className="absolute inset-2 md:inset-3 border border-accent/25 pointer-events-none" />
           <div ref={containerRef} style={{ minWidth: '320px', height: '680px' }} />
         </div>
       </div>
