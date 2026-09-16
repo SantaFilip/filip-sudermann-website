@@ -66,6 +66,13 @@ const TILE_LINE = '#c9b78e';
 const TILE_ACCENT = '#a9895a';
 const TILE_BASE = '#efe6d2';
 
+// Nur fuer die Saeulen: auf Wunsch zurueck auf den urspruenglichen,
+// kraeftigeren Goldton (statt des gedaempften BRASS) - Dach/Gebaelk/Sockel
+// bleiben bei der gedaempften Palette, nur die Saeule selbst (und die aus
+// ihr herauswachsende Rippe/Kegel) tragen wieder den alten Ton.
+const COL_GOLD = 0xc9973a;
+const COL_STONE = 0xd9cbaa;
+
 // Sockel-Textur: grossformatige Kalkstein-Platten mit feinen Fugenlinien
 // und einer sehr zurueckhaltenden Messing-Raute an jeder Kreuzung - wie ein
 // Empfangshallen-Boden, nicht wie ein Fliesenmuster. Alles in engen,
@@ -300,23 +307,26 @@ function buildDome(circumRadius, heightBudget, sides) {
   return group;
 }
 
-// Goldene Rippen: kein duenner Strich mehr, sondern ein massiver, sich
-// verjuengender Steg (der "Kegel mit Giebel zur Kuppelspitze"), der der
-// Kuppel-Profilkurve EXAKT folgt (dieselben r/y-Werte wie oben) - die
-// Rippe liegt dadurch garantiert genau auf der Kuppelflaeche, ohne Spalt
-// oder Durchdringung. Lebt im FRONT-Layer (mit den Saeulen), weil sie mit
-// ihnen mitdrehen muss - siehe deren dynamische Rotation in setColumns().
-// Breite an der Traufe an der Kapitellbreite orientiert (columnCapWidth),
-// damit sie optisch aus dem Saeulenkopf herauswaechst statt beliebig duenn/
-// dick anzusetzen.
+// Kegel + zweiseitiger Kamm: auf der Saeulenspitze sitzt jetzt ein
+// plastischer Kegel (echtes 3D-Relief statt nur Materialfarbe), aus dem ein
+// First mit zwei geneigten Flanken (wie ein schmaler Giebel) zur
+// Kuppelspitze hochlaeuft - vorher war das nur ein flaches, taillierendes
+// Band ohne eigene Hoehe ("der braune Strich"). Der Kamm folgt der
+// Kuppel-Profilkurve EXAKT (dieselben r/y-Werte wie in buildDome) und wird
+// nur in der Mitte angehoben, seine beiden Raender bleiben auf der
+// Kuppelflaeche - so liegt er ohne Spalt/Durchdringung auf, wirkt aber
+// dreidimensional statt flach aufgemalt. Lebt im FRONT-Layer (mit den
+// Saeulen), weil er mit ihnen mitdrehen muss - siehe setColumns().
 function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   const group = new THREE.Group();
   // Muss exakt mit domeH aus buildDome() uebereinstimmen (siehe Kommentar
-  // dort) - sonst driften Rippe und Kuppelflaeche auseinander.
+  // dort) - sonst driften Kamm und Kuppelflaeche auseinander.
   const domeH = heightBudget * 0.36;
-  const halfAngle = Math.max(0.012, (columnCapWidth || circumRadius * 0.09) / 2 / circumRadius);
+  const capW = columnCapWidth || circumRadius * 0.09;
+  const halfAngle = Math.max(0.012, capW / 2 / circumRadius);
   const steps = 14;
   const raise = 1.006; // minimal ueber die Kuppelflaeche angehoben, gegen Z-Fighting
+  const pitch = 0.62; // First-Hoehe relativ zur halben Kammbreite - Giebel-Neigung
 
   for (let i = 0; i < sides; i++) {
     const beta = (i / sides) * Math.PI * 2;
@@ -327,28 +337,58 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
       const r = t * circumRadius * raise;
       const y = domeH * (1 - Math.pow(t, 1.5));
       const wa = halfAngle * t; // an der Spitze auf einen Punkt zulaufend
+      const halfWidthLinear = r * wa;
+      const peakY = y + halfWidthLinear * pitch;
       const bL = beta - wa;
       const bR = beta + wa;
+      // Drei Punkte je Schritt: linke Flanke, First (angehoben), rechte
+      // Flanke - ergibt den "zweiseitigen Kamm" statt eines flachen Bands.
       positions.push(r * Math.sin(bL), y, r * Math.cos(bL));
+      positions.push(r * Math.sin(beta), peakY, r * Math.cos(beta));
       positions.push(r * Math.sin(bR), y, r * Math.cos(bR));
       if (s > 0) {
-        const a = (s - 1) * 2;
-        const b = a + 1;
-        const c = a + 2;
-        const d = a + 3;
-        indices.push(a, b, c, b, d, c);
+        const pL = (s - 1) * 3, pC = pL + 1, pR = pL + 2;
+        const cL = s * 3, cC = cL + 1, cR = cL + 2;
+        // linke Flanke
+        indices.push(pL, pC, cL, pC, cC, cL);
+        // rechte Flanke
+        indices.push(pC, pR, cC, pR, cR, cC);
       }
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geo.setIndex(indices);
     geo.computeVertexNormals();
-    // Eigenes Material je Rippe (nicht geteilt): jede Rippe muss unabhaengig
-    // ein-/ausgeblendet werden koennen, synchron mit ihrer Saeule (siehe
-    // setColumns) - sonst wuerde eine Rippe ohne zugehoerige, laengst
+    // Eigenes Material je Kamm (nicht geteilt): jeder Kamm muss unabhaengig
+    // ein-/ausgeblendet werden koennen, synchron mit seiner Saeule (siehe
+    // setColumns) - sonst wuerde ein Kamm ohne zugehoerige, laengst
     // ausgeblendete Saeule weiter voll sichtbar in der Luft haengen.
-    const ribMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
-    group.add(new THREE.Mesh(geo, ribMat));
+    const ridgeMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
+    const ridge = new THREE.Mesh(geo, ridgeMat);
+
+    // Kegel auf der Saeulenspitze: Basis sitzt auf dem Kapitell (t=1),
+    // Spitze zeigt entlang der Kammrichtung nach innen/oben - so waechst
+    // der Kamm sichtbar AUS dem Kegel heraus, statt lose daneben zu stehen.
+    const basePt = new THREE.Vector3(
+      circumRadius * raise * Math.sin(beta), 0, circumRadius * raise * Math.cos(beta)
+    );
+    const aimT = 0.8;
+    const aimR = aimT * circumRadius * raise;
+    const aimY = domeH * (1 - Math.pow(aimT, 1.5));
+    const aimPt = new THREE.Vector3(aimR * Math.sin(beta), aimY, aimR * Math.cos(beta));
+    const dir = aimPt.clone().sub(basePt).normalize();
+
+    const coneRadius = capW * 0.62;
+    const coneHeight = capW * 0.95;
+    const coneMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.62, roughness: 0.26, transparent: true });
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 20), coneMat);
+    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    cone.position.copy(basePt).addScaledVector(dir, coneHeight / 2);
+
+    const sideGroup = new THREE.Group();
+    sideGroup.add(ridge, cone);
+    sideGroup.userData.mats = [ridgeMat, coneMat];
+    group.add(sideGroup);
   }
 
   return group;
@@ -487,8 +527,8 @@ function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   // transparent von Anfang an: setColumns() blendet Saeulen nahe der
   // Kantenabschneidung sanft aus (Opacity-Fade) statt sie hart zu
   // verstecken - ein ploetzliches Verschwinden war als "Despawn" sichtbar.
-  const shaftMat = new THREE.MeshStandardMaterial({ color: STONE, metalness: 0.05, roughness: 0.5, transparent: true });
-  const capMat = new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.5, roughness: 0.3, transparent: true });
+  const shaftMat = new THREE.MeshStandardMaterial({ color: COL_STONE, metalness: 0.05, roughness: 0.5, transparent: true });
+  const capMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.5, roughness: 0.3, transparent: true });
 
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(colWidth / 2, colWidth / 2, shaftHeight, 24), shaftMat);
   group.add(shaft);
@@ -625,7 +665,10 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
         const rib = ribs?.children[s];
         if (rib) {
           rib.visible = !hidden;
-          if (!hidden) rib.material.opacity = fade;
+          if (!hidden) {
+            const ribMats = rib.userData.mats;
+            if (ribMats) ribMats.forEach((m) => { m.opacity = fade; });
+          }
         }
         if (!hidden) {
           const rad = (deg * Math.PI) / 180;
