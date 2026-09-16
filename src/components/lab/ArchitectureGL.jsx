@@ -38,10 +38,21 @@ const GOLD_DEEP = 0x8a6423;
 const NAVY = 0x142a4d;
 const GLASS = 0xdcebf5;
 
-function buildDome(circumRadius, sides) {
+function buildDome(circumRadius, heightBudget, sides) {
   const group = new THREE.Group();
-  const domeH = circumRadius * 0.24;
-  const fasciaH = circumRadius * 0.035;
+  // domeH/fasciaH haengen an heightBudget (drumHalfHeight - der
+  // tatsaechlichen Wandhoehe), NICHT an circumRadius (der Breite). Vorher
+  // haengte die Traufband-Lippe (die bewusst unter den Dachrand ragt) am
+  // Radius - auf einem breiten, aber niedrigen Bildschirm (breite Fassade,
+  // wenig Hoehe) wurde sie riesig und fraess sich sichtbar in die
+  // Anzeigetafel darunter, obwohl die Kuppel selbst gar nicht zu breit war.
+  const domeH = heightBudget * 0.55;
+  // Sehr duenn halten: die Lippe haengt bewusst unter den Dachrand (y = 0,
+  // die Wandkante) hinein, ist also der einzige Teil der Kuppel, der
+  // ueberhaupt in den Bereich der Anzeigetafel hineinragt. Bei 9% kam es
+  // auf kurzen/breiten Screens (wenig heightBudget, wenig Innenabstand im
+  // Panel) schon vor, dass sie in die Ueberschrift hineinragte.
+  const fasciaH = heightBudget * 0.02;
 
   const profile = [
     new THREE.Vector2(0.001, domeH),
@@ -129,14 +140,17 @@ function buildDome(circumRadius, sides) {
   return group;
 }
 
-function buildBase(circumRadius) {
+function buildBase(circumRadius, heightBudget) {
   const group = new THREE.Group();
   const topR = circumRadius * 0.93;
   const midR = circumRadius * 1.1;
   const botR = circumRadius * 1.28;
-  const tier1 = circumRadius * 0.05;
-  const tier2 = circumRadius * 0.06;
-  const tier3 = circumRadius * 0.07;
+  // Stufenhoehen an heightBudget (drumHalfHeight) gebunden, nicht an
+  // circumRadius - siehe Kommentar in buildDome zur selben Falle bei der
+  // Traufband-Lippe.
+  const tier1 = heightBudget * 0.13;
+  const tier2 = heightBudget * 0.155;
+  const tier3 = heightBudget * 0.18;
 
   const profile = [
     new THREE.Vector2(topR, 0),
@@ -216,11 +230,11 @@ export default function ArchitectureGL({ stageW, stageH, perspectivePx, circumRa
     // verschlucken.
     const domeBaseRadius = circumRadius * 0.62;
 
-    const dome = buildDome(domeBaseRadius, sides);
+    const dome = buildDome(domeBaseRadius, drumHalfHeight, sides);
     dome.position.set(0, drumHalfHeight, centerOffsetZ);
     scene.add(dome);
 
-    const base = buildBase(domeBaseRadius);
+    const base = buildBase(domeBaseRadius, drumHalfHeight);
     base.position.set(0, -drumHalfHeight, centerOffsetZ);
     scene.add(base);
 
