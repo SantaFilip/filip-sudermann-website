@@ -674,12 +674,12 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
 // Sockel-Oberflaeche (y = 0 in diesem Koordinatensystem).
 function buildBaseRing(circumRadius, columnCapWidth) {
   const group = new THREE.Group();
-  // Deutlich breiter als zuvor (1.2x -> 2.0x der Kapitellbreite) - die
-  // Saeule soll komplett auf der weissen Marmorflaeche stehen, nicht mit
-  // ihrem Kapitell schon auf das Mosaik uebergreifen. Bleibt trotzdem klar
-  // innerhalb von midR (1.18x circumRadius in buildBase), damit die naechste
-  // Sockelstufe nicht ueberschrieben wird.
-  const band = Math.max(columnCapWidth * 2.0, circumRadius * 0.09);
+  // Noch einmal deutlich breiter (2.0x -> 3.5x der Kapitellbreite) - eine
+  // Saeule nahe der Kamera (vorderer Bildbereich) wird perspektivisch
+  // groesser projiziert als eine seitliche, brauchte also mehr Marmorflaeche
+  // um sich, um komplett darauf zu stehen statt mit dem Kapitell aufs Mosaik
+  // ueberzugreifen. midR in buildBase wurde dafuer auf 1.35x erweitert.
+  const band = Math.max(columnCapWidth * 3.5, circumRadius * 0.18);
   // Volle Scheibe statt schmalem Ring: `inner` haengt NICHT mehr an band -
   // eine breitere band (fuer eine breitere Aussenkante) hätte sonst auch
   // die Innenkante weiter nach innen gezogen und dort ein Loch aufgerissen,
@@ -740,8 +740,13 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   // Saeulen) statt vorher *0.93 - die Plattformkante muss exakt dort
   // sitzen, wo die Saeulenfuesse ankommen, nicht knapp daneben.
   const topR = circumRadius;
-  const midR = circumRadius * 1.18;
-  const botR = circumRadius * 1.38;
+  // Weiter nach aussen gerueckt (1.18/1.38 -> 1.35/1.65), um Platz fuer eine
+  // deutlich breitere weisse Marmorflaeche zu schaffen (siehe buildBaseRing)
+  // - eine Saeule nahe der Kamera wirkt durch die Perspektive groesser
+  // projiziert als eine seitliche, brauchte also mehr radialen Puffer, als
+  // die vorherigen, engeren Stufen hergaben.
+  const midR = circumRadius * 1.35;
+  const botR = circumRadius * 1.65;
   // Stufenhoehen an heightBudget (drumHalfHeight) gebunden, nicht an
   // circumRadius - siehe Kommentar in buildDome zur selben Falle bei der
   // Traufband-Lippe.

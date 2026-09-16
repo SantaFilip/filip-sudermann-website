@@ -25,14 +25,18 @@ const CUBE_FILL_DESKTOP = 0.86;
 // Seitlicher Rand auf dem Desktop, damit der Koerper wie ein Buch auf dem
 // Wasser liegt statt bildschirmbreit anzustossen.
 const CUBE_WIDTH_DESKTOP = 0.93;
-// Das gesamte Gebaeude (Saeulen/Dach/Sockel/Inhalt zusammen) 5% kleiner als
+// Das gesamte Gebaeude (Saeulen/Dach/Sockel/Inhalt zusammen) kleiner als
 // die eigentliche Fuellung - schafft zusaetzlichen Luftraum rundum, allen
 // voran ueber der Kuppel, die sonst bei einer steileren Kuppelhoehe an der
 // Buehnenoberkante anstossen kann. Wirkt auf `cube.w`/`cube.h` (also auf
 // die gesamte davon abgeleitete Geometrie), NICHT auf `stageW`/`stageH`
 // (die Buehnen-/Kameragroesse bleibt gleich - nur das Gebaeude darin wird
-// kleiner gezeichnet).
-const GEBAEUDE_SKALIERUNG = 0.95;
+// kleiner gezeichnet). Von 0.95 auf 0.9 verstaerkt, nachdem ein separater
+// Versuch (Buehne per CSS-Padding nach unten schieben) einen sichtbaren
+// Farbbruch zwischen Buehnenblau und Seitenhintergrund erzeugte - dieser
+// Weg bleibt INNERHALB der Buehne, also durchgehend vom blauen
+// Atmosphaeren-Hintergrund gedeckt.
+const GEBAEUDE_SKALIERUNG = 0.9;
 const MOBILE_MAX = 767;
 
 // Hochskalieren ist keine Option: der Inhalt liegt bereits auf voller
@@ -793,13 +797,18 @@ export default function RotaryStage({
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
     // #beratung etc.) muessen ihre Zielflaeche finden koennen, um sie per
     // Klick zu oeffnen - siehe scrollToSection().
-    // pt-16/lg:pt-20 glich bislang nur exakt die Hoehe des fixierten Headers
-    // aus (h-16/lg:h-20, siehe Header.jsx) - die Buehne begann direkt an
-    // dessen Unterkante, ohne eigenen Luftraum. Zusaetzliche ~32px schaffen
-    // sichtbaren Abstand, in den die Kuppelspitze/UN-Flagge hineinragen kann,
-    // ohne an den Header zu stossen - ohne die 3D-Kalibrierung der Buehne
-    // selbst anzufassen (die bleibt bei 90vh, nur ihr Start ruckt nach unten).
-    <div ref={rootRef} data-rotary-root="" className="pt-24 lg:pt-28">
+    // pt-16/lg:pt-20 gleicht exakt die Hoehe des fixierten Headers aus
+    // (h-16/lg:h-20, siehe Header.jsx). Ein frueherer Versuch vergroesserte
+    // dies auf pt-24/lg:pt-28, um der Kuppelspitze/UN-Flagge mehr Luft zu
+    // geben - erzeugte dabei aber einen sichtbaren Farbbruch: der
+    // zusaetzliche Abstand liegt AUSSERHALB der Buehne (stickyRef), zeigt
+    // also den normalen Seitenhintergrund (cremeweiss), nicht den
+    // atmosphaerischen blauen Buehnenhintergrund - direkt ueber der Kuppel
+    // hoerte das Blau dadurch sichtbar hart auf. Zurueck auf den exakten
+    // Header-Ausgleich; mehr Luftraum kommt stattdessen ueber
+    // GEBAEUDE_SKALIERUNG (siehe unten) - der bleibt INNERHALB der Buehne,
+    // vom blauen Hintergrund gedeckt.
+    <div ref={rootRef} data-rotary-root="" className="pt-16 lg:pt-20">
       <div
         ref={stickyRef}
         // Normales Fluss-Element, nicht mehr gepinnt: die Buehne dreht sich
