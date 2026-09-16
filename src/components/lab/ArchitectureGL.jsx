@@ -916,7 +916,7 @@ export const ArchitectureBackGL = React.memo(function ArchitectureBackGL({
 // beabsichtigt: Saeulen markieren die Nahtstelle zwischen zwei Facetten und
 // muessen dort sichtbar bleiben, auch wenn die Facette direkt dahinter liegt.
 const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
-  { stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92 },
+  { stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colWidth, colCapWidth, colCapHeight, cullDeg = 92, ribCullDeg },
   ref
 ) {
   const containerRef = useRef(null);
@@ -962,6 +962,15 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
       // GSAP-Tick, ein echter Zeitwert macht die Geschwindigkeit unabhaengig
       // von der tatsaechlichen Framerate.
       const t = performance.now() / 1000;
+      // Rippen (Kegel+Kamm+Flagge) sitzen auf der STATISCHEN Kuppel (Back-
+      // Layer) - die dreht selbst nicht mit und hat eine feste, begrenzte
+      // Silhouette aus der festen Kameraperspektive. Ihr eigener Cutoff
+      // (ribCullDeg, enger als cullDeg) muss daher niedriger liegen: bei
+      // einem breiteren Saeulen-/Flaechen-Cutoff (siehe CULL_DEG in
+      // RotaryStage.jsx) rotierte eine Rippe sonst weiter herum, als die
+      // Kuppel-Silhouette sie noch optisch traegt - sie schwebte sichtbar
+      // frei im Himmel, ohne erkennbare Verbindung zur Kuppelflaeche.
+      const ribCut = ribCullDeg ?? Math.min(cullDeg, 88);
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
         const absDeg = Math.abs(deg);
@@ -972,8 +981,9 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
         // sichtbar in der Luft, obwohl ihre Saeule schon ausgeblendet ist.
         const rib = ribs?.children[s];
         if (rib) {
-          rib.visible = !hidden;
-          if (!hidden) {
+          const ribHidden = absDeg >= ribCut;
+          rib.visible = !ribHidden;
+          if (!ribHidden) {
             rib.rotation.y = ((-deg - s * step) * Math.PI) / 180;
             const ribMats = rib.userData.mats;
             if (ribMats) ribMats.forEach((m) => { m.opacity = fade; });
