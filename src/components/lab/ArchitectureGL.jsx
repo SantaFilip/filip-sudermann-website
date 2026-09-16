@@ -62,9 +62,12 @@ const BRASS_LIGHT = 0xceac78;
 const BRASS_DEEP = 0x7a5f3c;
 const NAVY = 0x0c1a32;
 const GLASS = 0xf0f1ea;
-const TILE_LINE = '#c9b78e';
-const TILE_ACCENT = '#a9895a';
-const TILE_BASE = '#efe6d2';
+// Sockel-Mosaik: Quarz (helles Weiss) und Lapislazuli (kraeftiges Blau) -
+// auf Wunsch statt des vorherigen zurueckhaltenden Kalkstein-Musters.
+const QUARTZ = '#f6f4ee';
+const QUARTZ_DEEP = '#e6e1d3';
+const LAPIS = '#1f4d8c';
+const LAPIS_DEEP = '#15335e';
 
 // Nur fuer die Saeulen: auf Wunsch zurueck auf den urspruenglichen,
 // kraeftigeren Goldton (statt des gedaempften BRASS) - Dach/Gebaelk/Sockel
@@ -73,12 +76,10 @@ const TILE_BASE = '#efe6d2';
 const COL_GOLD = 0xc9973a;
 const COL_STONE = 0xd9cbaa;
 
-// Sockel-Textur: grossformatige Kalkstein-Platten mit feinen Fugenlinien
-// und einer sehr zurueckhaltenden Messing-Raute an jeder Kreuzung - wie ein
-// Empfangshallen-Boden, nicht wie ein Fliesenmuster. Alles in engen,
-// hellen Steintoenen (kein Blau, kein starker Kontrast) - das Muster soll
-// sich erst bei genauerem Hinsehen zeigen, nicht dominieren. Per Canvas
-// erzeugt, da keine externen Bild-Assets zur Verfuegung stehen.
+// Sockel-Mosaik: klassisches Maeanderband (griechischer Schluesselmaeander)
+// in Lapislazuli-Blau auf hellem Quarz-Grund - auf Wunsch statt des
+// vorherigen zurueckhaltenden Kalkstein-Musters. Per Canvas erzeugt, da
+// keine externen Bild-Assets zur Verfuegung stehen.
 function buildTileTexture() {
   const size = 1024;
   const canvas = document.createElement('canvas');
@@ -87,49 +88,49 @@ function buildTileTexture() {
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
 
-  // Grundflaeche mit sehr leichtem radialen Verlauf statt reiner Flatcolor -
-  // liest als natuerlicher Kalkstein, nicht als digitale Flaeche.
+  // Grundflaeche: Quarz-Weiss mit sehr leichtem radialen Verlauf statt
+  // reiner Flatcolor - liest als polierter Stein, nicht als digitale Flaeche.
   const bgGrad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.75);
-  bgGrad.addColorStop(0, TILE_BASE);
-  bgGrad.addColorStop(1, '#e6dabd');
+  bgGrad.addColorStop(0, QUARTZ);
+  bgGrad.addColorStop(1, QUARTZ_DEEP);
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, size, size);
 
-  // Grossformatige Plattenfugen: ein einfaches Raster, duenne Linie, kaum
-  // sichtbar - deutet grosse Steinplatten an statt kleiner Kacheln.
-  const grid = size / 4;
-  ctx.strokeStyle = TILE_LINE;
-  ctx.globalAlpha = 0.35;
-  ctx.lineWidth = size * 0.0028;
-  for (let i = 0; i <= 4; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * grid, 0);
-    ctx.lineTo(i * grid, size);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, i * grid);
-    ctx.lineTo(size, i * grid);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  // Feine Messing-Raute an jeder Fugenkreuzung - die einzige Zierde, sehr
-  // klein und zart, wie eine Intarsie in echtem Naturstein.
-  ctx.fillStyle = TILE_ACCENT;
-  ctx.globalAlpha = 0.55;
-  const r = size * 0.01;
-  for (let gy = 0; gy <= 4; gy++) {
-    for (let gx = 0; gx <= 4; gx++) {
-      const cx = gx * grid;
-      const cy = gy * grid;
+  // Maeanderband: ein sich wiederholendes, gestuftes Schluesselmotiv in
+  // Lapislazuli-Blau, Zelle fuer Zelle in einem 8x8-Raster.
+  const cells = 8;
+  const cell = size / cells;
+  ctx.strokeStyle = LAPIS;
+  ctx.lineWidth = cell * 0.16;
+  ctx.lineCap = 'square';
+  ctx.lineJoin = 'miter';
+  for (let gy = 0; gy < cells; gy++) {
+    for (let gx = 0; gx < cells; gx++) {
+      const x0 = gx * cell, y0 = gy * cell;
       ctx.beginPath();
-      ctx.moveTo(cx, cy - r);
-      ctx.lineTo(cx + r, cy);
-      ctx.lineTo(cx, cy + r);
-      ctx.lineTo(cx - r, cy);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(x0 + cell * 0.16, y0 + cell * 0.86);
+      ctx.lineTo(x0 + cell * 0.16, y0 + cell * 0.16);
+      ctx.lineTo(x0 + cell * 0.86, y0 + cell * 0.16);
+      ctx.lineTo(x0 + cell * 0.86, y0 + cell * 0.52);
+      ctx.lineTo(x0 + cell * 0.48, y0 + cell * 0.52);
+      ctx.stroke();
     }
+  }
+
+  // Duenne Fugenlinien im tieferen Blau, kaum sichtbar - deutet einzelne
+  // Mosaiksteine an, ohne das Maeanderband zu uebertoenen.
+  ctx.strokeStyle = LAPIS_DEEP;
+  ctx.globalAlpha = 0.18;
+  ctx.lineWidth = size * 0.0015;
+  for (let i = 0; i <= cells; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * cell, 0);
+    ctx.lineTo(i * cell, size);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, i * cell);
+    ctx.lineTo(size, i * cell);
+    ctx.stroke();
   }
   ctx.globalAlpha = 1;
 
@@ -421,6 +422,34 @@ function addLights(scene, circumRadius, perspectivePx) {
   scene.add(upfill);
 }
 
+// Kontrollpunkte des Kuppelprofils (t = Radiusanteil, yf = Hoehenanteil) -
+// von buildDome() (fuer die LatheGeometry-Profilkurve) UND buildDomeRibs()
+// (fuer den Kamm-Verlauf) gemeinsam genutzt. Vorher naeherte der Kamm das
+// Profil mit einer eigenen Potenzfunktion (1 - t^1.5) an, die an keinem
+// Punkt ausser den Enden mit der tatsaechlichen, mehrfach geknickten
+// Kuppelkurve uebereinstimmte - der Kamm lief dadurch sichtbar anders
+// gekruemmt als das Dach selbst. Stueckweise lineare Interpolation
+// zwischen denselben Punkten wie die LatheGeometry-Profilkurve (die
+// zwischen ihren Vector2-Punkten ebenfalls linear interpoliert) ergibt
+// exakt dieselbe Kurve.
+const DOME_PROFILE = [
+  { t: 0, yf: 1 },
+  { t: 0.32, yf: 0.93 },
+  { t: 0.62, yf: 0.72 },
+  { t: 0.86, yf: 0.38 },
+  { t: 1, yf: 0 },
+];
+function domeProfileYFraction(t) {
+  for (let i = 0; i < DOME_PROFILE.length - 1; i++) {
+    const a = DOME_PROFILE[i], b = DOME_PROFILE[i + 1];
+    if (t <= b.t) {
+      const localT = (t - a.t) / (b.t - a.t);
+      return a.yf + (b.yf - a.yf) * localT;
+    }
+  }
+  return 0;
+}
+
 function buildDome(circumRadius, heightBudget, sides) {
   const group = new THREE.Group();
   // domeH/fasciaH haengen an heightBudget (drumHalfHeight - der
@@ -570,13 +599,13 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     for (let s = 0; s <= steps; s++) {
       const t = s / steps; // 0 = Kuppelspitze, 1 = Traufe/Saeulenkopf
       const r = t * circumRadius * raise;
-      // Laeuft wieder exakt auf der Kuppel-Profilkurve (dieselbe Formel wie
-      // buildDome), von der Traufe (y=0) bis zur Kuppelspitze (y=domeH) -
-      // der Kamm liegt so durchgehend AUF der Kuppelflaeche, statt (wie ein
-      // vorheriger Versuch) davon abgehoben von der Kegelspitze aus zu
-      // starten. Der Kegel selbst markiert weiterhin den Saeulenkopf, der
-      // Kamm setzt aber wieder an der Traufe an, nicht an seiner Spitze.
-      const y = domeH * (1 - Math.pow(t, 1.5));
+      // Laeuft exakt auf der Kuppel-Profilkurve (ueber domeProfileYFraction,
+      // DIESELBEN Kontrollpunkte wie buildDome's LatheGeometry-Profil) - von
+      // der Traufe (y=0) bis zur Kuppelspitze (y=domeH). Vorher naeherte
+      // eine eigene Potenzfunktion (1-t^1.5) die Kurve nur grob an und wich
+      // sichtbar von der tatsaechlichen, mehrfach geknickten Kuppelform ab -
+      // der Kamm liegt jetzt garantiert exakt auf der Kuppelflaeche.
+      const y = domeH * domeProfileYFraction(t);
       const wa = halfAngle * t; // an der Spitze auf einen Punkt zulaufend
       const halfWidthLinear = r * wa;
       const peakY = y + halfWidthLinear * pitch;
@@ -725,12 +754,10 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   });
   group.add(new THREE.Mesh(geo, mat));
 
-  // Navy-Kragen an der obersten Stufe, wo die Saeulen stehen.
-  const collarGeo = new THREE.CylinderGeometry(topR * 1.002, topR * 1.002, tier1 * 0.5, 64, 1, true);
-  const collarMat = new THREE.MeshStandardMaterial({ color: NAVY, metalness: 0.1, roughness: 0.6, side: THREE.DoubleSide });
-  const collar = new THREE.Mesh(collarGeo, collarMat);
-  collar.position.y = -tier1 * 0.25;
-  group.add(collar);
+  // Frueher sass hier ein dunkelblauer Navy-Kragen an der obersten Stufe -
+  // wirkte als eigenstaendiger dunkler Ring unpassend/unharmonisch neben
+  // dem Mosaikboden und wurde ersatzlos entfernt; die Fliesenstufe selbst
+  // geht jetzt direkt in die Goldkante am Rand ueber.
 
   // Goldkante am Plattformrand.
   const rimGeo = new THREE.TorusGeometry(topR, circumRadius * 0.006, 10, 64);

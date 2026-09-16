@@ -43,9 +43,18 @@ const MOBILE_MAX = 767;
 const MAX_SCALE = 1;
 
 // Ab diesem Winkel zur Blickrichtung liegt eine Flaeche hinter der Kante und
-// wird nicht mehr gezeichnet. Knapp ueber 90 Grad, damit sie nicht schon
-// verschwindet, waehrend ihre Kante noch sichtbar ist.
-const CULL_DEG = 92;
+// wird nicht mehr gezeichnet. Der naheliegende Wert waere 90 Grad (eine
+// flache Flaeche steht dort exakt auf der Kante) - gemessen zeigt sich aber,
+// dass die tatsaechliche Bildschirmbreite einer Flaeche nicht monoton gegen
+// 90 Grad gegen Null laeuft: sie erreicht ihr Minimum (nahe 0px) schon bei
+// ca. 77-78 Grad und waechst DANACH wieder auf teils ueber 100px, bevor sie
+// bei einem hoeheren CULL_DEG hart verschwindet - ein Perspektiv-Artefakt an
+// der Kante, das genau als das gemeldete "Despawnen" sichtbar wurde (eine
+// noch 100px breite Flaeche verschwindet schlagartig). Der Schnitt liegt
+// jetzt kurz hinter diesem gemessenen Minimum, nicht bei der theoretischen
+// 90-Grad-Annahme - die Flaeche ist an dieser Stelle bereits auf wenige
+// Pixel geschrumpft, ihr Verschwinden faellt praktisch nicht mehr auf.
+const CULL_DEG = 80;
 
 // Wie weit die aufgegangene Frontflaeche aus dem Koerper heraustritt.
 //
@@ -791,7 +800,13 @@ export default function RotaryStage({
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
     // #beratung etc.) muessen ihre Zielflaeche finden koennen, um sie per
     // Klick zu oeffnen - siehe scrollToSection().
-    <div ref={rootRef} data-rotary-root="" className="pt-16 lg:pt-20">
+    // pt-16/lg:pt-20 glich bislang nur exakt die Hoehe des fixierten Headers
+    // aus (h-16/lg:h-20, siehe Header.jsx) - die Buehne begann direkt an
+    // dessen Unterkante, ohne eigenen Luftraum. Zusaetzliche ~32px schaffen
+    // sichtbaren Abstand, in den die Kuppelspitze/UN-Flagge hineinragen kann,
+    // ohne an den Header zu stossen - ohne die 3D-Kalibrierung der Buehne
+    // selbst anzufassen (die bleibt bei 90vh, nur ihr Start ruckt nach unten).
+    <div ref={rootRef} data-rotary-root="" className="pt-24 lg:pt-28">
       <div
         ref={stickyRef}
         // Normales Fluss-Element, nicht mehr gepinnt: die Buehne dreht sich
