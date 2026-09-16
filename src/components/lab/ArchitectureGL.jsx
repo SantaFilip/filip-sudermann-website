@@ -64,33 +64,40 @@ const TILE_CREAM = '#f4ecd8';
 // Kachelfelder wie chinesisches Blauweiss-Porzellan - per Canvas erzeugt,
 // da keine externen Bild-Assets zur Verfuegung stehen.
 function buildTileTexture() {
-  const size = 512;
+  // 1024 statt vorher 512 plus Anisotropie: bei 512 und dichter Wiederholung
+  // (10x) kippte das Muster bei flachem Blickwinkel auf dem Sockel in
+  // grobe, blockige Pixel-Kanten - las sich wie Retro-Konsolen-Grafik statt
+  // hochwertiger Textur.
+  const size = 1024;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
   ctx.fillStyle = TILE_CREAM;
   ctx.fillRect(0, 0, size, size);
 
-  const cell = size / 8;
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
+  const cell = size / 6;
+  for (let row = 0; row < 6; row++) {
+    for (let col = 0; col < 6; col++) {
       const x = col * cell;
       const y = row * cell;
       if ((row + col) % 2 === 0) {
-        ctx.fillStyle = TILE_BLUE_PALE + '2a';
+        ctx.fillStyle = TILE_BLUE_PALE + '22';
         ctx.fillRect(x, y, cell, cell);
       }
     }
   }
 
-  // Griechischer Maeander (Greek key), laufend um jede Kachelreihe.
+  // Griechischer Maeander (Greek key), laufend um jede Kachelreihe -
+  // duenner und mit abgerundeten Verbindungen statt harter Miter-Kanten,
+  // wirkt weniger wie ein grob gepixeltes Icon.
   ctx.strokeStyle = TILE_BLUE;
-  ctx.lineWidth = cell * 0.12;
-  ctx.lineCap = 'square';
-  ctx.lineJoin = 'miter';
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
+  ctx.lineWidth = cell * 0.09;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (let row = 0; row < 6; row++) {
+    for (let col = 0; col < 6; col++) {
       const x = col * cell;
       const y = row * cell;
       ctx.save();
@@ -110,7 +117,38 @@ function buildTileTexture() {
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(10, 2);
+  tex.repeat.set(6, 1.3);
+  tex.anisotropy = 8;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// Einfache Gradient-Himmel-Umgebung als Reflection-Map - ohne sie hat die
+// Kuppel nichts zum Spiegeln und wirkt trotz Glasmaterial nur wie eine
+// matte, dunkle Flaeche (besonders die Unterseite, die kaum Direktlicht
+// abbekommt). `scene.environment` (nicht `scene.background`!) speist nur
+// die Reflexionen der PBR-Materialien, laesst den transparenten Canvas-
+// Hintergrund aber unangetastet.
+function buildEnvTexture() {
+  const w = 64;
+  const h = 32;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#bfe0f5');
+  grad.addColorStop(0.42, '#eaf4fb');
+  grad.addColorStop(0.5, '#fff8ea');
+  grad.addColorStop(0.58, '#f1e6cf');
+  grad.addColorStop(1, '#cdbd98');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
   if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
@@ -141,24 +179,25 @@ function buildDome(circumRadius, heightBudget, sides) {
   const domeGeo = new THREE.LatheGeometry(profile, 64);
   // Kein `transmission`: ohne Environment-Map sampelt MeshPhysicalMaterial
   // dafuer den (leeren) Canvas-Hintergrund und faerbt die Kuppel unkontrolliert.
-  // Undurchsichtig + hoher clearcoat + kuehler Blauton wirkt als modernes
-  // Glasdach mit Glanz, ohne die fruehere Transparenz-Geisterhaftigkeit:
-  // `transparent`/DoubleSide liess vorher die Rueckseite der Kuppel durch die
-  // Vorderseite hindurchscheinen (zwei ueberlagerte, halbtransparente
-  // Flaechen statt einer festen Kappe) - wirkte dadurch schwebend statt
-  // aufliegend. `FrontSide` blendet die von der Kamera abgewandte
-  // Rueckseite komplett aus, es ist wirklich nur die kameraseitige Haelfte
-  // zu sehen.
+  // `FrontSide` blendet die von der Kamera abgewandte Rueckseite komplett
+  // aus (frueher liess `DoubleSide` + `transparent` die Rueckseite durch die
+  // Vorderseite scheinen - zwei ueberlagerte Halbtransparenz-Flaechen statt
+  // einer festen Kappe, wirkte schwebend statt aufliegend). Da FrontSide die
+  // Rueckseite ohnehin wegschneidet, ist maessige Transparenz jetzt gefahrlos
+  // moeglich - kombiniert mit einer Environment-Map (siehe buildEnvTexture)
+  // fuer echte Spiegelungen liest das jetzt als Glas, nicht nur als glaenzend
+  // lackierte Flaeche.
   const domeMat = new THREE.MeshPhysicalMaterial({
     color: GLASS_BLUE,
-    metalness: 0.06,
-    roughness: 0.1,
-    transparent: false,
-    opacity: 1,
+    metalness: 0.1,
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.82,
     side: THREE.FrontSide,
-    clearcoat: 0.9,
-    clearcoatRoughness: 0.08,
-    reflectivity: 0.5,
+    clearcoat: 1,
+    clearcoatRoughness: 0.04,
+    reflectivity: 0.9,
+    envMapIntensity: 1.4,
   });
   const dome = new THREE.Mesh(domeGeo, domeMat);
   group.add(dome);
@@ -214,7 +253,6 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   const group = new THREE.Group();
   const domeH = heightBudget * 0.55;
   const halfAngle = Math.max(0.012, (columnCapWidth || circumRadius * 0.09) / 2 / circumRadius);
-  const ribMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide });
   const steps = 14;
   const raise = 1.006; // minimal ueber die Kuppelflaeche angehoben, gegen Z-Fighting
 
@@ -243,6 +281,11 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geo.setIndex(indices);
     geo.computeVertexNormals();
+    // Eigenes Material je Rippe (nicht geteilt): jede Rippe muss unabhaengig
+    // ein-/ausgeblendet werden koennen, synchron mit ihrer Saeule (siehe
+    // setColumns) - sonst wuerde eine Rippe ohne zugehoerige, laengst
+    // ausgeblendete Saeule weiter voll sichtbar in der Luft haengen.
+    const ribMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
     group.add(new THREE.Mesh(geo, ribMat));
   }
 
@@ -369,8 +412,11 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
 function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   const group = new THREE.Group();
   const shaftHeight = Math.max(1, totalHeight - colCapHeight * 2);
-  const shaftMat = new THREE.MeshStandardMaterial({ color: STONE, metalness: 0.05, roughness: 0.5 });
-  const capMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.5, roughness: 0.3 });
+  // transparent von Anfang an: setColumns() blendet Saeulen nahe der
+  // Kantenabschneidung sanft aus (Opacity-Fade) statt sie hart zu
+  // verstecken - ein ploetzliches Verschwinden war als "Despawn" sichtbar.
+  const shaftMat = new THREE.MeshStandardMaterial({ color: STONE, metalness: 0.05, roughness: 0.5, transparent: true });
+  const capMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.5, roughness: 0.3, transparent: true });
 
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(colWidth / 2, colWidth / 2, shaftHeight, 24), shaftMat);
   group.add(shaft);
@@ -389,6 +435,7 @@ function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   capBottom.position.y = -shaftHeight / 2 - colCapHeight / 2;
   group.add(capBottom);
 
+  group.userData.mats = [shaftMat, capMat];
   return group;
 }
 
@@ -407,10 +454,27 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
     setColumns(degs, colRadius, pivotZ) {
       const { columns, ribs, renderer, scene, camera } = stateRef.current;
       if (!columns || !renderer) return;
+      // Statt eines harten visible=false-Umschaltens (ein sichtbares
+      // "Despawnen" der Saeule mitten im Bild) blendet ein Opacity-Fade
+      // ueber ein paar Grad vor der eigentlichen Kantenabschneidung aus -
+      // die Saeule loest sich unauffaellig auf, statt schlagartig zu
+      // verschwinden.
+      const fadeSpan = 16;
+      const fadeStart = cullDeg - fadeSpan;
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
-        const hidden = Math.abs(deg) > cullDeg;
+        const absDeg = Math.abs(deg);
+        const fade = absDeg <= fadeStart ? 1 : absDeg >= cullDeg ? 0 : 1 - (absDeg - fadeStart) / fadeSpan;
+        const hidden = fade <= 0;
         col.visible = !hidden;
+        // Zugehoerige Rippe (gleicher Index s, siehe buildDomeRibs) im
+        // selben Takt ein-/ausblenden - sonst haengt eine goldene Rippe
+        // sichtbar in der Luft, obwohl ihre Saeule schon ausgeblendet ist.
+        const rib = ribs?.children[s];
+        if (rib) {
+          rib.visible = !hidden;
+          if (!hidden) rib.material.opacity = fade;
+        }
         if (!hidden) {
           const rad = (deg * Math.PI) / 180;
           // CSS `rotateY(-deg) translateZ(colRadius)`: nach der CSS-
@@ -419,6 +483,8 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
           // NICHT +sin(deg), das hatte Saeulen mittig auf die Facetten statt
           // auf die Nahtstellen gesetzt.
           col.position.set(-colRadius * Math.sin(rad), 0, colRadius * Math.cos(rad) + pivotZ);
+          const mats = col.userData.mats;
+          if (mats) mats.forEach((m) => { m.opacity = fade; });
         }
       });
       // Rippen (Kegel-Giebel Saeule->Kuppelspitze) drehen als starre Gruppe
@@ -452,13 +518,26 @@ const ArchitectureGL = forwardRef(function ArchitectureGL(
     renderer.domElement.style.inset = '0';
     container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xfff4e0, 0.65));
+    // Environment-Map fuer echte Spiegelungen auf Kuppel/Marmor - ohne sie
+    // hat MeshPhysicalMaterial nichts zu reflektieren und wirkt trotz
+    // Glas-Setup nur wie eine matte, dunkle Flaeche (besonders die
+    // Kuppel-Unterseite, die kaum Direktlicht abbekommt).
+    scene.environment = buildEnvTexture();
+
+    scene.add(new THREE.AmbientLight(0xfff4e0, 0.85));
     const sun = new THREE.DirectionalLight(0xfff8ec, 1.15);
     sun.position.set(circumRadius * 0.6, circumRadius * 1.4, perspectivePx * 0.5);
     scene.add(sun);
     const fill = new THREE.DirectionalLight(0xaad4ff, 0.35);
     fill.position.set(-circumRadius, circumRadius * 0.3, perspectivePx * 0.2);
     scene.add(fill);
+    // Von unten aufhellend: die Kuppel-Unterseite (die dem Betrachter
+    // meist zugewandte Flaeche) zeigt nach unten und bekommt von sun/fill
+    // (beide oberhalb) kaum Licht ab - wirkte dadurch dunkel/schmutzig statt
+    // wie helles Glas.
+    const upfill = new THREE.DirectionalLight(0xdcebf7, 0.5);
+    upfill.position.set(circumRadius * 0.3, -circumRadius * 0.8, perspectivePx * 0.4);
+    scene.add(upfill);
 
     // Dach/Sockel sitzen auf derselben Drehachse (centerOffsetZ) und mit
     // demselben Radius (ringRadius) wie die Saeulen - keine unabhaengig

@@ -855,7 +855,13 @@ export default function RotaryStage({
               colWidth={colW}
               colCapWidth={colCapW}
               colCapHeight={colCapH}
-              cullDeg={CULL_DEG}
+              // Bewusst groesszuegiger als CULL_DEG (das Mass fuer die
+              // Inhaltsflaechen, die bei diesem Winkel unlesbar wuerden):
+              // Saeulen haben keine Lesbarkeits-Grenze, sie duerfen laenger
+              // sichtbar bleiben und sich sanft ausblenden (siehe Fade in
+              // setColumns), statt schon abzureissen, waehrend der
+              // sichtbare Gebaeude-Faecher sie eigentlich noch zeigen wuerde.
+              cullDeg={CULL_DEG + 35}
             />
           </div>
         )}
