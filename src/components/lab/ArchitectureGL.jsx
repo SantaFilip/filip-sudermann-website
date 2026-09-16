@@ -254,6 +254,40 @@ function buildFlagTexture(code) {
       ctx.arc(w / 2, h / 2, h * 0.2, 0, Math.PI * 2);
       ctx.fill();
       break;
+    case 'UN': {
+      // Dunkles Marineblau mit einer "Blue Marble"-Erdkugel in der Mitte
+      // (Wolkenwirbel, Kontinent-Flecken) statt des vorherigen schlichten
+      // weissen Rings - naeher an der tatsaechlichen UN-Flagge als das
+      // reine Emblem-Icon.
+      ctx.fillStyle = '#242a5c';
+      ctx.fillRect(0, 0, w, h);
+      const cx = w / 2, cy = h / 2, r = h * 0.32;
+      const globeGrad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r);
+      globeGrad.addColorStop(0, '#7fb0e8');
+      globeGrad.addColorStop(0.55, '#3d6fa8');
+      globeGrad.addColorStop(1, '#1f3f6b');
+      ctx.fillStyle = globeGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#c9a26a';
+      ctx.beginPath();
+      ctx.ellipse(cx - r * 0.15, cy - r * 0.1, r * 0.38, r * 0.26, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + r * 0.3, cy + r * 0.18, r * 0.2, r * 0.15, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+      ctx.lineWidth = r * 0.07;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(cx - r * 0.1, cy + r * 0.25, r * 0.55, 0.2, 1.7);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx + r * 0.25, cy - r * 0.2, r * 0.42, 2.6, 4.1);
+      ctx.stroke();
+      break;
+    }
     default:
       ctx.fillStyle = '#cccccc';
       ctx.fillRect(0, 0, w, h);
@@ -297,8 +331,13 @@ function buildFlagMesh(code, tangentDir, scale) {
   flagPivot.position.set(0, poleH * 0.97, 0);
   group.add(flagPivot);
 
-  const flagW = scale * 1.35 * 1.8;
-  const flagH = scale * 0.9 * 1.8;
+  // An poleH gebunden (nicht mehr ein von scale unabhaengiger Multiplikator):
+  // die Fahne muss innerhalb der kurzen Mast-Hoehe bleiben, sonst haengt ihr
+  // unteres Ende unter die Anschlagshoehe hinunter - genau bis in den Kegel
+  // hinein, auf dem der Mast steht ("Flagge ist innerhalb des Kegels").
+  // 0.8 statt voller poleH*0.97 laesst etwas Luft ueber der Kegelspitze.
+  const flagH = poleH * 0.8;
+  const flagW = flagH * 1.55;
   const topAttach = new THREE.Vector3(0, 0, 0);
   const topOuter = topAttach.clone().addScaledVector(tangentDir, flagW);
   const botAttach = new THREE.Vector3(0, -flagH, 0);
@@ -529,14 +568,15 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     const positions = [];
     const indices = [];
     for (let s = 0; s <= steps; s++) {
-      const t = s / steps; // 0 = Kuppelspitze, 1 = Kegelspitze (Traufe-Ende)
+      const t = s / steps; // 0 = Kuppelspitze, 1 = Traufe/Saeulenkopf
       const r = t * circumRadius * raise;
-      // Hoehe laeuft nicht mehr von 0 (Traufe) bis domeH, sondern von
-      // coneHeight (Kegelspitze) bis domeH (Kuppelspitze) - "von der
-      // Kegelspitze aus soll der Rahmen des Dachs beginnen". Bei t=1 landet
-      // das exakt auf der Kegelspitze (r=circumRadius, y=coneHeight), bei
-      // t=0 weiterhin exakt auf dem Kuppelscheitel.
-      const y = coneHeight + (domeH - coneHeight) * (1 - Math.pow(t, 1.5));
+      // Laeuft wieder exakt auf der Kuppel-Profilkurve (dieselbe Formel wie
+      // buildDome), von der Traufe (y=0) bis zur Kuppelspitze (y=domeH) -
+      // der Kamm liegt so durchgehend AUF der Kuppelflaeche, statt (wie ein
+      // vorheriger Versuch) davon abgehoben von der Kegelspitze aus zu
+      // starten. Der Kegel selbst markiert weiterhin den Saeulenkopf, der
+      // Kamm setzt aber wieder an der Traufe an, nicht an seiner Spitze.
+      const y = domeH * (1 - Math.pow(t, 1.5));
       const wa = halfAngle * t; // an der Spitze auf einen Punkt zulaufend
       const halfWidthLinear = r * wa;
       const peakY = y + halfWidthLinear * pitch;
@@ -594,6 +634,16 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     sideGroup.userData.flagPivot = flagGroup.userData.flagPivot;
     group.add(sideGroup);
   }
+
+  // UN-Flagge auf der Kuppelspitze, zusaetzlich zu den acht Landesflaggen
+  // auf den Saeulen - markiert die Mitte, wo bisher nur die schlichte
+  // Bekroenung (Stab/Ring/Kugel aus buildDome) sass. Kein Bezug zu einer
+  // Saeule, dreht also nicht mit - nur der eigene Wind-Schwung in
+  // setColumns() bewegt sie.
+  const unFlag = buildFlagMesh('UN', new THREE.Vector3(1, 0, 0), circumRadius * 0.06);
+  unFlag.position.set(0, domeH, 0);
+  group.add(unFlag);
+  group.userData.unFlagPivot = unFlag.userData.flagPivot;
 
   return group;
 }
@@ -913,6 +963,12 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
           if (mats) mats.forEach((m) => { m.opacity = fade; });
         }
       });
+      // UN-Flagge auf der Kuppelspitze: eigener Wind-Schwung, unabhaengig
+      // von den Saeulen-Phasen (kein s-Index vorhanden).
+      const unFlagPivot = ribs?.userData.unFlagPivot;
+      if (unFlagPivot) {
+        unFlagPivot.rotation.y = Math.sin(t * 1.6 + 4.2) * 0.18 + Math.sin(t * 4.1 + 7.1) * 0.06;
+      }
       renderer.render(scene, camera);
     },
   }));
