@@ -366,24 +366,21 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     const ridgeMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.6, roughness: 0.28, side: THREE.DoubleSide, transparent: true });
     const ridge = new THREE.Mesh(geo, ridgeMat);
 
-    // Kegel auf der Saeulenspitze: Basis sitzt auf dem Kapitell (t=1),
-    // Spitze zeigt entlang der Kammrichtung nach innen/oben - so waechst
-    // der Kamm sichtbar AUS dem Kegel heraus, statt lose daneben zu stehen.
+    // Kegel auf der Saeulenspitze: Basis sitzt auf dem Kapitell (t=1), Spitze
+    // zeigt gerade nach oben - an die Ausrichtung der Saeule selbst gebunden
+    // (ihre Achse steht immer senkrecht, unabhaengig von der Rotation),
+    // nicht an die Kammrichtung. Der Kamm waechst seitlich aus dem Kegel
+    // heraus zur Kuppelspitze, der Kegel selbst bleibt aber vertikal.
     const basePt = new THREE.Vector3(
       circumRadius * raise * Math.sin(beta), 0, circumRadius * raise * Math.cos(beta)
     );
-    const aimT = 0.8;
-    const aimR = aimT * circumRadius * raise;
-    const aimY = domeH * (1 - Math.pow(aimT, 1.5));
-    const aimPt = new THREE.Vector3(aimR * Math.sin(beta), aimY, aimR * Math.cos(beta));
-    const dir = aimPt.clone().sub(basePt).normalize();
+    const up = new THREE.Vector3(0, 1, 0);
 
     const coneRadius = capW * 0.62;
     const coneHeight = capW * 0.95;
     const coneMat = new THREE.MeshStandardMaterial({ color: COL_GOLD, metalness: 0.62, roughness: 0.26, transparent: true });
     const cone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 20), coneMat);
-    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-    cone.position.copy(basePt).addScaledVector(dir, coneHeight / 2);
+    cone.position.copy(basePt).addScaledVector(up, coneHeight / 2);
 
     const sideGroup = new THREE.Group();
     sideGroup.add(ridge, cone);
@@ -643,21 +640,18 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     setColumns(degs, colRadius, pivotZ) {
       const { columns, ribs, renderer, scene, camera } = stateRef.current;
       if (!columns || !renderer) return;
-      // Statt eines harten visible=false-Umschaltens (ein sichtbares
-      // "Despawnen" der Saeule mitten im Bild) blendet ein Opacity-Fade
-      // kurz vor der eigentlichen Kantenabschneidung aus - die Saeule loest
-      // sich unauffaellig auf, statt schlagartig zu verschwinden. Bewusst
-      // schmal (5 statt vorher 16 Grad): ein breites Fenster bedeutete, dass
-      // die Saeule ueber einen laengeren Dreh-/Zeitraum sichtbar halbtrans-
-      // parent/"blass" wirkte, obwohl ihre Nachbarflaechen noch gut lesbar
-      // waren - genau das wurde als "Saeule verblasst" gemeldet.
-      const fadeSpan = 5;
-      const fadeStart = cullDeg - fadeSpan;
+      // Kein Opacity-Fade mehr: der war selbst als sichtbares "Verblassen"
+      // beim Ein-/Austritt an der Kantenabschneidung wahrnehmbar, so schmal
+      // das Fenster auch war. Die Inhaltsflaechen schneiden an genau
+      // derselben Schwelle (CULL_DEG, siehe faceRefs-Schleife oben) schon
+      // seit jeher hart per visibility um - ohne dass das je als Problem
+      // auffiel. Saeule und Rippe jetzt exakt genauso: harter Schnitt bei
+      // cullDeg, synchron mit ihrer Flaeche, keine Zwischenstufe.
+      const fade = 1;
       columns.forEach((col, s) => {
         const deg = degs[s] ?? 0;
         const absDeg = Math.abs(deg);
-        const fade = absDeg <= fadeStart ? 1 : absDeg >= cullDeg ? 0 : 1 - (absDeg - fadeStart) / fadeSpan;
-        const hidden = fade <= 0;
+        const hidden = absDeg >= cullDeg;
         col.visible = !hidden;
         // Zugehoerige Rippe (gleicher Index s, siehe buildDomeRibs) im
         // selben Takt ein-/ausblenden - sonst haengt eine goldene Rippe
