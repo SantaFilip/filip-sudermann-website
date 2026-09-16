@@ -187,12 +187,19 @@ function buildDome(circumRadius, heightBudget, sides) {
   // moeglich - kombiniert mit einer Environment-Map (siehe buildEnvTexture)
   // fuer echte Spiegelungen liest das jetzt als Glas, nicht nur als glaenzend
   // lackierte Flaeche.
+  // Undurchsichtig: `transparent:true` liess die Kuppel (deren Silhouette
+  // auch ueber den seitlichen Folien liegt, nicht nur der mittleren) einen
+  // helllblauen Schleier ueber den Inhalt darunter legen - die Randfolien
+  // wirkten dadurch blasser/verwaschener als die mittlere. Der Glas-
+  // Eindruck kommt jetzt allein aus Reflexion (envMap, hoher Clearcoat) -
+  // reales Glas unter Kunstlicht wirkt ohnehin oft eher spiegelnd-opak als
+  // durchsichtig.
   const domeMat = new THREE.MeshPhysicalMaterial({
     color: GLASS_BLUE,
     metalness: 0.1,
     roughness: 0.05,
-    transparent: true,
-    opacity: 0.82,
+    transparent: false,
+    opacity: 1,
     side: THREE.FrontSide,
     clearcoat: 1,
     clearcoatRoughness: 0.04,
