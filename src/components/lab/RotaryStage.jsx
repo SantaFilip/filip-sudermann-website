@@ -815,7 +815,13 @@ export default function RotaryStage({
             muessen praktisch immer vor dem Inhalt liegen. Wird wie die
             Huelle ausgeblendet, wenn eine Facette einzeln aufgeklappt ist. */}
         {cube.h > 0 && circumRadius > 0 && (
-          <div ref={glWrapRef} className="absolute inset-0">
+          // pointer-events-none: ohne das faengt dieser volle Wrapper (liegt
+          // ueber der gesamten Buehne, spaeter im DOM als der Klick-Faenger
+          // der Facetten) jeden Klick/Drag ab, bevor er das Overlay
+          // erreicht - Rotation per Drag liess sich dadurch gar nicht mehr
+          // auslösen (elementFromPoint traf immer diesen Wrapper statt
+          // [data-rotary-overlay]).
+          <div ref={glWrapRef} className="pointer-events-none absolute inset-0">
             <ArchitectureGL
               ref={architectureRef}
               stageW={cube.stageW}

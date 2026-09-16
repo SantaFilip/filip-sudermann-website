@@ -212,8 +212,15 @@ function buildBase(circumRadius, heightBudget) {
 // daher genuegt ein Cylinder statt der frueheren CSS-Gradient-Attrappe fuer
 // den Rundungs-Eindruck. Echtes Licht (siehe Scene-Lights) uebernimmt die
 // Schattierung, die vorher per Hand als Farbverlauf nachgestellt wurde.
-function buildColumn(colWidth, colCapWidth, colCapHeight, shaftHeight) {
+// totalHeight ist die volle Spanne, die die Saeule (Schaft + beide Kappen
+// zusammen) einnehmen darf - exakt drumHalfHeight*2, damit ihr Fuss genau
+// auf der Sockel-Oberkante (y = -drumHalfHeight) beginnt und ihre Spitze
+// genau dort endet, wo die Kuppel ansetzt (y = +drumHalfHeight). Schaft und
+// Kappen frueher addiert statt aufgeteilt liessen die Saeule oben in die
+// Kuppel hinein- und unten durch den Sockel hindurchragen.
+function buildColumn(colWidth, colCapWidth, colCapHeight, totalHeight) {
   const group = new THREE.Group();
+  const shaftHeight = Math.max(1, totalHeight - colCapHeight * 2);
   const shaftMat = new THREE.MeshStandardMaterial({ color: STONE, metalness: 0.05, roughness: 0.5 });
   const capMat = new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.5, roughness: 0.3 });
 
