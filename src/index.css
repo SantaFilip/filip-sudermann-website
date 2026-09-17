@@ -157,6 +157,24 @@
     display: none;
   }
 
+  /* Badge ("6 FAQ") und Fragen wirkten auf der Facette klein - beide nutzen
+     feste Pixelgroessen (text-[34px]/text-[28px] fuer das Badge,
+     text-[18px] fuer die Fragen), die FitToFace beim Einpassen der ganzen
+     Flaeche gleichmaessig mit herunterskaliert, statt sich an der
+     tatsaechlichen Facettenbreite auszurichten. cqw-basiert statt fest,
+     damit beide unabhaengig von der Facettenbreite gut lesbar bleiben. */
+  .rotary-face #faq .inline-flex span:first-child {
+    font-size: clamp(1.6rem, 7.5cqw, 2.8rem);
+  }
+
+  .rotary-face #faq .inline-flex span:last-child {
+    font-size: clamp(1.35rem, 6cqw, 2.3rem);
+  }
+
+  .rotary-face #faq button {
+    font-size: clamp(1.15rem, 4.3cqw, 1.7rem);
+  }
+
   /* Kontakt: der Infotext unter dem Titel bricht sowohl in der schmalen als
      auch in der aufgeklappten Facette um - kleiner und ohne Umbruch passt
      er in eine Zeile. cqw-basiert, damit er bei beiden Facettenbreiten
@@ -704,11 +722,14 @@
       font-size: 0.95rem;
     }
 
-    /* FAQ: die Fragen bekommen Hoehe, statt oben zusammenzukleben. */
+    /* FAQ: die Fragen bekommen Hoehe, statt oben zusammenzukleben.
+       Schriftgroesse bewusst nicht mehr hier gesetzt (frueher fest
+       1.35rem) - das cqw-basierte Pendant weiter oben deckt auch den
+       hohen Facetten-Fall ab und wuerde sonst durch diese spaetere,
+       kleinere Regel ueberschrieben. */
     .rotary-face #faq button {
       padding-top: 2.4rem;
       padding-bottom: 2.4rem;
-      font-size: 1.35rem;
     }
   }
 
