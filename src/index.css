@@ -217,12 +217,18 @@
      leerer Flaeche (die Flaeche selbst hat feste Groesse, FitToFace
      skaliert Inhalt nur runter, nie hoch - zu kleiner Inhalt bleibt als
      Leerraum stehen statt sich zu strecken, mehr Aussenabstand wuerde daran
-     nichts aendern, nur den Leerraum verschieben). cqw-basiert statt fester
-     Wert, damit er sowohl in der schmalen als auch in der aufgeklappten
-     Facette moeglichst viel der verfuegbaren Breite - und darueber,
-     aspect-square, auch Hoehe - ausfuellt. */
+     nichts aendern, nur den Leerraum verschieben).
+     ERSTER VERSUCH war cqw-basiert (min(92cqw, 34rem)) - cqw misst aber
+     gegen die GESAMTE Facette (container-type:size auf .rotary-face selbst),
+     nicht gegen die tatsaechlich verfuegbare, durch px-6/lg:px-12 und
+     max-w-[1400px] schon schmalere Spaltenbreite. 92% DER FACETTE ueberstieg
+     dadurch die Spalte, der Globus lief seitlich ueber und wurde vom
+     overflow-hidden der Flaeche hart abgeschnitten. max-width:100% ist
+     stattdessen exakt so breit wie w-full selbst schon macht (die Breite der
+     Spalte) - kann also nie ueberlaufen, unabhaengig von Padding/Aufbau der
+     umgebenden Container, und ist trotzdem der groesstmoegliche Wert. */
   .rotary-face #global-reach .max-w-md {
-    max-width: min(92cqw, 34rem);
+    max-width: 100%;
   }
 
   /* Infotext-Schrift ebenfalls cqw-skaliert statt der festen text-lg
