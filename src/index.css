@@ -212,6 +212,26 @@
     text-align: center;
   }
 
+  /* Globus: max-w-md (28rem/448px) begrenzte ihn deutlich unter der
+     verfuegbaren Facettenbreite - er wirkte dadurch klein, umgeben von viel
+     leerer Flaeche (die Flaeche selbst hat feste Groesse, FitToFace
+     skaliert Inhalt nur runter, nie hoch - zu kleiner Inhalt bleibt als
+     Leerraum stehen statt sich zu strecken, mehr Aussenabstand wuerde daran
+     nichts aendern, nur den Leerraum verschieben). cqw-basiert statt fester
+     Wert, damit er sowohl in der schmalen als auch in der aufgeklappten
+     Facette moeglichst viel der verfuegbaren Breite - und darueber,
+     aspect-square, auch Hoehe - ausfuellt. */
+  .rotary-face #global-reach .max-w-md {
+    max-width: min(92cqw, 34rem);
+  }
+
+  /* Infotext-Schrift ebenfalls cqw-skaliert statt der festen text-lg
+     (1.125rem) - sonst blieb er auf breiter Facette winzig neben dem nun
+     deutlich groesseren Titel/Globus. */
+  .rotary-face #global-reach p {
+    font-size: clamp(1rem, 2.6cqw, 1.5rem);
+  }
+
   .rotary-face #global-reach p {
     max-width: 100%;
   }
