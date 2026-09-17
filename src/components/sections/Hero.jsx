@@ -136,7 +136,16 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="relative"
           >
-            <div className="relative hero-portrait-box aspect-[4/5] bg-secondary overflow-hidden rounded-[30px]">
+            {/* aspect-square statt aspect-[4/5]: die Quelle (hero-portrait.jpg)
+                ist selbst quadratisch (1024x1024). Ein 4:5-Rahmen (schmaler
+                als das Quadrat) liess object-cover ca. 10% links/rechts
+                wegschneiden - knapp genug, um den Laptop-Rand abzuschneiden.
+                Mit exakt demselben Seitenverhaeltnis wie die Quelle croppt
+                object-cover gar nicht mehr: Kopf und Laptop bleiben
+                vollstaendig im Bild, unabhaengig vom umgebenden Layout
+                (Handy-Vollbreite oder die schmale Rotunden-Facette, siehe
+                index.css .rotary-face .lg\:hidden.grid). */}
+            <div className="relative hero-portrait-box aspect-square bg-secondary overflow-hidden rounded-[30px]">
               <Image src={IMAGES.heroPortrait} alt="Filip Sudermann" className="w-full h-full" fittingType="fill" />
               <span className="absolute bottom-4 left-5 text-sm font-medium text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] z-10">
                 ~ Filip Sudermann, 2026
