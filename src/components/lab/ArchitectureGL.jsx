@@ -70,12 +70,16 @@ const BRASS_LIGHT = 0xb99b6a;
 const BRASS_DEEP = 0x7a5f3c;
 const NAVY = 0x0c1a32;
 const GLASS = 0xf0f1ea;
-// Sockel-Marmor: warmes Elfenbein/Creme statt des vorherigen blau-weissen
-// Mosaiks - auf Wunsch ein "premium, old money"-Sockel ohne Musterunruhe.
-// MARBLE_VEIN ist die sehr zurueckhaltende Aderung darauf, kein Muster.
-const QUARTZ = '#f6f4ee';
-const QUARTZ_DEEP = '#e6e1d3';
-const MARBLE_VEIN = '#a89a80';
+// Sockel-Marmor: reines Weiss statt des vorherigen warmen Elfenbein/Creme -
+// auf Wunsch dieselbe Farbe wie die Marmor-Umrandung um die Saeulenfuesse
+// (buildBaseRing, 0xfbfaf6), damit Sockelstufen und Umrandung als EIN
+// durchgehendes weisses Material lesen statt als zwei sichtbar
+// unterschiedliche Steinsorten. MARBLE_VEIN ist die sehr zurueckhaltende
+// Aderung darauf, kein Muster - ebenfalls kuehler/neutraler statt warm-
+// beige, passend zum weissen statt cremefarbenen Grund.
+const QUARTZ = '#fbfaf6';
+const QUARTZ_DEEP = '#f2f0ea';
+const MARBLE_VEIN = '#aba79d';
 // Saeulen-Marmor (siehe buildColumnMarbleTexture): kuehleres, neutraleres
 // Grau als MARBLE_VEIN - der Sockel ist warmer Elfenbein-Marmor, die Saeule
 // ein kuehlerer, "Carrara"-artiger Weiss-/Grauton, bewusst unterschiedliche
@@ -130,7 +134,7 @@ function buildBaseMarbleTexture() {
   // lesbar, nicht nur als gemalte Trennlinie.
   const cols = 6, rows = 6;
   const cw = size / cols, ch = size / rows;
-  const palette = [QUARTZ, '#efe6d2', '#e8ddc4', '#f2ead6', '#e3d7bd', '#f6efdf'];
+  const palette = [QUARTZ, '#f7f5f0', '#f4f2ec', '#f9f8f4', '#f1efe9', '#fcfbf8'];
   for (let gy = 0; gy < rows; gy++) {
     for (let gx = 0; gx < cols; gx++) {
       const x0 = gx * cw, y0 = gy * ch;
@@ -143,7 +147,7 @@ function buildBaseMarbleTexture() {
     for (let gx = 0; gx < cols; gx++) {
       const x0 = gx * cw, y0 = gy * ch;
       ctx.lineWidth = size * 0.006;
-      ctx.strokeStyle = 'rgba(110,98,76,0.5)';
+      ctx.strokeStyle = 'rgba(120,118,110,0.4)';
       ctx.strokeRect(x0 + ctx.lineWidth / 2, y0 + ctx.lineWidth / 2, cw - ctx.lineWidth, ch - ctx.lineWidth);
       ctx.lineWidth = size * 0.004;
       ctx.strokeStyle = 'rgba(255,255,255,0.55)';
@@ -152,7 +156,7 @@ function buildBaseMarbleTexture() {
       ctx.lineTo(x0, y0);
       ctx.lineTo(x0 + cw, y0);
       ctx.stroke();
-      ctx.strokeStyle = 'rgba(80,70,52,0.45)';
+      ctx.strokeStyle = 'rgba(95,92,85,0.35)';
       ctx.beginPath();
       ctx.moveTo(x0 + cw, y0);
       ctx.lineTo(x0 + cw, y0 + ch);
@@ -879,9 +883,13 @@ function buildBaseRing(circumRadius, columnCapWidth) {
 
   // Riser: kurze, blickdichte Zylinderwand an Innen- und Aussenkante -
   // macht den Hoehenversatz als echte Stufe sichtbar statt als Sprung.
+  // Selbe Farbe wie die Ring-Oberflaeche (0xfbfaf6) statt eines eigenen,
+  // leicht abweichenden Cremetons - der abweichende Ton laestellte sich
+  // unter der Goldkante als eigener, sichtbar hellgelber Streifen dar statt
+  // als schlichte Stufenwand im selben Weiss.
   [inner, outer].forEach((r) => {
     const riserGeo = new THREE.CylinderGeometry(r, r, stepH, 64, 1, true);
-    const riserMat = new THREE.MeshStandardMaterial({ color: 0xefece2, metalness: 0.03, roughness: 0.4, side: THREE.DoubleSide });
+    const riserMat = new THREE.MeshStandardMaterial({ color: 0xfbfaf6, metalness: 0.03, roughness: 0.4, side: THREE.DoubleSide });
     const riser = new THREE.Mesh(riserGeo, riserMat);
     riser.position.y = stepH / 2;
     group.add(riser);
