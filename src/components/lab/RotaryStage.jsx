@@ -171,7 +171,14 @@ function FitToFace({ children }) {
       const natural = inner.scrollHeight;
       if (!natural) return;
 
-      inner.style.zoom = String(Math.min(MAX_SCALE, available / natural));
+      const z = Math.min(MAX_SCALE, available / natural);
+      inner.style.zoom = String(z);
+      // Als CSS-Variable verfuegbar machen: transform-Werte (z.B. translateY in
+      // cqh) auf Nachkommen von inner werden von diesem Zoom mitskaliert - wer
+      // einen zoom-unabhaengigen (also uebertragbaren) Versatz braucht, teilt
+      // seinen cqh-Wert per calc() durch --face-zoom, siehe #results in
+      // index.css.
+      inner.style.setProperty('--face-zoom', String(z));
     };
 
     measure();

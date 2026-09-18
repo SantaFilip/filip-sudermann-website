@@ -152,10 +152,22 @@
        -14.28cqh empirisch bestimmt (iterativ per Playwright gegen die
        tatsaechliche Badge-Position von #process gemessen, Restabweichung
        zuletzt < 0.01px) - der Zusammenhang zwischen cqh-Wert und
-       resultierendem Bildschirm-Versatz ist wegen des verschachtelten
-       FitToFace-Zooms nicht linear 1:1, ein rein rechnerischer Wert waere
-       hier nicht zuverlaessig gewesen. */
-    transform: translateY(-14.28cqh);
+       resultierendem Bildschirm-Versatz war zunaechst nicht linear 1:1
+       (ein rein rechnerischer Wert war unzuverlaessig) - Ursache: dieses
+       Element liegt innerhalb des von FitToFace gezoomten inner-Wrappers,
+       der jeden Transform-Wert seiner Nachkommen um den Zoomfaktor
+       mitskaliert. Der cqh-Wert selbst bleibt davon unberuehrt (cqh
+       bezieht sich auf die AEUSSERE, ungezoomte Facette), der sichtbare
+       Versatz auf dem Bildschirm aber nicht - er ist cqh-Wert * Zoom.
+       --face-zoom (von FitToFace als CSS-Variable gesetzt, siehe
+       RotaryStage.jsx) macht diesen Zoomfaktor zugaenglich; die Division
+       hebt ihn wieder auf, wodurch der resultierende sichtbare Versatz bei
+       jeder Facettenbreite/jedem Zoom gleich bleibt statt nur bei der einen
+       Groesse, an der -14.28cqh urspruenglich einmalig eingemessen wurde.
+       4.6422cqh = 14.28cqh * 0.325083 (der Zoomfaktor von #results bei der
+       Messung) - der bei --face-zoom:0.325083 wieder exakt -14.28cqh
+       ergibt, bei jedem anderen Zoom aber automatisch mitskaliert. */
+    transform: translateY(calc(-4.6422cqh / var(--face-zoom, 1)));
   }
 
   /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
