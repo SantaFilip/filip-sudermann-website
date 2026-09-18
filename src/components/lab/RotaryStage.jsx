@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { X } from 'lucide-react';
@@ -290,6 +291,11 @@ export default function RotaryStage({
   const abfrage = (q) => typeof window !== 'undefined' && window.matchMedia(q).matches;
   const [reduced, setReduced] = useState(() => abfrage('(prefers-reduced-motion: reduce)'));
   const [mobile, setMobile] = useState(() => abfrage(`(max-width: ${MOBILE_MAX}px)`));
+  // Welche Facette gerade aufgeklappt ist - anders als modus/offeneFlaeche
+  // (reine Closure-Variablen im Dreh-Effekt, siehe dort) echter React-State:
+  // steuert den Portal-Vollbild-Overlay weiter unten, der React zum Rendern
+  // braucht (ein DOM-Knoten ausserhalb dieses Baums, siehe Kommentar dort).
+  const [openIndex, setOpenIndex] = useState(null);
 
   // Erst wenn die Breitenklasse feststeht, ist entschieden, welche Achse und
   // welcher Fuellgrad gelten.
@@ -306,6 +312,44 @@ export default function RotaryStage({
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
   }, []);
+
+  // Vollbild-Portal offen: Hintergrund-Scroll sperren (sonst scrollt die
+  // eigentliche Seite unsichtbar hinter der neuen "Seite" mit) und Escape
+  // schliesst - beides normales Verhalten fuer etwas, das sich wie eine
+  // eigene Seite anfuehlen soll.
+  useEffect(() => {
+    if (openIndex === null) return;
+    // Beide sperren, nicht nur body: der eigentliche Scroll-Container der
+    // Seite ist im Standardmodus <html> (document.documentElement), nicht
+    // <body> - overflow:hidden nur auf body liess das Mausrad ungebremst
+    // durch auf <html> durchschlagen (per Playwright-Test bestaetigt:
+    // window.scrollY bewegte sich trotz body{overflow:hidden}).
+    const htmlVorher = document.documentElement.style.overflow;
+    const bodyVorher = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    // lenis.stop() waere hier die falsche Wahl: Lenis (globaler Smooth-
+    // Scroll, siehe lenisInstance.js) ruft im gestoppten Zustand bewusst
+    // event.preventDefault() auf JEDEM Mausrad-Event auf (siehe dessen
+    // Quelltext) - das blockte nicht nur den Hintergrund, sondern auch das
+    // eigene Scrollen im Overlay selbst (per Test bestaetigt: scrollTop
+    // blieb bei 0, obwohl der Inhalt hoeher als der Viewport war). Der
+    // Overlay-Wrapper traegt stattdessen data-lenis-prevent (siehe unten) -
+    // das ist Lenis' eigener Mechanismus, um ein Element von seiner
+    // Steuerung auszunehmen und natives Scrollen zuzulassen. Da das Overlay
+    // den kompletten Viewport bedeckt, kann ohnehin kein Mausrad-Event mehr
+    // ausserhalb davon landen - Lenis ruehrt den Hintergrund in der Zeit
+    // dadurch gar nicht erst an, faehrt aber (ungestoppt) normal weiter.
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeRefs.current[openIndex]?.click();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.documentElement.style.overflow = htmlVorher;
+      document.body.style.overflow = bodyVorher;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [openIndex]);
 
   useLayoutEffect(() => {
     // Auf dem Handy laeuft die Seite ohne Buehne: keine Eigendrehung, keine
@@ -541,6 +585,7 @@ export default function RotaryStage({
       if (modus === 'open' && offeneFlaeche === i) {
         modus = 'auto';
         offeneFlaeche = null;
+        setOpenIndex(null);
         apply(pos);
         return;
       }
@@ -565,6 +610,7 @@ export default function RotaryStage({
         onComplete: () => {
           modus = 'open';
           offeneFlaeche = i;
+          setOpenIndex(i);
           apply(ziel);
         },
       });
@@ -601,6 +647,7 @@ export default function RotaryStage({
         if (seekTween) seekTween.kill();
         modus = 'dragging';
         offeneFlaeche = null;
+        setOpenIndex(null);
       }
       e.preventDefault();
       // Nach links ziehen bringt die naechste Flaeche herein (wie ein
@@ -715,6 +762,10 @@ export default function RotaryStage({
       gsap.ticker.remove(tick);
       if (seekTween) seekTween.kill();
       teichTrigger.kill();
+      // Falls dieser Effekt neu aufgesetzt wird (z.B. Umschalten auf mobile)
+      // waehrend eine Facette offen stand: den Vollbild-Portal-State mit
+      // aufraeumen, sonst bliebe er verwaist stehen.
+      setOpenIndex(null);
     };
   }, [reduced, panels.length, mobile, lateral, sides, step, fuellung, expandTo]);
 
@@ -887,6 +938,7 @@ export default function RotaryStage({
     // Header-Ausgleich; mehr Luftraum kommt stattdessen ueber
     // GEBAEUDE_SKALIERUNG (siehe unten) - der bleibt INNERHALB der Buehne,
     // vom blauen Hintergrund gedeckt.
+    <>
     <div ref={rootRef} data-rotary-root="" className="pt-16 lg:pt-20">
       <div
         ref={stickyRef}
@@ -961,7 +1013,11 @@ export default function RotaryStage({
               style={inhaltStyle}
             >
               <FaceOrnament />
-              <FitToFace>{panel}</FitToFace>
+              {/* Waehrend diese Flaeche offen steht, lebt ihr Inhalt im
+                  Vollbild-Portal weiter unten (siehe openIndex) - hier
+                  ausgelassen, sonst liefe z.B. das Calendly-Widget zweimal
+                  gleichzeitig. */}
+              {i !== openIndex && <FitToFace>{panel}</FitToFace>}
 
               {/* Klick-Faenger: solange die Flaeche noch dreht, oeffnet ein
                   Klick sie, ein Ziehen dreht den Koerper direkt mit. Steht
@@ -1035,5 +1091,34 @@ export default function RotaryStage({
         )}
       </div>
     </div>
+
+    {/* Vollbild-Portal: "wie eine neu geoeffnete Seite" - direkt an
+        document.body gehaengt, damit es den 3D-Transform-Kontext der
+        Trommel (perspective/preserve-3d auf sticky/box) wirklich verlaesst
+        und echten position:fixed-Vollbildschirm bekommt (innerhalb der
+        Trommel wuerde fixed sich nur auf den naechsten transformierten
+        Vorfahren beziehen, nicht auf den Viewport - CSS-Spec-Eigenheit).
+        Deckt bewusst auch den Header ab (z-[100] > Header z-50): fuehlt
+        sich sonst wie eine Karte UEBER der Seite an, nicht wie eine neue
+        Seite. Ohne .rotary-face-Klasse und ohne FitToFace-Zoom - die auf
+        die schmale, feste Trommel-Facette zugeschnittenen CSS-Regeln
+        (cqw-Clamps, ausgeblendete Buttons etc.) passen hier nicht mehr,
+        stattdessen einfach die normale, responsive Section-Darstellung wie
+        im Onepager, mit echtem Scrollen statt Herunterzoomen. */}
+    {openIndex !== null && createPortal(
+      <div className="fixed inset-0 z-[100] overflow-y-auto bg-background" data-lenis-prevent>
+        <button
+          type="button"
+          onClick={() => closeRefs.current[openIndex]?.click()}
+          aria-label="Seite schliessen"
+          className="fixed right-5 top-5 z-[101] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card shadow-lg transition-colors hover:bg-accent/10"
+        >
+          <X size={20} />
+        </button>
+        {panels[openIndex]}
+      </div>,
+      document.body
+    )}
+    </>
   );
 }
