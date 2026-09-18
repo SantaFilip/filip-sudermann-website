@@ -614,6 +614,15 @@
     }
   }
 
+  /* Hero-Bannerbild im Vollbild-Portal (RotaryStage.jsx, .rotary-portal)
+     ausblenden - dieselbe Regel wie oben fuer die schmale Trommel-Facette,
+     hier aber bewusst AUSSERHALB jedes @container-Blocks: das Portal ist
+     voller Viewport-breit (weit ueber 900px), eine @container-gegatete
+     Regel wuerde es dort nie treffen. */
+  .rotary-portal #top > .w-full > img {
+    display: none;
+  }
+
   /*
    * Weite Facetten - die Detailansicht.
    *

@@ -1100,13 +1100,17 @@ export default function RotaryStage({
         Vorfahren beziehen, nicht auf den Viewport - CSS-Spec-Eigenheit).
         Deckt bewusst auch den Header ab (z-[100] > Header z-50): fuehlt
         sich sonst wie eine Karte UEBER der Seite an, nicht wie eine neue
-        Seite. Ohne .rotary-face-Klasse und ohne FitToFace-Zoom - die auf
-        die schmale, feste Trommel-Facette zugeschnittenen CSS-Regeln
-        (cqw-Clamps, ausgeblendete Buttons etc.) passen hier nicht mehr,
-        stattdessen einfach die normale, responsive Section-Darstellung wie
-        im Onepager, mit echtem Scrollen statt Herunterzoomen. */}
+        Seite.
+        Scrollen soll weder noetig noch moeglich sein - deshalb wieder
+        FitToFace (zoomt auf die tatsaechlich verfuegbare Vollbildhoehe
+        herunter, genau wie in der Trommel-Facette, nur mit viel mehr
+        Platz) statt echtem Scrollen, und overflow-hidden statt -auto.
+        Dafuer auch wieder die .rotary-face-Klasse: die dort bereits
+        vorhandenen CSS-Regeln (u.a. das Hero-Bannerbild ausblenden, s.
+        ".rotary-face #top > .w-full > img") greifen dadurch unveraendert
+        weiter, ohne sie hier zu duplizieren. */}
     {openIndex !== null && createPortal(
-      <div className="fixed inset-0 z-[100] overflow-y-auto bg-background" data-lenis-prevent>
+      <div className="fixed inset-0 z-[100] overflow-hidden bg-background rotary-portal" data-lenis-prevent>
         <button
           type="button"
           onClick={() => closeRefs.current[openIndex]?.click()}
@@ -1115,7 +1119,7 @@ export default function RotaryStage({
         >
           <X size={20} />
         </button>
-        {panels[openIndex]}
+        <FitToFace>{panels[openIndex]}</FitToFace>
       </div>,
       document.body
     )}
