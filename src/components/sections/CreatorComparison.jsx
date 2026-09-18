@@ -61,7 +61,7 @@ export default function CreatorComparison() {
           </div>
         </div>
 
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center mt-10 konkret-toggle">
           <motion.button
             onClick={() => setKonkretOpen(!konkretOpen)}
             className="flex items-center gap-3 shrink-0 group"

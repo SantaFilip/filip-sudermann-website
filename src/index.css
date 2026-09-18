@@ -149,6 +149,23 @@
     max-width: 100%;
   }
 
+  /* Marktvorteil: Titel ca. 1,5x groesser auf Wunsch - ein einzelner
+     cqw-basierter Wert statt zweier getrennter (schmal/aufgeklappt), damit
+     er unabhaengig von der Facettenbreite konsistent groesser bleibt. */
+  .rotary-face #results h2 {
+    font-size: clamp(2.7rem, 9cqw, 4.5rem);
+  }
+
+  /* "Konkrete Zahlen zeigen"-Knopf unter der Gegenueberstellung: oeffnet
+     eine ganze zusaetzliche Case-Study-Sektion, die in der schmalen
+     Facette weder Platz noch Sinn hat - blendet ihn hier komplett aus statt
+     ihn nur zu verkleinern. Der State (konkretOpen), den er umschaltet,
+     bleibt false, solange niemand klickt - die Case-Study-Sektion taucht
+     also gar nicht erst auf. */
+  .rotary-face #results .konkret-toggle {
+    display: none;
+  }
+
   /* FAQ: die Wiederholung "FAQ" (Badge) / "Haeufige Fragen" (Titel) ist auf
      der eigenen Flaeche ueberfluessig - anders als im Onepager, wo die
      Section weiter oben auf der Seite steht und die Wiederholung nicht
@@ -465,12 +482,8 @@
       align-self: flex-start;
     }
 
-    /* Marktvorteil: Titel und Infotext unter dem Badge lesen bei der
-       universellen Verkleinerung (h2/p weiter oben) zu klein - eigener,
-       groesserer Cap fuer diese Flaeche. */
-    .rotary-face #results h2 {
-      font-size: clamp(1.8rem, 7cqw, 3rem);
-    }
+    /* Marktvorteil: Titel-Groesse jetzt ungegatet weiter oben (gilt fuer
+       jede Facettenbreite einheitlich) - hier nur noch der Infotext. */
 
     .rotary-face #results .mb-12 p {
       font-size: clamp(1.1rem, 3.5cqw, 1.6rem);
