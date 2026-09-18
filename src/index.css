@@ -298,6 +298,32 @@
     height: 58rem !important;
   }
 
+  /* Kontakt im Vollbild-Portal: zweispaltig statt gestapelt - links Titel/
+     Infotext vertikal mittig (viel Luft sonst ungenutzt, weil der Text
+     selbst nur wenig Hoehe braucht), rechts der Kalender, oben UND rechts
+     bis an den Rahmenrand gezogen statt zentriert darin zu schweben. Nur
+     2 echte Kind-Elemente im Normalfall (Kopf-Div + Kalender-Box, das
+     Erfolgs-Banner dazwischen rendert bei done=false gar nichts) - grid
+     ordnet sie dadurch von selbst nebeneinander statt untereinander ein. */
+  .rotary-portal #beratung > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    align-items: start;
+    gap: 2rem;
+  }
+
+  .rotary-portal #beratung .mb-12 {
+    align-self: center;
+    margin-bottom: 0;
+  }
+
+  /* Erfolgs-Banner (nach erfolgreicher Buchung) soll, falls es doch
+     einmal sichtbar ist, ueber beide Spalten laufen statt eine davon zu
+     kapern. */
+  .rotary-portal #beratung > div > button {
+    grid-column: 1 / -1;
+  }
+
   /*
    * Creator-Economy: der Titel liest neben der frei bleibenden
    * Zeilenbreite deutlich zu klein - unabhaengig davon, ob die Facette

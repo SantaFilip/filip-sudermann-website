@@ -170,7 +170,15 @@ function FitToFace({ children }) {
     // vom zuvor gesetzten Wert - kein Wettlauf mehr moeglich. Zwischen den
     // beiden Style-Schreibvorgaengen findet kein Paint statt, es blitzt also
     // nichts sichtbar auf.
-    const measure = () => {
+    // Ratchet-Untergrenze: haelt fest, wie weit schon heruntergezoomt wurde,
+    // damit ein Aufklappen/Zuklappen (Accordion, o.ae.) innerhalb des
+    // Inhalts nicht bei jedem Mal sichtbar neu heraus- und wieder
+    // hereinzoomt ("atmen"). Nur ein echtes Resize der AEUSSEREN Flaeche
+    // (Fensterbreite, Facette wechselt) darf diese Untergrenze wieder
+    // anheben - dafuer der eigene, ungeratchete Pfad fuer outer weiter unten.
+    let minZoom = MAX_SCALE;
+
+    const measure = (ratchet) => {
       const cs = getComputedStyle(outer);
       const available =
         outer.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
@@ -181,7 +189,9 @@ function FitToFace({ children }) {
       const natural = inner.scrollHeight;
       if (!natural) return;
 
-      const z = Math.min(MAX_SCALE, available / natural);
+      let z = Math.min(MAX_SCALE, available / natural);
+      if (ratchet) z = Math.min(z, minZoom);
+      minZoom = z;
       inner.style.zoom = String(z);
       // Als CSS-Variable verfuegbar machen: transform-Werte (z.B. translateY in
       // cqh) auf Nachkommen von inner werden von diesem Zoom mitskaliert - wer
@@ -191,11 +201,20 @@ function FitToFace({ children }) {
       inner.style.setProperty('--face-zoom', String(z));
     };
 
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(outer);
-    ro.observe(inner);
-    return () => ro.disconnect();
+    measure(false);
+    // Getrennte Observer statt einem gemeinsamen: outer (die Flaeche selbst)
+    // darf frei neu messen (echtes Resize, z.B. Fenster/Facette), inner
+    // (der Inhalt) nur mit Ratchet - waechst er (Accordion oeffnet), wird
+    // nachgeschaerft; schrumpft er wieder (Accordion schliesst), bleibt der
+    // zuvor erreichte Zoom stehen statt wieder hochzuspringen.
+    const outerRo = new ResizeObserver(() => measure(false));
+    const innerRo = new ResizeObserver(() => measure(true));
+    outerRo.observe(outer);
+    innerRo.observe(inner);
+    return () => {
+      outerRo.disconnect();
+      innerRo.disconnect();
+    };
   }, []);
 
   return (
@@ -314,7 +333,29 @@ export default function RotaryStage({
     if (idx === null) return;
     setClosing(true);
     closeRefs.current[idx]?.click();
-    window.setTimeout(() => setClosing(false), 480);
+    // Auf das tatsaechliche Ende des Schrumpf-Uebergangs warten statt eine
+    // feste Verzoegerung zu raten (die vorherige 480ms-Loesung war je nach
+    // Geraet/Last mal zu kurz, mal spuerbar zu lang - genau das gemeldete
+    // "noch immer vorhandene" Ruckeln). transitionend auf width ist das
+    // zuverlaessige Signal, WANN die Trommel darunter wirklich fertig
+    // geschrumpft ist. Fallback-Timeout nur als Sicherheitsnetz, falls aus
+    // irgendeinem Grund kein Uebergang laeuft (z.B. expandTo nicht gesetzt).
+    const face = faceRefs.current[idx];
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      setClosing(false);
+    };
+    if (face) {
+      const onEnd = (e) => {
+        if (e.target !== face || e.propertyName !== 'width') return;
+        face.removeEventListener('transitionend', onEnd);
+        finish();
+      };
+      face.addEventListener('transitionend', onEnd);
+    }
+    window.setTimeout(finish, 650);
   };
 
   // Erst wenn die Breitenklasse feststeht, ist entschieden, welche Achse und
