@@ -242,6 +242,14 @@
     font-size: clamp(1.35rem, 5cqw, 2.1rem);
   }
 
+  /* Antworttext (AccordionContent) blieb bisher bei Tailwinds text-sm
+     (0.875rem) unveraendert stehen, obwohl Badge/Frage bereits vergroessert
+     sind - wirkte danach im Vergleich winzig. Zwei Stufen groesser, auf
+     Rueckmeldung. */
+  .rotary-face #faq [role="region"] {
+    font-size: clamp(1.1rem, 4cqw, 1.6rem);
+  }
+
   /* Kontakt: der Infotext unter dem Titel bricht sowohl in der schmalen als
      auch in der aufgeklappten Facette um - kleiner und ohne Umbruch passt
      er in eine Zeile. cqw-basiert, damit er bei beiden Facettenbreiten
@@ -249,6 +257,28 @@
   .rotary-face #beratung p {
     white-space: nowrap;
     font-size: clamp(0.6rem, 2.3cqw, 0.95rem);
+  }
+
+  /* Im Vollbild-Portal (.rotary-portal) ist reichlich Breite da - hier statt
+     der schmalen Trommel-Groesse 3 Stufen groesser, auf Rueckmeldung.
+     white-space wieder normal: bei dieser Groesse wuerde der ganze (lange)
+     Satz in einer Zeile seitlich aus dem Rahmen laufen. */
+  .rotary-portal #beratung p {
+    white-space: normal;
+    font-size: clamp(1.05rem, 3.4cqw, 1.75rem);
+  }
+
+  /* Calendly-Kalender: das eigene Widget (Fremdinhalt, ueber initInlineWidget
+     als iframe injiziert) rendert seine Karte offenbar mit einer eigenen,
+     von unserer Container-Breite unabhaengigen bevorzugten Breite - blieb
+     dadurch innerhalb des breiten Rahmens sichtbar schmaeler, als der
+     Rahmen selbst hergibt. width:100% auf Container UND iframe erzwingt die
+     volle verfuegbare Breite; !important auch hier noetig, aus demselben
+     Grund wie bei der Hoehe unten (Calendly schreibt eigene inline Styles
+     auf das iframe, die es sonst schlagen wuerden). */
+  .rotary-face #beratung .calendly-embed,
+  .rotary-face #beratung .calendly-embed iframe {
+    width: 100% !important;
   }
 
   /* Calendly-Kalender: die feste Hoehe (680px, siehe ConsultationBooking.jsx)

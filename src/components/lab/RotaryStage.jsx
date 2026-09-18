@@ -296,6 +296,26 @@ export default function RotaryStage({
   // steuert den Portal-Vollbild-Overlay weiter unten, der React zum Rendern
   // braucht (ein DOM-Knoten ausserhalb dieses Baums, siehe Kommentar dort).
   const [openIndex, setOpenIndex] = useState(null);
+  // Faellt openIndex sofort auf null (Schliessen), verschwaende das Portal
+  // im selben Frame - die Trommel darunter braucht aber 420ms (siehe
+  // inhaltStyle-Transition weiter unten), um von "aufgeklappt" zurueck auf
+  // Facettengroesse zu schrumpfen. Ohne Uebergang sah man dazwischen kurz
+  // die noch breite Flaeche aufblitzen (das gemeldete Ruckeln). closing
+  // haelt das Portal stattdessen noch fuer die Dauer eines Opacity-
+  // Ausblendens sichtbar, waehrend die Trommel darunter bereits (verdeckt)
+  // fertig schrumpft - beim Aufdecken ist sie dann schon am Ziel.
+  const [closing, setClosing] = useState(false);
+  const lastOpenIndexRef = useRef(null);
+  useEffect(() => {
+    if (openIndex !== null) lastOpenIndexRef.current = openIndex;
+  }, [openIndex]);
+  const requestClose = () => {
+    const idx = openIndex;
+    if (idx === null) return;
+    setClosing(true);
+    closeRefs.current[idx]?.click();
+    window.setTimeout(() => setClosing(false), 480);
+  };
 
   // Erst wenn die Breitenklasse feststeht, ist entschieden, welche Achse und
   // welcher Fuellgrad gelten.
@@ -318,7 +338,7 @@ export default function RotaryStage({
   // schliesst - beides normales Verhalten fuer etwas, das sich wie eine
   // eigene Seite anfuehlen soll.
   useEffect(() => {
-    if (openIndex === null) return;
+    if (openIndex === null && !closing) return;
     // Beide sperren, nicht nur body: der eigentliche Scroll-Container der
     // Seite ist im Standardmodus <html> (document.documentElement), nicht
     // <body> - overflow:hidden nur auf body liess das Mausrad ungebremst
@@ -341,7 +361,7 @@ export default function RotaryStage({
     // ausserhalb davon landen - Lenis ruehrt den Hintergrund in der Zeit
     // dadurch gar nicht erst an, faehrt aber (ungestoppt) normal weiter.
     const onKey = (e) => {
-      if (e.key === 'Escape') closeRefs.current[openIndex]?.click();
+      if (e.key === 'Escape') requestClose();
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -349,7 +369,7 @@ export default function RotaryStage({
       document.body.style.overflow = bodyVorher;
       window.removeEventListener('keydown', onKey);
     };
-  }, [openIndex]);
+  }, [openIndex, closing]);
 
   useLayoutEffect(() => {
     // Auf dem Handy laeuft die Seite ohne Buehne: keine Eigendrehung, keine
@@ -1016,8 +1036,14 @@ export default function RotaryStage({
               {/* Waehrend diese Flaeche offen steht, lebt ihr Inhalt im
                   Vollbild-Portal weiter unten (siehe openIndex) - hier
                   ausgelassen, sonst liefe z.B. das Calendly-Widget zweimal
-                  gleichzeitig. */}
-              {i !== openIndex && <FitToFace>{panel}</FitToFace>}
+                  gleichzeitig. Auch waehrend closing noch ausgelassen:
+                  openIndex ist dann schon null, das Portal (siehe unten)
+                  zeigt denselben Inhalt aber noch bis zum Ende seines
+                  Ausblendens (lastOpenIndexRef) - sonst liefe der Inhalt
+                  fuer die Dauer des Ausblendens kurz doppelt. */}
+              {!(i === openIndex || (closing && i === lastOpenIndexRef.current)) && (
+                <FitToFace>{panel}</FitToFace>
+              )}
 
               {/* Klick-Faenger: solange die Flaeche noch dreht, oeffnet ein
                   Klick sie, ein Ziehen dreht den Koerper direkt mit. Steht
@@ -1108,18 +1134,29 @@ export default function RotaryStage({
         Dafuer auch wieder die .rotary-face-Klasse: die dort bereits
         vorhandenen CSS-Regeln (u.a. das Hero-Bannerbild ausblenden, s.
         ".rotary-face #top > .w-full > img") greifen dadurch unveraendert
-        weiter, ohne sie hier zu duplizieren. */}
-    {openIndex !== null && createPortal(
-      <div className="fixed inset-0 z-[100] overflow-hidden bg-background rotary-portal" data-lenis-prevent>
+        weiter, ohne sie hier zu duplizieren.
+        Bleibt waehrend closing (siehe requestClose oben) noch gemountet
+        und blendet per Opacity aus, statt im selben Frame zu verschwinden -
+        das deckt die 420ms, die die Trommel darunter zum Schrumpfen
+        braucht (inhaltStyle-Transition), ohne dass der Zwischenzustand
+        sichtbar aufblitzt. displayIndex faellt dabei auf den zuletzt
+        offenen Index zurueck, weil openIndex selbst schon beim Start des
+        Schliessens auf null steht. */}
+    {(openIndex !== null || closing) && createPortal(
+      <div
+        className="fixed inset-0 z-[100] overflow-hidden bg-background rotary-portal"
+        style={{ opacity: closing ? 0 : 1, transition: 'opacity 440ms ease' }}
+        data-lenis-prevent
+      >
         <button
           type="button"
-          onClick={() => closeRefs.current[openIndex]?.click()}
+          onClick={requestClose}
           aria-label="Seite schliessen"
           className="fixed right-5 top-5 z-[101] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card shadow-lg transition-colors hover:bg-accent/10"
         >
           <X size={20} />
         </button>
-        <FitToFace>{panels[openIndex]}</FitToFace>
+        <FitToFace>{panels[openIndex ?? lastOpenIndexRef.current]}</FitToFace>
       </div>,
       document.body
     )}
