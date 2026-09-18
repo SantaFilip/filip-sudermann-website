@@ -114,7 +114,7 @@ export default function ConsultationBooking() {
             Drittanbieter-Widget. */}
         <div className="relative bg-card border border-border p-3 md:p-5">
           <div className="absolute inset-2 md:inset-3 border border-accent/25 pointer-events-none" />
-          <div ref={containerRef} style={{ minWidth: '320px', height: '680px' }} />
+          <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: '680px' }} />
         </div>
       </div>
     </section>

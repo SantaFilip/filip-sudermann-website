@@ -162,17 +162,19 @@
      text-[18px] fuer die Fragen), die FitToFace beim Einpassen der ganzen
      Flaeche gleichmaessig mit herunterskaliert, statt sich an der
      tatsaechlichen Facettenbreite auszurichten. cqw-basiert statt fest,
-     damit beide unabhaengig von der Facettenbreite gut lesbar bleiben. */
+     damit beide unabhaengig von der Facettenbreite gut lesbar bleiben.
+     Werte nach Rueckmeldung nochmals angehoben (auch der erste Versuch
+     wirkte auf der rotierenden Flaeche noch klein). */
   .rotary-face #faq .inline-flex span:first-child {
-    font-size: clamp(1.6rem, 7.5cqw, 2.8rem);
+    font-size: clamp(1.9rem, 8.5cqw, 3.4rem);
   }
 
   .rotary-face #faq .inline-flex span:last-child {
-    font-size: clamp(1.35rem, 6cqw, 2.3rem);
+    font-size: clamp(1.6rem, 7cqw, 2.8rem);
   }
 
   .rotary-face #faq button {
-    font-size: clamp(1.15rem, 4.3cqw, 1.7rem);
+    font-size: clamp(1.35rem, 5cqw, 2.1rem);
   }
 
   /* Kontakt: der Infotext unter dem Titel bricht sowohl in der schmalen als
@@ -182,6 +184,23 @@
   .rotary-face #beratung p {
     white-space: nowrap;
     font-size: clamp(0.6rem, 2.3cqw, 0.95rem);
+  }
+
+  /* Calendly-Kalender: die feste Hoehe (680px, siehe ConsultationBooking.jsx)
+     gilt fuer die eigenstaendige Seite genauso wie fuer die Facette - dort
+     wird sie von FitToFace zusammen mit Badge/Infotext gleichmaessig
+     herunterskaliert und wirkt dadurch kleiner als auf der normalen Seite.
+     Nur hier (Facette) deutlich groesser, damit mehr vom Kalender ohne
+     internes Scrollen sichtbar ist - ein fixer, groesserer rem-Wert statt
+     cqw/cqh: die Breite haengt an verschachtelten Spalten mit eigenem
+     Padding, ein cqw-Wert wuerde (wie beim Globus zuvor) gegen die falsche
+     Bezugsgroesse rechnen und die Karte seitlich ueberlaufen lassen.
+     !important noetig: die Hoehe steht als inline style im JSX (React
+     schreibt sie dort, weil Calendly sie zur Laufzeit braucht) - ein
+     inline style schlaegt jede externe Regel unabhaengig von deren
+     Spezifitaet, nur !important kommt dagegen an. */
+  .rotary-face #beratung .calendly-embed {
+    height: 58rem !important;
   }
 
   /*
