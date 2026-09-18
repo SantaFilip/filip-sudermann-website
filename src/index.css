@@ -156,6 +156,19 @@
     font-size: clamp(2.7rem, 9cqw, 4.5rem);
   }
 
+  /* Badge ("3 Marktvorteil") ebenfalls vergroessert - nutzte bisher feste
+     Pixelgroessen (text-[34px]/text-[28px]), die FitToFace beim Einpassen
+     der Flaeche einfach mit herunterskaliert, statt sich an der
+     tatsaechlichen Facettenbreite auszurichten - genau dasselbe Muster wie
+     zuvor beim FAQ-Badge. */
+  .rotary-face #results .inline-flex span:first-child {
+    font-size: clamp(1.9rem, 8.5cqw, 3.4rem);
+  }
+
+  .rotary-face #results .inline-flex span:last-child {
+    font-size: clamp(1.6rem, 7cqw, 2.8rem);
+  }
+
   /* "Konkrete Zahlen zeigen"-Knopf unter der Gegenueberstellung: oeffnet
      eine ganze zusaetzliche Case-Study-Sektion, die in der schmalen
      Facette weder Platz noch Sinn hat - blendet ihn hier komplett aus statt
@@ -475,10 +488,15 @@
        Rueckgrat wirkt nur auf seine Nachkommen. align-self auf dem direkten
        Kind (dem FitToFace-Wrapper) trifft stattdessen einen echten
        Nachkommen und funktioniert. */
+    /* #results (Marktvorteil) bewusst NICHT mehr in dieser Liste: seit der
+       Knopf ("Konkrete Zahlen zeigen") entfernt ist, endet der Inhalt
+       deutlich vor dem unteren Rand der Flaeche - oben verankert blieb
+       darunter ein grosser, unausgeglichener Leerraum stehen. Die
+       Gegenueberstellung wirkt vertikal zentriert (der FitToFace-
+       Standardwert, items-center) ausgeglichener. */
     .rotary-face:has(#creator-economy) > div,
     .rotary-face:has(#beratung) > div,
-    .rotary-face:has(#faq) > div,
-    .rotary-face:has(#results) > div {
+    .rotary-face:has(#faq) > div {
       align-self: flex-start;
     }
 
