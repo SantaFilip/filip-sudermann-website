@@ -138,6 +138,24 @@
    */
   .rotary-face #results .mb-12 {
     text-align: center;
+    /* Badge/Titel auf dieselbe Hoehe wie bei Arbeitsweise (#process) heben,
+       OHNE die Gegenueberstellungs-Boxen darunter zu verschieben: beide
+       Sections zentrieren ihren Inhalt vertikal (FitToFace, items-center),
+       aber Marktvorteil hat insgesamt weniger Inhalt (kein Icon-Raster,
+       keine Workload/Gewinnanteil-Karte) - beim Zentrieren landet der Kopf
+       dadurch tiefer als bei Arbeitsweise. margin-top wuerde auch die
+       nachfolgenden Boxen mitziehen (normaler Dokumentenfluss) - transform
+       verschiebt nur dieses Element visuell, der Platz danach (und damit
+       die Position der Boxen) bleibt unangetastet, per DOM-Messung
+       bestaetigt. cqh statt eines festen px-Werts, damit es bei anderer
+       Facettengroesse (FitToFace zoomt dann anders herunter) weiter passt.
+       -14.28cqh empirisch bestimmt (iterativ per Playwright gegen die
+       tatsaechliche Badge-Position von #process gemessen, Restabweichung
+       zuletzt < 0.01px) - der Zusammenhang zwischen cqh-Wert und
+       resultierendem Bildschirm-Versatz ist wegen des verschachtelten
+       FitToFace-Zooms nicht linear 1:1, ein rein rechnerischer Wert waere
+       hier nicht zuverlaessig gewesen. */
+    transform: translateY(-14.28cqh);
   }
 
   /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
@@ -160,13 +178,18 @@
      Pixelgroessen (text-[34px]/text-[28px]), die FitToFace beim Einpassen
      der Flaeche einfach mit herunterskaliert, statt sich an der
      tatsaechlichen Facettenbreite auszurichten - genau dasselbe Muster wie
-     zuvor beim FAQ-Badge. */
+     zuvor beim FAQ-Badge. Untergrenze exakt auf die Groesse des
+     Arbeitsweise-Badges (#process) gehoben - jene Flaeche braucht wegen
+     ihres deutlich groesseren Gesamtinhalts (Icon-Raster, Workload/
+     Gewinnanteil-Karte) keinerlei Herunterzoomen und zeigt dadurch die
+     Tailwind-Basisgroesse (34px/28px) unveraendert; Marktvorteil landete
+     mit weniger Inhalt bei staerkerem Zoom vorher unter dieser Groesse. */
   .rotary-face #results .inline-flex span:first-child {
-    font-size: clamp(1.9rem, 8.5cqw, 3.4rem);
+    font-size: clamp(2.125rem, 8.5cqw, 3.4rem);
   }
 
   .rotary-face #results .inline-flex span:last-child {
-    font-size: clamp(1.6rem, 7cqw, 2.8rem);
+    font-size: clamp(1.75rem, 7cqw, 2.8rem);
   }
 
   /* "Konkrete Zahlen zeigen"-Knopf unter der Gegenueberstellung: oeffnet
