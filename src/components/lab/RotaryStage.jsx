@@ -40,15 +40,6 @@ const CUBE_WIDTH_DESKTOP = 0.93;
 const GEBAEUDE_SKALIERUNG = 0.9;
 const MOBILE_MAX = 767;
 
-// Anteil der Buehnenhoehe (sticky, exakt die Flaeche UNTER dem fixierten
-// Header), auf den eine Facette beim Aufklappen waechst - anders als beim
-// Ausklappen in der Breite (expandTo, ueber die Buehnenbreite) ein
-// eigener, bewusst hoeherer Wert: der Wunsch war "nimmt den ganzen
-// Bildschirm bis auf die Kopfleiste ein", nicht nur "etwas breiter". 1
-// waere randlos (kein Blick mehr auf Kuppel/Sockel dahinter, wirkt
-// abgeschnitten); 0.97 laesst einen minimalen Spalt.
-const EXPAND_FILL_Y = 0.97;
-
 // Hochskalieren ist keine Option: der Inhalt liegt bereits auf voller
 // Flaechenbreite, ein Faktor ueber 1 schiebt ihn seitlich aus der Flaeche
 // heraus und die Kanten werden abgeschnitten. Die Flaeche wird stattdessen
@@ -62,16 +53,6 @@ const MAX_SCALE = 1;
 // wiederum spuerbar zu spaet) - jetzt naeher an der theoretischen 90-Grad-
 // Kante (Flaeche exakt auf der Kante des Koerpers), mit nur wenig Puffer.
 const CULL_DEG = 98;
-
-// Wie weit die aufgegangene Frontflaeche aus dem Koerper heraustritt.
-//
-// Bei einem geschlossenen Vielflaechner stoesst die Nachbarflaeche mit ihrer
-// vorderen Kante genau auf z = 0 - dieselbe Ebene, auf der die Frontflaeche
-// liegt. Verbreitert man sie dort, ragt sie in den Raum der Nachbarn und der
-// Compositor schneidet beide pixelweise ineinander: die breite Folie wird in
-// Streifen zerlegt. Ein kleiner Versatz nach vorn reicht, damit sie
-// vollstaendig vor jedem Punkt der Nachbarn liegt.
-const EXPAND_LIFT = 60;
 
 // Bis zu diesem Anteil des Scrollwegs, den der Nutzer ueber die Buehne hinweg
 // zurueckgelegt hat, bleibt der Teich unveraendert stehen, danach laeuft er
@@ -399,22 +380,6 @@ export default function RotaryStage({
     };
     let depth = 0;
     let drift = 0;
-    // Flaechenbreite lokal mitfuehren. Der React-Zustand taugt hier nicht:
-    // apply laeuft in der Closure des Effekts und sieht dort noch den Wert
-    // von vor dem letzten Rendern - beim Aufbau also 0.
-    let flaecheW = 0;
-    // Unverstaerkte Flaechenhoehe (Gegenstueck zu flaecheW) - Referenzpunkt,
-    // um den herum die Flaeche beim Aufklappen mittig in der Hoehe waechst.
-    let flaecheH = 0;
-    // Hoehe/marginTop einer Flaeche VOR dem Aufklappen, je Index zwischen-
-    // gespeichert - anders als bei der Breite (flaecheW, ein einzelner
-    // Wert fuer alle Facetten) braucht die Hoehe das nicht: sie steht schon
-    // als boostedFaceH/faceVOffset in inhaltStyle (siehe unten im Render),
-    // aus einer Formel (drumHeightScale), die von hier aus nicht ohne
-    // Weiteres erneut berechenbar ist. Einfacher: beim ersten Aufklappen
-    // einer Facette die aktuellen (von React gesetzten) Werte sichern und
-    // beim Schliessen wieder eintragen, statt sie nachzurechnen.
-    const offenHoeheCache = new Map();
 
     const layout = () => {
       const vorgabe = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
@@ -439,14 +404,11 @@ export default function RotaryStage({
       // Die Tiefe des Koerpers spannt die Kante in Drehrichtung auf: bei
       // senkrechter Drehachse die Breite, sonst die Hoehe.
       depth = bodyRadius(lateral ? w : h, sides) * 2;
-      flaecheW = w;
-      flaecheH = h;
       setCube({ w, h, stageW: sticky.clientWidth, stageH: sticky.clientHeight });
 
-      // setCube loest ein Neurendern aus, und das schreibt die Flaechenbreite
-      // aus dem Zustand zurueck - also auch ueber eine bereits aufgegangene
-      // Frontflaeche. Deshalb im naechsten Frame, nach dem Rendern, erneut
-      // anwenden.
+      // setCube loest ein Neurendern aus - im naechsten Frame erneut
+      // anwenden, damit apply() mit den frischen, aus dem Rendern
+      // zurueckgeschriebenen Werten arbeitet.
       requestAnimationFrame(() => apply(pos));
     };
 
@@ -462,14 +424,12 @@ export default function RotaryStage({
     const apply = (p) => {
       pos = p;
       const radius = depth / 2;
-      const breit = expandTo && !mobile ? Math.round(sticky.clientWidth * expandTo) : 0;
-      // Aufgeklappt soll die Flaeche nicht nur breiter, sondern auch fast
-      // bildschirmhoch werden ("den gesamten Bildschirm bis auf die
-      // Kopfleiste einnehmen") - sticky ist exakt die Buehne UNTER dem
-      // Header (siehe pt-16/pt-20 aussen), 90vh davon reicht bis knapp an
-      // deren Rand.
-      const hoch = expandTo && !mobile ? Math.round(sticky.clientHeight * EXPAND_FILL_Y) : 0;
-      const offen = Boolean(breit) && modus === 'open' && offeneFlaeche !== null;
+      // Eine geoeffnete Facette wird nicht mehr in der Trommel selbst
+      // vergroessert - ihr Inhalt lebt komplett im Vollbild-Portal (siehe
+      // openIndex/createPortal im Render weiter unten), das ohnehin alles
+      // bedeckt. offen steuert hier nur noch: Dach/Sockel/Saeulen und die
+      // jeweils anderen Facetten ausblenden, solange eine offen steht.
+      const offen = Boolean(expandTo) && !mobile && modus === 'open' && offeneFlaeche !== null;
       const turn = (deg) => (lateral ? `rotateY(${-deg}deg)` : `rotateX(${deg}deg)`);
       // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
       // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
@@ -557,41 +517,6 @@ export default function RotaryStage({
         if (overlay) overlay.style.pointerEvents = auf ? 'none' : 'auto';
         const closeBtn = closeRefs.current[i];
         if (closeBtn) closeBtn.style.visibility = auf ? 'visible' : 'hidden';
-
-        if (breit) {
-          const w = auf ? breit : flaecheW;
-          face.style.width = `${w}px`;
-          // Links verankert, also den Zuwachs haelftig nach links ziehen,
-          // damit die Facette mittig aufgeht statt nach rechts zu wachsen.
-          face.style.marginLeft = `${-(w - flaecheW) / 2}px`;
-
-          if (auf) {
-            face.style.transform = `${turn(deg)} translateZ(${radius + EXPAND_LIFT}px)`;
-            // Aufgeklappt wird auch die Hoehe auf fast Buehnenhoehe gezogen
-            // (analog zur Breite oben) - Dach/Sockel sind waehrend offen
-            // ohnehin ausgeblendet (glWrapRef), die sonst noetige
-            // Hoehen-"Boost" fuer den Anschluss an sie (boostedFaceH,
-            // siehe Render weiter unten) spielt hier also keine Rolle mehr.
-            // Die von React gesetzte Hoehe/marginTop vor dem ersten
-            // Ueberschreiben sichern, um sie beim Schliessen exakt wieder
-            // herzustellen - eine erneute Berechnung waere hier (anders als
-            // bei flaecheW/flaecheH oben) nicht ohne Weiteres moeglich, die
-            // Boost-Formel haengt an Werten, die nur beim Rendern vorliegen.
-            if (!offenHoeheCache.has(i)) {
-              offenHoeheCache.set(i, { height: face.style.height, marginTop: face.style.marginTop });
-            }
-            face.style.height = `${hoch}px`;
-            // Oben verankert (top:0, wie width/marginLeft), also den Zuwachs
-            // haelftig nach oben ziehen, damit die Facette mittig um denselben
-            // Punkt waechst wie beim Aufklappen in der Breite.
-            face.style.marginTop = `${-(hoch - flaecheH) / 2}px`;
-          } else if (offenHoeheCache.has(i)) {
-            const cached = offenHoeheCache.get(i);
-            face.style.height = cached.height;
-            face.style.marginTop = cached.marginTop;
-            offenHoeheCache.delete(i);
-          }
-        }
       });
 
       const backdrop = backdropRef.current;
