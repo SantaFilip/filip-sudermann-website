@@ -315,47 +315,12 @@ export default function RotaryStage({
   // steuert den Portal-Vollbild-Overlay weiter unten, der React zum Rendern
   // braucht (ein DOM-Knoten ausserhalb dieses Baums, siehe Kommentar dort).
   const [openIndex, setOpenIndex] = useState(null);
-  // Faellt openIndex sofort auf null (Schliessen), verschwaende das Portal
-  // im selben Frame - die Trommel darunter braucht aber 420ms (siehe
-  // inhaltStyle-Transition weiter unten), um von "aufgeklappt" zurueck auf
-  // Facettengroesse zu schrumpfen. Ohne Uebergang sah man dazwischen kurz
-  // die noch breite Flaeche aufblitzen (das gemeldete Ruckeln). closing
-  // haelt das Portal stattdessen noch fuer die Dauer eines Opacity-
-  // Ausblendens sichtbar, waehrend die Trommel darunter bereits (verdeckt)
-  // fertig schrumpft - beim Aufdecken ist sie dann schon am Ziel.
-  const [closing, setClosing] = useState(false);
-  const lastOpenIndexRef = useRef(null);
-  useEffect(() => {
-    if (openIndex !== null) lastOpenIndexRef.current = openIndex;
-  }, [openIndex]);
+  // Kein Groessen-Uebergang mehr (siehe inhaltStyle/apply weiter unten -
+  // die Trommel-Flaeche springt beim Auf-/Zuklappen jetzt hart auf ihre
+  // Zielgroesse statt zu animieren). Das Portal kann openIndex deshalb
+  // direkt folgen, ohne auf irgendeinen Uebergang zu warten.
   const requestClose = () => {
-    const idx = openIndex;
-    if (idx === null) return;
-    setClosing(true);
-    closeRefs.current[idx]?.click();
-    // Auf das tatsaechliche Ende des Schrumpf-Uebergangs warten statt eine
-    // feste Verzoegerung zu raten (die vorherige 480ms-Loesung war je nach
-    // Geraet/Last mal zu kurz, mal spuerbar zu lang - genau das gemeldete
-    // "noch immer vorhandene" Ruckeln). transitionend auf width ist das
-    // zuverlaessige Signal, WANN die Trommel darunter wirklich fertig
-    // geschrumpft ist. Fallback-Timeout nur als Sicherheitsnetz, falls aus
-    // irgendeinem Grund kein Uebergang laeuft (z.B. expandTo nicht gesetzt).
-    const face = faceRefs.current[idx];
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      setClosing(false);
-    };
-    if (face) {
-      const onEnd = (e) => {
-        if (e.target !== face || e.propertyName !== 'width') return;
-        face.removeEventListener('transitionend', onEnd);
-        finish();
-      };
-      face.addEventListener('transitionend', onEnd);
-    }
-    window.setTimeout(finish, 650);
+    closeRefs.current[openIndex]?.click();
   };
 
   // Erst wenn die Breitenklasse feststeht, ist entschieden, welche Achse und
@@ -379,7 +344,7 @@ export default function RotaryStage({
   // schliesst - beides normales Verhalten fuer etwas, das sich wie eine
   // eigene Seite anfuehlen soll.
   useEffect(() => {
-    if (openIndex === null && !closing) return;
+    if (openIndex === null) return;
     // Beide sperren, nicht nur body: der eigentliche Scroll-Container der
     // Seite ist im Standardmodus <html> (document.documentElement), nicht
     // <body> - overflow:hidden nur auf body liess das Mausrad ungebremst
@@ -410,7 +375,7 @@ export default function RotaryStage({
       document.body.style.overflow = bodyVorher;
       window.removeEventListener('keydown', onKey);
     };
-  }, [openIndex, closing]);
+  }, [openIndex]);
 
   useLayoutEffect(() => {
     // Auf dem Handy laeuft die Seite ohne Buehne: keine Eigendrehung, keine
@@ -595,22 +560,6 @@ export default function RotaryStage({
 
         if (breit) {
           const w = auf ? breit : flaecheW;
-          // Erster Frame, in dem diese Flaeche aufgeht: offenHoeheCache
-          // hat fuer i noch keinen Eintrag (siehe unten). Genau in diesem
-          // Moment liegt die Flaeche bereits hinter dem sofort deckenden
-          // Portal (siehe openIndex/requestClose weiter oben) - eine
-          // 420ms-Breiten-Animation (aus inhaltStyle) waere hier nie
-          // sichtbar, kostet aber Hauptthread-Zeit genau dort, wo Portal-
-          // Mount und FitToFace-Messung ohnehin schon viel zu tun haben -
-          // ein Teil des gemeldeten Ruckelns beim Oeffnen. transition kurz
-          // aus, Zielwerte in diesem Frame direkt (ohne Animation)
-          // anwenden, im naechsten Frame wieder an - das eigentlich
-          // sichtbare Schliessen (transitionend-gesteuert, siehe
-          // requestClose) bleibt davon unberuehrt.
-          const erstesOeffnenFrame = auf && !offenHoeheCache.has(i);
-          if (erstesOeffnenFrame) {
-            face.style.transition = 'none';
-          }
           face.style.width = `${w}px`;
           // Links verankert, also den Zuwachs haelftig nach links ziehen,
           // damit die Facette mittig aufgeht statt nach rechts zu wachsen.
@@ -628,7 +577,7 @@ export default function RotaryStage({
             // herzustellen - eine erneute Berechnung waere hier (anders als
             // bei flaecheW/flaecheH oben) nicht ohne Weiteres moeglich, die
             // Boost-Formel haengt an Werten, die nur beim Rendern vorliegen.
-            if (erstesOeffnenFrame) {
+            if (!offenHoeheCache.has(i)) {
               offenHoeheCache.set(i, { height: face.style.height, marginTop: face.style.marginTop });
             }
             face.style.height = `${hoch}px`;
@@ -641,13 +590,6 @@ export default function RotaryStage({
             face.style.height = cached.height;
             face.style.marginTop = cached.marginTop;
             offenHoeheCache.delete(i);
-          }
-
-          if (erstesOeffnenFrame) {
-            void face.offsetHeight;
-            requestAnimationFrame(() => {
-              face.style.transition = '';
-            });
           }
         }
       });
@@ -667,39 +609,16 @@ export default function RotaryStage({
     const klickAuf = (i) => {
       if (modus === 'seeking' || modus === 'dragging') return;
       if (modus === 'open' && offeneFlaeche === i) {
-        // Nicht sofort zurueck auf 'auto': das liesse den Ticker im selben
-        // Frame weiterdrehen, waehrend diese Flaeche noch 420ms lang breit
-        // ist (der Schrumpf-Uebergang, siehe unten im breit-Block) - die
-        // Saeulen/das Dach (glWrapRef) werden aber schon jetzt wieder
-        // eingeblendet (offen faellt mit offeneFlaeche=null sofort weg).
-        // Rotiert die Trommel in dieser Zeitspanne bereits weiter, passt
-        // die Facetten-Winkelposition nicht mehr zur (noch zu breiten)
-        // Flaeche - sichtbar als kurz aufblitzende Luecke zwischen zwei
-        // Saeulen. 'closing' haelt pos fest (der Ticker dreht nur bei
-        // 'auto', siehe tick()), bis transitionend bestaetigt, dass die
-        // Flaeche wirklich wieder auf Facettengroesse ist.
-        modus = 'closing';
+        // Kein Groessen-Uebergang mehr (siehe apply() weiter unten - die
+        // Flaeche springt hart auf Facettengroesse), die Trommel kann
+        // deshalb sofort weiterdrehen: keine Zwischen-Zeitspanne mehr, in
+        // der Winkelposition und Flaechengroesse auseinanderlaufen
+        // koennten (das war die Ursache der zuvor gemeldeten, kurz
+        // aufblitzenden Luecke zwischen zwei Saeulen).
+        modus = 'auto';
         offeneFlaeche = null;
         setOpenIndex(null);
         apply(pos);
-
-        const face = faceRefs.current[i];
-        const resumeAuto = () => {
-          if (modus === 'closing') modus = 'auto';
-        };
-        if (face) {
-          const onCloseEnd = (e) => {
-            if (e.target !== face || e.propertyName !== 'width') return;
-            face.removeEventListener('transitionend', onCloseEnd);
-            resumeAuto();
-          };
-          face.addEventListener('transitionend', onCloseEnd);
-          // Sicherheitsnetz wie beim Portal-Ausblenden (requestClose) -
-          // falls aus irgendeinem Grund kein Uebergang laeuft.
-          window.setTimeout(resumeAuto, 650);
-        } else {
-          resumeAuto();
-        }
         return;
       }
 
@@ -1032,9 +951,9 @@ export default function RotaryStage({
     marginTop: `${faceVOffset}px`,
     transformStyle: 'preserve-3d',
   };
-  const inhaltStyle = expandTo
-    ? { ...inhaltBase, transition: 'width 420ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 420ms cubic-bezier(0.4, 0, 0.2, 1)' }
-    : inhaltBase;
+  // Kein Uebergang beim Auf-/Zuklappen (siehe apply() weiter oben) - die
+  // Flaeche springt hart auf ihre Zielgroesse statt zu animieren.
+  const inhaltStyle = inhaltBase;
 
   return (
     // data-rotary-root/-index: Ankerlinks in der Kopfzeile (#process,
@@ -1129,14 +1048,8 @@ export default function RotaryStage({
               {/* Waehrend diese Flaeche offen steht, lebt ihr Inhalt im
                   Vollbild-Portal weiter unten (siehe openIndex) - hier
                   ausgelassen, sonst liefe z.B. das Calendly-Widget zweimal
-                  gleichzeitig. Auch waehrend closing noch ausgelassen:
-                  openIndex ist dann schon null, das Portal (siehe unten)
-                  zeigt denselben Inhalt aber noch bis zum Ende seines
-                  Ausblendens (lastOpenIndexRef) - sonst liefe der Inhalt
-                  fuer die Dauer des Ausblendens kurz doppelt. */}
-              {!(i === openIndex || (closing && i === lastOpenIndexRef.current)) && (
-                <FitToFace>{panel}</FitToFace>
-              )}
+                  gleichzeitig. */}
+              {i !== openIndex && <FitToFace>{panel}</FitToFace>}
 
               {/* Klick-Faenger: solange die Flaeche noch dreht, oeffnet ein
                   Klick sie, ein Ziehen dreht den Koerper direkt mit. Steht
@@ -1228,17 +1141,12 @@ export default function RotaryStage({
         vorhandenen CSS-Regeln (u.a. das Hero-Bannerbild ausblenden, s.
         ".rotary-face #top > .w-full > img") greifen dadurch unveraendert
         weiter, ohne sie hier zu duplizieren.
-        Bleibt waehrend closing (siehe requestClose oben) noch gemountet
-        und blendet per Opacity aus, statt im selben Frame zu verschwinden -
-        das deckt die 420ms, die die Trommel darunter zum Schrumpfen
-        braucht (inhaltStyle-Transition), ohne dass der Zwischenzustand
-        sichtbar aufblitzt. displayIndex faellt dabei auf den zuletzt
-        offenen Index zurueck, weil openIndex selbst schon beim Start des
-        Schliessens auf null steht. */}
-    {(openIndex !== null || closing) && createPortal(
+        Kein Ein-/Ausblenden mehr - erscheint/verschwindet hart mit
+        openIndex, kein Uebergang (siehe apply()/inhaltStyle: die Trommel-
+        Flaeche darunter springt jetzt ebenso uebergangslos). */}
+    {openIndex !== null && createPortal(
       <div
         className="fixed inset-0 z-[100] overflow-hidden bg-background rotary-portal"
-        style={{ opacity: closing ? 0 : 1, transition: 'opacity 440ms ease' }}
         data-lenis-prevent
       >
         <button
@@ -1249,7 +1157,7 @@ export default function RotaryStage({
         >
           <X size={20} />
         </button>
-        <FitToFace>{panels[openIndex ?? lastOpenIndexRef.current]}</FitToFace>
+        <FitToFace>{panels[openIndex]}</FitToFace>
       </div>,
       document.body
     )}

@@ -138,39 +138,6 @@
    */
   .rotary-face #results .mb-12 {
     text-align: center;
-    /* Badge/Titel auf dieselbe Hoehe wie bei Arbeitsweise (#process) heben,
-       OHNE die Gegenueberstellungs-Boxen darunter zu verschieben: beide
-       Sections zentrieren ihren Inhalt vertikal (FitToFace, items-center),
-       aber Marktvorteil hat insgesamt weniger Inhalt (kein Icon-Raster,
-       keine Workload/Gewinnanteil-Karte) - beim Zentrieren landet der Kopf
-       dadurch tiefer als bei Arbeitsweise. margin-top wuerde auch die
-       nachfolgenden Boxen mitziehen (normaler Dokumentenfluss) - transform
-       verschiebt nur dieses Element visuell, der Platz danach (und damit
-       die Position der Boxen) bleibt unangetastet, per DOM-Messung
-       bestaetigt. cqh statt eines festen px-Werts, damit es bei anderer
-       Facettengroesse (FitToFace zoomt dann anders herunter) weiter passt.
-       -14.28cqh empirisch bestimmt (iterativ per Playwright gegen die
-       tatsaechliche Badge-Position von #process gemessen, Restabweichung
-       zuletzt < 0.01px) - der Zusammenhang zwischen cqh-Wert und
-       resultierendem Bildschirm-Versatz war zunaechst nicht linear 1:1
-       (ein rein rechnerischer Wert war unzuverlaessig) - Ursache: dieses
-       Element liegt innerhalb des von FitToFace gezoomten inner-Wrappers,
-       der jeden Transform-Wert seiner Nachkommen um den Zoomfaktor
-       mitskaliert. Der cqh-Wert selbst bleibt davon unberuehrt (cqh
-       bezieht sich auf die AEUSSERE, ungezoomte Facette), der sichtbare
-       Versatz auf dem Bildschirm aber nicht - er ist cqh-Wert * Zoom.
-       --face-zoom (von FitToFace als CSS-Variable gesetzt, siehe
-       RotaryStage.jsx) macht diesen Zoomfaktor zugaenglich; die Division
-       hebt ihn wieder auf, wodurch der resultierende sichtbare Versatz bei
-       jeder Facettenbreite/jedem Zoom gleich bleibt statt nur bei der einen
-       Groesse, an der -14.28cqh urspruenglich einmalig eingemessen wurde.
-       4.6422cqh = 14.28cqh * 0.325083 (der Zoomfaktor von #results bei der
-       Messung) - der bei --face-zoom:0.325083 wieder exakt -14.28cqh
-       ergibt, bei jedem anderen Zoom aber automatisch mitskaliert.
-       Auf Wunsch nochmals hoeher als der urspruengliche, exakt auf
-       Arbeitsweise abgestimmte Wert - deckt sich jetzt nicht mehr exakt
-       mit dessen Hoehe, sitzt aber spuerbar weiter oben. */
-    transform: translateY(calc(-7cqh / var(--face-zoom, 1)));
   }
 
   /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
@@ -184,10 +151,9 @@
 
   /* Marktvorteil: Titel ca. 1,5x groesser auf Wunsch - ein einzelner
      cqw-basierter Wert statt zweier getrennter (schmal/aufgeklappt), damit
-     er unabhaengig von der Facettenbreite konsistent groesser bleibt.
-     Nochmals 3 Stufen groesser (~40%) auf weiteren Wunsch. */
+     er unabhaengig von der Facettenbreite konsistent groesser bleibt. */
   .rotary-face #results h2 {
-    font-size: clamp(3.8rem, 12.5cqw, 6.3rem);
+    font-size: clamp(2.7rem, 9cqw, 4.5rem);
   }
 
   /* Badge ("3 Marktvorteil") ebenfalls vergroessert - nutzte bisher feste
@@ -595,9 +561,20 @@
       align-self: flex-start;
     }
 
-    /* Marktvorteil: Titel-Groesse jetzt ungegatet weiter oben (gilt fuer
-       jede Facettenbreite einheitlich) - hier nur noch der Infotext.
-       Ebenfalls 3 Stufen groesser auf Wunsch (~40%, wie beim Titel). */
+    /* Marktvorteil in der ROTATIONSVERSION (schmale Trommel-Facette, nicht
+       das Vollbild-Portal - dort gilt weiter oben die ungegatete,
+       kleinere Groesse ohne Versatz unveraendert): Titel und Infotext 3
+       Stufen groesser (~40%) und der ganze Kopf staerker nach oben
+       versetzt, auf Wunsch. Bewusst hier im @container-Block statt
+       ungegatet, nachdem eine vorherige, ungegatete Version versehentlich
+       auch das Portal mitveraenderte. */
+    .rotary-face #results .mb-12 {
+      transform: translateY(calc(-7cqh / var(--face-zoom, 1)));
+    }
+
+    .rotary-face #results h2 {
+      font-size: clamp(3.8rem, 12.5cqw, 6.3rem);
+    }
 
     .rotary-face #results .mb-12 p {
       font-size: clamp(1.55rem, 4.9cqw, 2.25rem);
