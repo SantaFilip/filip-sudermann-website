@@ -832,6 +832,79 @@
     }
   }
 
+  /* Arbeitsweise im Vollbild-Portal: eigenes Layout statt der obigen
+     Regeln, die fuer die beengte Trommel-Facette (feste 210px-Spalte)
+     gedacht sind - im Portal ist reichlich Platz, also nicht nur
+     umsortiert, sondern auch deutlich vergroessert. Ungegated (kein
+     @container noetig): das Portal ist als voller Viewport praktisch
+     immer breit genug.
+     Kopf oben links (statt zentriert ueber beide Spalten), die 4 Schritte
+     darunter in derselben (linken) Spalte, vertikal mittig - "vollstaendig
+     nach Mitte/unten links" - und die Diagramme rechts, vertikal ueber
+     beide Zeilen zentriert. grid-template-areas macht die Zuordnung
+     unabhaengig von der Anzahl/Reihenfolge der Kind-Elemente lesbar. */
+  .rotary-portal #process > div {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 'header chart' 'steps chart';
+    gap: 1rem 3rem;
+  }
+
+  .rotary-portal #process > div > div:first-child {
+    grid-area: header;
+    grid-column: auto;
+    text-align: left;
+    align-self: start;
+  }
+
+  .rotary-portal #process > div > div:nth-child(2) {
+    grid-area: steps;
+    align-self: center;
+  }
+
+  .rotary-portal #process > div > .mt-24 {
+    grid-area: chart;
+    align-self: center;
+  }
+
+  /* Schritt-Karten vergroessert: groessere Icon-Abzeichen, groessere
+     Schrift, mehr Innenabstand - im 300px-Rahmen der Trommel-Facette waere
+     das zu eng geworden, im Portal ist die Spalte deutlich breiter. */
+  .rotary-portal #process .lg\:grid.grid-cols-4 {
+    gap: 1.1rem;
+  }
+
+  .rotary-portal #process .lg\:grid.grid-cols-4 .w-14.h-14 {
+    width: 3.75rem !important;
+    height: 3.75rem !important;
+  }
+
+  .rotary-portal #process .lg\:grid.grid-cols-4 .w-14.h-14 svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+
+  .rotary-portal #process .lg\:grid.grid-cols-4 .rounded-2xl {
+    padding: 1.3rem 1.5rem !important;
+  }
+
+  .rotary-portal #process .lg\:grid.grid-cols-4 h3 {
+    font-size: 1.4rem !important;
+  }
+
+  .rotary-portal #process .lg\:grid.grid-cols-4 p {
+    font-size: 1.05rem !important;
+  }
+
+  .rotary-portal #process .mt-24 .text-sm,
+  .rotary-portal #process .mt-24 .text-xs {
+    font-size: 1.05rem !important;
+  }
+
+  .rotary-portal #process .mt-24 h3 {
+    font-size: 1.6rem !important;
+  }
+
   /*
    * Hohe Facetten. Zwei Sections sind im Seitenfluss bewusst flach gehalten
    * und lassen auf einer bildschirmhohen Folie den Grossteil leer stehen -
@@ -944,6 +1017,40 @@
   .rotary-face #process .relative.shrink-0 > svg {
     width: 100%;
     height: 100%;
+  }
+
+  /* Kreisdiagramme im Vollbild-Portal vergroessert. Donut2D setzt seine
+     Groesse (210px) als festen Inline-Style auf Wrapper-Div UND svg -
+     width/height mit !important ueberschreiben das; das svg skaliert
+     sein viewBox="0 0 210 210" dabei gleichmaessig auf die neue Box (kein
+     Transform noetig, bleibt als Vektorgrafik scharf).
+     max-width mit ueberschreiben ist der eigentlich entscheidende Teil:
+     eine aeltere Regel weiter oben (.relative.shrink-0, Teil der
+     schmalen Trommel-Facette) setzt max-width:210px ohne !important -
+     width/height gewinnen zwar den Cascade-Kampf, aber max-width wirkt
+     als nachgelagerte Begrenzung im Box-Sizing-Algorithmus (unabhaengig
+     von Specificity/!important auf width selbst) und kappt den fertig
+     berechneten Wert trotzdem auf 210px zurueck. html-Praefix zusaetzlich
+     fuer mehr Sicherheitsabstand bei der Specificity. */
+  html .rotary-portal #process .relative.shrink-0,
+  html .rotary-portal #process .relative.shrink-0 svg {
+    width: 260px !important;
+    height: 260px !important;
+    max-width: 260px !important;
+    max-height: 260px !important;
+    aspect-ratio: unset !important;
+  }
+
+  /* Die umschliessende Karte (max-w-3xl = 48rem) war fuer die alte
+     210px-Donuts bemessen - bei 260px liefen sie seitlich in die
+     Legende/den Nachbarn hinein. Karte und Spaltenabstand entsprechend
+     mitvergroessert. */
+  .rotary-portal #process .mt-24 .max-w-3xl {
+    max-width: 64rem;
+  }
+
+  .rotary-portal #process .mt-24 [class*="grid-cols-[1fr_auto_1fr]"] {
+    gap: 2.5rem !important;
   }
 
   .rotary-face section {
