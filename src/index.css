@@ -166,8 +166,11 @@
        Groesse, an der -14.28cqh urspruenglich einmalig eingemessen wurde.
        4.6422cqh = 14.28cqh * 0.325083 (der Zoomfaktor von #results bei der
        Messung) - der bei --face-zoom:0.325083 wieder exakt -14.28cqh
-       ergibt, bei jedem anderen Zoom aber automatisch mitskaliert. */
-    transform: translateY(calc(-4.6422cqh / var(--face-zoom, 1)));
+       ergibt, bei jedem anderen Zoom aber automatisch mitskaliert.
+       Auf Wunsch nochmals hoeher als der urspruengliche, exakt auf
+       Arbeitsweise abgestimmte Wert - deckt sich jetzt nicht mehr exakt
+       mit dessen Hoehe, sitzt aber spuerbar weiter oben. */
+    transform: translateY(calc(-7cqh / var(--face-zoom, 1)));
   }
 
   /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
@@ -181,9 +184,10 @@
 
   /* Marktvorteil: Titel ca. 1,5x groesser auf Wunsch - ein einzelner
      cqw-basierter Wert statt zweier getrennter (schmal/aufgeklappt), damit
-     er unabhaengig von der Facettenbreite konsistent groesser bleibt. */
+     er unabhaengig von der Facettenbreite konsistent groesser bleibt.
+     Nochmals 3 Stufen groesser (~40%) auf weiteren Wunsch. */
   .rotary-face #results h2 {
-    font-size: clamp(2.7rem, 9cqw, 4.5rem);
+    font-size: clamp(3.8rem, 12.5cqw, 6.3rem);
   }
 
   /* Badge ("3 Marktvorteil") ebenfalls vergroessert - nutzte bisher feste
@@ -592,10 +596,11 @@
     }
 
     /* Marktvorteil: Titel-Groesse jetzt ungegatet weiter oben (gilt fuer
-       jede Facettenbreite einheitlich) - hier nur noch der Infotext. */
+       jede Facettenbreite einheitlich) - hier nur noch der Infotext.
+       Ebenfalls 3 Stufen groesser auf Wunsch (~40%, wie beim Titel). */
 
     .rotary-face #results .mb-12 p {
-      font-size: clamp(1.1rem, 3.5cqw, 1.6rem);
+      font-size: clamp(1.55rem, 4.9cqw, 2.25rem);
     }
 
     /* Arbeitsweise: Titel und Infotext unter dem Badge wiederholen sich mit

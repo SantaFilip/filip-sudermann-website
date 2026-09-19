@@ -667,10 +667,39 @@ export default function RotaryStage({
     const klickAuf = (i) => {
       if (modus === 'seeking' || modus === 'dragging') return;
       if (modus === 'open' && offeneFlaeche === i) {
-        modus = 'auto';
+        // Nicht sofort zurueck auf 'auto': das liesse den Ticker im selben
+        // Frame weiterdrehen, waehrend diese Flaeche noch 420ms lang breit
+        // ist (der Schrumpf-Uebergang, siehe unten im breit-Block) - die
+        // Saeulen/das Dach (glWrapRef) werden aber schon jetzt wieder
+        // eingeblendet (offen faellt mit offeneFlaeche=null sofort weg).
+        // Rotiert die Trommel in dieser Zeitspanne bereits weiter, passt
+        // die Facetten-Winkelposition nicht mehr zur (noch zu breiten)
+        // Flaeche - sichtbar als kurz aufblitzende Luecke zwischen zwei
+        // Saeulen. 'closing' haelt pos fest (der Ticker dreht nur bei
+        // 'auto', siehe tick()), bis transitionend bestaetigt, dass die
+        // Flaeche wirklich wieder auf Facettengroesse ist.
+        modus = 'closing';
         offeneFlaeche = null;
         setOpenIndex(null);
         apply(pos);
+
+        const face = faceRefs.current[i];
+        const resumeAuto = () => {
+          if (modus === 'closing') modus = 'auto';
+        };
+        if (face) {
+          const onCloseEnd = (e) => {
+            if (e.target !== face || e.propertyName !== 'width') return;
+            face.removeEventListener('transitionend', onCloseEnd);
+            resumeAuto();
+          };
+          face.addEventListener('transitionend', onCloseEnd);
+          // Sicherheitsnetz wie beim Portal-Ausblenden (requestClose) -
+          // falls aus irgendeinem Grund kein Uebergang laeuft.
+          window.setTimeout(resumeAuto, 650);
+        } else {
+          resumeAuto();
+        }
         return;
       }
 
