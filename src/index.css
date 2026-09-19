@@ -843,11 +843,20 @@
      nach Mitte/unten links" - und die Diagramme rechts, vertikal ueber
      beide Zeilen zentriert. grid-template-areas macht die Zuordnung
      unabhaengig von der Anzahl/Reihenfolge der Kind-Elemente lesbar. */
+  /* max-w-[1400px] ist fuer die normale Seite bemessen - im viewport-
+     breiten Portal bleibt dadurch ungenutzter Rand stehen, obwohl die
+     Schritte breiter und der Abstand zum Diagramm groesser werden sollen.
+     Deutlich angehoben statt die beiden Spalten sich gegenseitig Platz
+     wegnehmen zu lassen. */
+  .rotary-portal #process .max-w-\[1400px\] {
+    max-width: 1800px;
+  }
+
   .rotary-portal #process > div {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.45fr);
     grid-template-rows: auto 1fr;
     grid-template-areas: 'header chart' 'steps chart';
-    gap: 1rem 3rem;
+    gap: 1rem 4.5rem;
   }
 
   .rotary-portal #process > div > div:first-child {
@@ -885,7 +894,7 @@
   }
 
   .rotary-portal #process .lg\:grid.grid-cols-4 .rounded-2xl {
-    padding: 1.3rem 1.5rem !important;
+    padding: 1rem 1.75rem !important;
   }
 
   .rotary-portal #process .lg\:grid.grid-cols-4 h3 {
@@ -894,6 +903,31 @@
 
   .rotary-portal #process .lg\:grid.grid-cols-4 p {
     font-size: 1.05rem !important;
+  }
+
+  /* Nummerierung 1-4: die Basis-Regel (oben, .lg\:grid.grid-cols-4 > div >
+     span) positioniert die Ziffer ohne eigenen z-index mitten auf dem
+     Icon-Abzeichen - im DOM steht sie VOR dem Abzeichen, dessen deckender
+     Hintergrund malt sie im normalen Stapelkontext dadurch zu, sie war
+     dadurch praktisch unsichtbar. Im Portal stattdessen ein eigenes,
+     deutlich sichtbares Rund-Abzeichen oben links auf der Karte, mit
+     z-index ueber dem Icon. */
+  .rotary-portal #process .lg\:grid.grid-cols-4 > div > span {
+    z-index: 2;
+    top: -0.5rem;
+    left: -0.5rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem !important;
+    font-weight: 700;
+    opacity: 1 !important;
+    color: hsl(var(--accent));
+    background: hsl(var(--card));
+    border: 1.5px solid hsl(var(--accent));
+    border-radius: 9999px;
   }
 
   .rotary-portal #process .mt-24 .text-sm,

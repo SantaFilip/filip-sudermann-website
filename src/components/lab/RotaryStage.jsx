@@ -595,6 +595,22 @@ export default function RotaryStage({
 
         if (breit) {
           const w = auf ? breit : flaecheW;
+          // Erster Frame, in dem diese Flaeche aufgeht: offenHoeheCache
+          // hat fuer i noch keinen Eintrag (siehe unten). Genau in diesem
+          // Moment liegt die Flaeche bereits hinter dem sofort deckenden
+          // Portal (siehe openIndex/requestClose weiter oben) - eine
+          // 420ms-Breiten-Animation (aus inhaltStyle) waere hier nie
+          // sichtbar, kostet aber Hauptthread-Zeit genau dort, wo Portal-
+          // Mount und FitToFace-Messung ohnehin schon viel zu tun haben -
+          // ein Teil des gemeldeten Ruckelns beim Oeffnen. transition kurz
+          // aus, Zielwerte in diesem Frame direkt (ohne Animation)
+          // anwenden, im naechsten Frame wieder an - das eigentlich
+          // sichtbare Schliessen (transitionend-gesteuert, siehe
+          // requestClose) bleibt davon unberuehrt.
+          const erstesOeffnenFrame = auf && !offenHoeheCache.has(i);
+          if (erstesOeffnenFrame) {
+            face.style.transition = 'none';
+          }
           face.style.width = `${w}px`;
           // Links verankert, also den Zuwachs haelftig nach links ziehen,
           // damit die Facette mittig aufgeht statt nach rechts zu wachsen.
@@ -612,7 +628,7 @@ export default function RotaryStage({
             // herzustellen - eine erneute Berechnung waere hier (anders als
             // bei flaecheW/flaecheH oben) nicht ohne Weiteres moeglich, die
             // Boost-Formel haengt an Werten, die nur beim Rendern vorliegen.
-            if (!offenHoeheCache.has(i)) {
+            if (erstesOeffnenFrame) {
               offenHoeheCache.set(i, { height: face.style.height, marginTop: face.style.marginTop });
             }
             face.style.height = `${hoch}px`;
@@ -625,6 +641,13 @@ export default function RotaryStage({
             face.style.height = cached.height;
             face.style.marginTop = cached.marginTop;
             offenHoeheCache.delete(i);
+          }
+
+          if (erstesOeffnenFrame) {
+            void face.offsetHeight;
+            requestAnimationFrame(() => {
+              face.style.transition = '';
+            });
           }
         }
       });
