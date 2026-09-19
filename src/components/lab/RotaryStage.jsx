@@ -333,8 +333,26 @@ export default function RotaryStage({
     // window.scrollY bewegte sich trotz body{overflow:hidden}).
     const htmlVorher = document.documentElement.style.overflow;
     const bodyVorher = document.body.style.overflow;
+    const paddingVorher = document.documentElement.style.paddingRight;
+    // Das Verschwinden der Scrollbar beim Sperren macht <html> (den
+    // eigentlichen Scroll-Container) einige Pixel breiter - genau die
+    // Breite, die die Scrollbar vorher fuer sich beansprucht hat. sticky
+    // (die Buehne) ist prozentual an diese Breite gekoppelt, ihr
+    // ResizeObserver (siehe layout() im Dreh-Effekt) feuert also bei jedem
+    // Oeffnen/Schliessen und rechnet die ganze Trommel (inkl. Saeulen) kurz
+    // auf eine leicht andere Breite um, bevor sie beim naechsten Frame
+    // zurueckspringt - sichtbar als das gemeldete "Verrutschen der Saeule
+    // gegenueber dem Hintergrund" direkt nach dem Schliessen. Fix: die durch
+    // die verschwindende Scrollbar frei werdende Breite sofort als
+    // padding-right ausgleichen, damit <html> (und damit sticky) beim
+    // Sperren/Entsperren exakt gleich breit bleibt und der ResizeObserver
+    // gar nicht erst ausloest.
+    const scrollbarBreite = window.innerWidth - document.documentElement.clientWidth;
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    if (scrollbarBreite > 0) {
+      document.documentElement.style.paddingRight = `${scrollbarBreite}px`;
+    }
     // lenis.stop() waere hier die falsche Wahl: Lenis (globaler Smooth-
     // Scroll, siehe lenisInstance.js) ruft im gestoppten Zustand bewusst
     // event.preventDefault() auf JEDEM Mausrad-Event auf (siehe dessen
@@ -354,6 +372,7 @@ export default function RotaryStage({
     return () => {
       document.documentElement.style.overflow = htmlVorher;
       document.body.style.overflow = bodyVorher;
+      document.documentElement.style.paddingRight = paddingVorher;
       window.removeEventListener('keydown', onKey);
     };
   }, [openIndex]);
