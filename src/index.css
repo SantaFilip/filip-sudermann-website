@@ -138,6 +138,15 @@
    */
   .rotary-face #results .mb-12 {
     text-align: center;
+    /* Nach oben versetzt, um die Luft ueber dem Kopf in der schmalen
+       Trommel-Vorschau besser zu nutzen - im Portal (viel mehr Platz,
+       eigene Zentrierung) wieder zurueckgesetzt, siehe .rotary-portal
+       Override weiter unten. */
+    transform: translateY(calc(-7cqh / var(--face-zoom, 1)));
+  }
+
+  .rotary-portal #results .mb-12 {
+    transform: none;
   }
 
   /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
@@ -149,11 +158,30 @@
     max-width: 100%;
   }
 
-  /* Marktvorteil: Titel ca. 1,5x groesser auf Wunsch - ein einzelner
-     cqw-basierter Wert statt zweier getrennter (schmal/aufgeklappt), damit
-     er unabhaengig von der Facettenbreite konsistent groesser bleibt. */
+  /* Marktvorteil-Titel/-Beschreibung in der Trommel-VORSCHAU deutlich
+     groesser (auf wiederholte Rueckmeldung, dass es noch immer zu klein
+     wirkte) - bewusst NICHT mehr ueber eine @container-Breitenschwelle
+     gegatet (das liess bei bestimmten Facettenbreiten eine Luecke, in der
+     weder die schmale noch die breite Regel griff, und die Groesse fiel
+     unbemerkt auf die alte, kleine Basis zurueck). Stattdessen die groesse
+     Version jetzt die Grundregel, und das Portal (siehe .rotary-portal
+     Override direkt danach) bewusst auf die vorherige, kleinere Groesse
+     zurueckgesetzt - eindeutig an der tatsaechlichen Ansicht (Portal ja/
+     nein) festgemacht statt an einer gemessenen Pixelbreite. */
   .rotary-face #results h2 {
+    font-size: clamp(4.8rem, 15cqw, 7.6rem);
+  }
+
+  .rotary-portal #results h2 {
     font-size: clamp(2.7rem, 9cqw, 4.5rem);
+  }
+
+  .rotary-face #results .mb-12 p {
+    font-size: clamp(2rem, 6cqw, 2.75rem);
+  }
+
+  .rotary-portal #results .mb-12 p {
+    font-size: 1.125rem;
   }
 
   /* Badge ("3 Marktvorteil") ebenfalls vergroessert - nutzte bisher feste
@@ -561,24 +589,11 @@
       align-self: flex-start;
     }
 
-    /* Marktvorteil in der ROTATIONSVERSION (schmale Trommel-Facette, nicht
-       das Vollbild-Portal - dort gilt weiter oben die ungegatete,
-       kleinere Groesse ohne Versatz unveraendert): Titel und Infotext 3
-       Stufen groesser (~40%) und der ganze Kopf staerker nach oben
-       versetzt, auf Wunsch. Bewusst hier im @container-Block statt
-       ungegatet, nachdem eine vorherige, ungegatete Version versehentlich
-       auch das Portal mitveraenderte. */
-    .rotary-face #results .mb-12 {
-      transform: translateY(calc(-7cqh / var(--face-zoom, 1)));
-    }
-
-    .rotary-face #results h2 {
-      font-size: clamp(3.8rem, 12.5cqw, 6.3rem);
-    }
-
-    .rotary-face #results .mb-12 p {
-      font-size: clamp(1.55rem, 4.9cqw, 2.25rem);
-    }
+    /* Marktvorteil-Groesse/-Versatz sitzt jetzt ungegatet weiter oben
+       (.rotary-face #results h2/.mb-12), mit eigenem .rotary-portal-
+       Override fuer die kleinere Portal-Groesse - siehe dortigen
+       Kommentar. Hier bewusst keine Breitenschwelle mehr, die liess bei
+       bestimmten Facettenbreiten eine ungeregelte Luecke. */
 
     /* Arbeitsweise: Titel und Infotext unter dem Badge wiederholen sich mit
        der grossen Ueberschrift ("Ich unterstuetze Creator...") weiter unten
