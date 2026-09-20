@@ -278,7 +278,7 @@
      obwohl der Rohwert der Vorschau hoeher war). Die clamp()-Werte hier
      sind jetzt echte Bildschirm-Zielgroessen. */
   .rotary-face #faq button {
-    font-size: calc(clamp(1.7rem, 5cqw, 2.1rem) / var(--face-zoom, 1));
+    font-size: calc(clamp(1.3rem, 4cqw, 1.6rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #faq button {
@@ -289,7 +289,7 @@
        ausloest, ohne die Liste so eng zu stauchen wie beim vorherigen
        Versuch (der nur ueber Abstand, nicht ueber Schriftgroesse,
        Puffer geschaffen hat). */
-    font-size: calc(clamp(1.15rem, 3.4cqw, 1.4rem) / var(--face-zoom, 1));
+    font-size: calc(clamp(0.95rem, 2.8cqw, 1.15rem) / var(--face-zoom, 1));
     /* py-7 (28px oben/unten) mal 6 Fragen sind allein 336px, die die
        geschlossene Liste schon fast bis an die verfuegbare Portal-Hoehe
        fuellen. !important noetig: Tailwinds eigene py-7-Utility liegt in
