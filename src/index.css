@@ -141,8 +141,9 @@
     /* Nach oben versetzt, um die Luft ueber dem Kopf in der schmalen
        Trommel-Vorschau besser zu nutzen - im Portal (viel mehr Platz,
        eigene Zentrierung) wieder zurueckgesetzt, siehe .rotary-portal
-       Override weiter unten. */
-    transform: translateY(calc(-7cqh / var(--face-zoom, 1)));
+       Override weiter unten. Wert auf Rueckmeldung von -7cqh auf -2cqh
+       reduziert (stand zu weit oben). */
+    transform: translateY(calc(-2cqh / var(--face-zoom, 1)));
   }
 
   .rotary-portal #results .mb-12 {
@@ -496,8 +497,25 @@
       margin-top: 4rem;
     }
 
+    /* Aussenraender der Facette (FitToFace p-10) und der Section selbst
+       (px-6/lg:px-12 auf dem max-w-[1400px]-Wrapper) fressen hier
+       zusammen ueber 170px Breite, bevor ueberhaupt eine Box beginnt -
+       bei zwei nebeneinanderliegenden Boxen bleibt dadurch pro Box kaum
+       Platz fuer einzeilige, laengere Saetze. Beides fuer Marktvorteil
+       in der schmalen Vorschau reduziert, um moeglichst viel Breite an
+       die Boxen zurueckzugeben. */
+    .rotary-face #results > div {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] {
+      grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr);
+      gap: 0.4rem;
+    }
+
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] > div {
-      padding: 3rem;
+      padding: 3rem 1.25rem;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li span {
