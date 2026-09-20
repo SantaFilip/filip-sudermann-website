@@ -515,10 +515,22 @@
          und sass nicht mehr sauber mittig zwischen den Boxen. */
       grid-template-columns: minmax(0, 1fr) 2.25rem minmax(0, 1fr);
       gap: 0.4rem;
+      align-items: center;
+    }
+
+    /* Pfeil zwischen den Boxen: seine Spur ist bereits genauso breit wie
+       die beiden Box-Spuren hoch sind ausgerichtet (align-items:center
+       oben auf dem Grid selbst, statt nur auf dem einzelnen Icon-Wrapper
+       zu vertrauen) und dicker gezeichnet, auf Wunsch. */
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] > div:nth-child(2) svg {
+      stroke-width: 3;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] > div {
-      padding: 3rem 1.25rem;
+      /* Oben knapper (Ueberschrift rueckt naeher an den Rand), unten
+         grosszuegiger (Fusszeile/Trennstrich ruecken weiter runter), auf
+         Wunsch. */
+      padding: 1.5rem 1.25rem 4rem;
     }
 
     /* Titelzeile ("OHNE/MIT GROWTH OPERATOR") und Fusszeile mittig, auf
