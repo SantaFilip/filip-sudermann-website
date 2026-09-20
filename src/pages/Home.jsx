@@ -115,24 +115,11 @@ function Rolle({ f }) {
 export default function Home() {
   const { t } = useLanguage();
   const f = t.folders;
-  const [rolle, setRolle] = useState(ROLLE_STANDARD);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {/*
-       * Provisorischer Testschalter, siehe ROLLE_STANDARD oben. Fix
-       * positioniert und dezent, damit er im normalen Betrieb nicht als
-       * eigenstaendige Funktion missverstanden wird.
-       */}
-      <button
-        type="button"
-        onClick={() => setRolle((v) => !v)}
-        className="fixed bottom-4 right-4 z-[100] rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur transition hover:text-foreground"
-      >
-        {rolle ? 'Onepager (ohne Rolle)' : 'Rolle testen'}
-      </button>
-      <main>{rolle ? <Rolle f={f} /> : <OnePager f={f} />}</main>
+      <main><Rolle f={f} /></main>
       <Footer />
     </div>
   );
