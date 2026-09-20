@@ -277,17 +277,21 @@
   }
 
   .rotary-portal #faq button {
-    font-size: clamp(1.35rem, 5cqw, 2.1rem);
-    /* Reserve schaffen: py-7 (28px oben/unten) mal 6 Fragen sind allein
-       336px, die die geschlossene Liste schon fast bis an die verfuegbare
-       Portal-Hoehe fuellen - fuer eine sich oeffnende Antwort bleibt dann
-       kein Puffer, jedes Aufklappen erzwingt sofort einen sichtbaren
-       Zoom der GESAMTEN Facette. Kleinerer Wert schafft genau diesen
-       Puffer zurueck. !important noetig: Tailwinds eigene py-7-Utility
-       liegt in einem spaeteren CSS-Layer als unser @layer components und
-       gewinnt sonst unabhaengig von Selektor-Spezifitaet. */
-    padding-top: 0.85rem !important;
-    padding-bottom: 0.85rem !important;
+    /* Kleiner als die Vorschau (auf Wunsch) UND kleiner als die
+       bisherige Portal-Groesse - schafft zusammen mit dem moderater
+       reduzierten Innenabstand direkt darunter genug Reserve, damit das
+       Aufklappen einer Antwort keinen Zoom der gesamten Facette mehr
+       ausloest, ohne die Liste so eng zu stauchen wie beim vorherigen
+       Versuch (der nur ueber Abstand, nicht ueber Schriftgroesse,
+       Puffer geschaffen hat). */
+    font-size: clamp(1.05rem, 3.6cqw, 1.5rem);
+    /* py-7 (28px oben/unten) mal 6 Fragen sind allein 336px, die die
+       geschlossene Liste schon fast bis an die verfuegbare Portal-Hoehe
+       fuellen. !important noetig: Tailwinds eigene py-7-Utility liegt in
+       einem spaeteren CSS-Layer als unser @layer components und gewinnt
+       sonst unabhaengig von Selektor-Spezifitaet. */
+    padding-top: 1.1rem !important;
+    padding-bottom: 1.1rem !important;
   }
 
   /* Antworttext (AccordionContent) blieb bisher bei Tailwinds text-sm
