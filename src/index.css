@@ -278,18 +278,21 @@
      obwohl der Rohwert der Vorschau hoeher war). Die clamp()-Werte hier
      sind jetzt echte Bildschirm-Zielgroessen. */
   .rotary-face #faq button {
-    font-size: calc(clamp(1.3rem, 4cqw, 1.6rem) / var(--face-zoom, 1));
+    font-size: calc(clamp(1.2rem, 3.7cqw, 1.45rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #faq button {
-    /* Kleiner als die Vorschau (auf Wunsch) UND kleiner als die
-       bisherige Portal-Groesse - schafft zusammen mit dem moderater
-       reduzierten Innenabstand direkt darunter genug Reserve, damit das
-       Aufklappen einer Antwort keinen Zoom der gesamten Facette mehr
-       ausloest, ohne die Liste so eng zu stauchen wie beim vorherigen
-       Versuch (der nur ueber Abstand, nicht ueber Schriftgroesse,
-       Puffer geschaffen hat). */
-    font-size: calc(clamp(0.95rem, 2.8cqw, 1.15rem) / var(--face-zoom, 1));
+    /* Kleiner als die bisherige Portal-Groesse - schafft zusammen mit
+       dem moderater reduzierten Innenabstand direkt darunter genug
+       Reserve, damit das Aufklappen einer Antwort keinen Zoom der
+       gesamten Facette mehr ausloest, ohne die Liste so eng zu stauchen
+       wie beim vorherigen Versuch (der nur ueber Abstand, nicht ueber
+       Schriftgroesse, Puffer geschaffen hat). Auf Rueckmeldung wieder
+       etwas angehoben - die Antwort (siehe [role="region"]-Override
+       weiter unten) schafft jetzt zusaetzlich eigenen Puffer, indem sie
+       selbst kleiner wird, die Frage muss den Puffer nicht mehr allein
+       tragen. */
+    font-size: calc(clamp(1.15rem, 3.2cqw, 1.35rem) / var(--face-zoom, 1));
     /* py-7 (28px oben/unten) mal 6 Fragen sind allein 336px, die die
        geschlossene Liste schon fast bis an die verfuegbare Portal-Hoehe
        fuellen. !important noetig: Tailwinds eigene py-7-Utility liegt in
@@ -305,6 +308,15 @@
      Rueckmeldung. */
   .rotary-face #faq [role="region"] {
     font-size: clamp(1.1rem, 4cqw, 1.6rem);
+  }
+
+  /* Portal: Antworttext auf Rueckmeldung kleiner als die Frage - vorher
+     ungegatet genauso gross wie im Vollbild eine Frage, wirkte dadurch
+     nicht wie untergeordneter Fliesstext. Gleicher Zoom-Ausgleich wie
+     bei den Fragen (Portal-Zoom liegt zwar meist nahe 1, aber der Trick
+     macht die Groesse unabhaengig davon zuverlaessig). */
+  .rotary-portal #faq [role="region"] {
+    font-size: calc(clamp(0.85rem, 2.2cqw, 1rem) / var(--face-zoom, 1));
   }
 
   /* Portal: eine aufgeklappte Antwort liess die natuerliche Hoehe der
