@@ -278,7 +278,10 @@
      obwohl der Rohwert der Vorschau hoeher war). Die clamp()-Werte hier
      sind jetzt echte Bildschirm-Zielgroessen. */
   .rotary-face #faq button {
-    font-size: calc(clamp(1.02rem, 3.15cqw, 1.23rem) / var(--face-zoom, 1));
+    /* True-Groesse auf Rueckmeldung deutlich (nicht nur graduell)
+       reduziert - Ziel ca. 13px Bildschirmgroesse, selbst per
+       --face-zoom-Multiplikation verifiziert statt nur nach Augenmass. */
+    font-size: calc(clamp(0.8rem, 2.5cqw, 0.95rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #faq button {
