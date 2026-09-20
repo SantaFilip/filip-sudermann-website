@@ -510,12 +510,32 @@
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] {
-      grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr);
+      /* Die mittlere Spur war mit 1.5rem schmaler als das Pfeil-Icon
+         selbst (28px/1.75rem) - der Pfeil ragte dadurch aus seiner Spur
+         und sass nicht mehr sauber mittig zwischen den Boxen. */
+      grid-template-columns: minmax(0, 1fr) 2.25rem minmax(0, 1fr);
       gap: 0.4rem;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] > div {
       padding: 3rem 1.25rem;
+    }
+
+    /* Titelzeile ("OHNE/MIT GROWTH OPERATOR") und Fusszeile mittig, auf
+       Wunsch - beides <p>-Elemente, die Stichpunkte selbst sind <span>
+       und bleiben davon unberuehrt. */
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] p {
+      font-size: 1.4rem;
+      text-align: center;
+    }
+
+    /* Stichpunkt-Icon mittig zur (ggf. zweizeilig umgebrochenen)
+       Textzeile statt an deren erster Zeile ausgerichtet - items-start
+       plus die feste mt-0.5-Verschiebung (fuer einzeiligen Text gedacht)
+       liess das Icon bei Umbruch optisch am oberen statt mittleren Rand
+       des Textblocks haengen. */
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li {
+      align-items: center;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li span {
@@ -526,13 +546,10 @@
       margin-top: 2.1rem;
     }
 
-    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] p {
-      font-size: 1.4rem;
-    }
-
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li > div {
       width: 2.3rem;
       height: 2.3rem;
+      margin-top: 0;
     }
 
     .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] li > div svg {
