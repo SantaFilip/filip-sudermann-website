@@ -176,7 +176,7 @@
      Messung selbst auf 1 zurueck, sonst wuerde diese Formel die Messung
      verfaelschen - siehe measure() in RotaryStage.jsx. */
   .rotary-face #results h2 {
-    font-size: calc(clamp(2.75rem, 6.5cqw, 3.5rem) / var(--face-zoom, 1));
+    font-size: calc(clamp(1.85rem, 4.2cqw, 2.3rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #results h2 {
@@ -184,7 +184,7 @@
   }
 
   .rotary-face #results .mb-12 p {
-    font-size: calc(clamp(1.1rem, 2.6cqw, 1.4rem) / var(--face-zoom, 1));
+    font-size: calc(clamp(0.85rem, 1.9cqw, 1.05rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #results .mb-12 p {
