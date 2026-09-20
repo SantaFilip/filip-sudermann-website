@@ -278,10 +278,10 @@
      obwohl der Rohwert der Vorschau hoeher war). Die clamp()-Werte hier
      sind jetzt echte Bildschirm-Zielgroessen. */
   .rotary-face #faq button {
-    /* True-Groesse auf Rueckmeldung deutlich (nicht nur graduell)
-       reduziert - Ziel ca. 13px Bildschirmgroesse, selbst per
-       --face-zoom-Multiplikation verifiziert statt nur nach Augenmass. */
-    font-size: calc(clamp(0.8rem, 2.5cqw, 0.95rem) / var(--face-zoom, 1));
+    /* Nochmal 15% runter (0.8-0.95rem -> 0.68-0.81rem), auf Rueckmeldung -
+       selbst per --face-zoom-Multiplikation verifiziert statt nur nach
+       Augenmass. */
+    font-size: calc(clamp(0.68rem, 2.13cqw, 0.81rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #faq button {
@@ -727,6 +727,13 @@
     .rotary-face:has(#beratung) > div,
     .rotary-face:has(#faq) > div {
       align-self: flex-start;
+    }
+
+    /* FAQ zusaetzlich noch etwas naeher an den oberen Rand, auf
+       Rueckmeldung - trotz align-self:flex-start blieb durch p-10 (Flaeche)
+       plus py-20/lg:py-32 (Section) oben mehr Luft als noetig. */
+    .rotary-face #faq > div {
+      transform: translateY(calc(-4cqh / var(--face-zoom, 1)));
     }
 
     /* Marktvorteil-Groesse/-Versatz sitzt jetzt ungegatet weiter oben
