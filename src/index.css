@@ -541,6 +541,13 @@
       text-align: center;
     }
 
+    /* Trennstrich+Fusszeile (mt-7 pt-5 border-t) noch weiter runter, auf
+       Wunsch - der Box-Innenabstand unten (padding-bottom: 4rem, siehe
+       oben) gibt dafuer bereits Luft. */
+    .rotary-face #results [class*="grid-cols-[1fr_auto_1fr]"] [class*="mt-7"] {
+      margin-top: 3.25rem;
+    }
+
     /* Stichpunkt-Icon mittig zur (ggf. zweizeilig umgebrochenen)
        Textzeile statt an deren erster Zeile ausgerichtet - items-start
        plus die feste mt-0.5-Verschiebung (fuer einzeiligen Text gedacht)
