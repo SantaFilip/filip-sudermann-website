@@ -265,8 +265,29 @@
     font-size: clamp(1.6rem, 7cqw, 2.8rem);
   }
 
+  /* Fragen in der Trommel-Vorschau nochmal ca. 2 Stufen groesser, auf
+     Rueckmeldung - im Portal bewusst auf der bisherigen Groesse
+     belassen (siehe .rotary-portal-Override direkt danach): dort
+     traegt jede der 6 Fragen zur natuerlichen Hoehe bei, ein groesserer
+     Wert dort wuerde das separat behobene Zoom-out-Problem beim
+     Aufklappen einer Antwort (siehe [role="region"] weiter unten) nur
+     wieder verschaerfen. */
   .rotary-face #faq button {
+    font-size: clamp(1.85rem, 6.2cqw, 2.7rem);
+  }
+
+  .rotary-portal #faq button {
     font-size: clamp(1.35rem, 5cqw, 2.1rem);
+    /* Reserve schaffen: py-7 (28px oben/unten) mal 6 Fragen sind allein
+       336px, die die geschlossene Liste schon fast bis an die verfuegbare
+       Portal-Hoehe fuellen - fuer eine sich oeffnende Antwort bleibt dann
+       kein Puffer, jedes Aufklappen erzwingt sofort einen sichtbaren
+       Zoom der GESAMTEN Facette. Kleinerer Wert schafft genau diesen
+       Puffer zurueck. !important noetig: Tailwinds eigene py-7-Utility
+       liegt in einem spaeteren CSS-Layer als unser @layer components und
+       gewinnt sonst unabhaengig von Selektor-Spezifitaet. */
+    padding-top: 0.85rem !important;
+    padding-bottom: 0.85rem !important;
   }
 
   /* Antworttext (AccordionContent) blieb bisher bei Tailwinds text-sm
@@ -275,6 +296,19 @@
      Rueckmeldung. */
   .rotary-face #faq [role="region"] {
     font-size: clamp(1.1rem, 4cqw, 1.6rem);
+  }
+
+  /* Portal: eine aufgeklappte Antwort liess die natuerliche Hoehe der
+     ganzen Facette (6 Fragen + eine offene Antwort) je nach Fensterhoehe
+     ueber die verfuegbare Portal-Hoehe wachsen - FitToFace zoomte dann
+     das GESAMTE Portal (Titel, alle Fragen, alles) sichtbar kleiner,
+     nur weil eine einzelne Antwort viel Platz brauchte. Die offene
+     Antwort bekommt hier eine eigene Hoehenbremse mit internem Scrollen
+     (max-height/overflow-y) - ihr Beitrag zur natuerlichen Gesamthoehe
+     ist damit gedeckelt, das Portal zoomt beim Aufklappen nicht mehr. */
+  .rotary-portal #faq [role="region"] {
+    max-height: 14rem;
+    overflow-y: auto;
   }
 
   /* Kontakt: der Infotext unter dem Titel bricht sowohl in der schmalen als
