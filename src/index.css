@@ -201,11 +201,25 @@
      Gewinnanteil-Karte) keinerlei Herunterzoomen und zeigt dadurch die
      Tailwind-Basisgroesse (34px/28px) unveraendert; Marktvorteil landete
      mit weniger Inhalt bei staerkerem Zoom vorher unter dieser Groesse. */
+  /* Wie bei Titel/Beschreibung oben (siehe dortigen Kommentar): plain
+     font-size wird vom Facetten-Zoom mitgestaucht, deshalb hier ebenfalls
+     ueber calc(.../var(--face-zoom)) kompensiert, statt den rohen Wert
+     weiter zu erhoehen. Portal-Override direkt danach haelt die dortige
+     Groesse unveraendert (dort ist kaum Stauchung noetig, die
+     Kompensation liefe sonst ungewollt ins Riesige). */
   .rotary-face #results .inline-flex span:first-child {
+    font-size: calc(clamp(1.4rem, 3.3cqw, 1.7rem) / var(--face-zoom, 1));
+  }
+
+  .rotary-portal #results .inline-flex span:first-child {
     font-size: clamp(2.125rem, 8.5cqw, 3.4rem);
   }
 
   .rotary-face #results .inline-flex span:last-child {
+    font-size: calc(clamp(1.15rem, 2.7cqw, 1.4rem) / var(--face-zoom, 1));
+  }
+
+  .rotary-portal #results .inline-flex span:last-child {
     font-size: clamp(1.75rem, 7cqw, 2.8rem);
   }
 
