@@ -158,18 +158,25 @@
     max-width: 100%;
   }
 
-  /* Marktvorteil-Titel/-Beschreibung in der Trommel-VORSCHAU deutlich
-     groesser (auf wiederholte Rueckmeldung, dass es noch immer zu klein
-     wirkte) - bewusst NICHT mehr ueber eine @container-Breitenschwelle
-     gegatet (das liess bei bestimmten Facettenbreiten eine Luecke, in der
-     weder die schmale noch die breite Regel griff, und die Groesse fiel
-     unbemerkt auf die alte, kleine Basis zurueck). Stattdessen die groesse
-     Version jetzt die Grundregel, und das Portal (siehe .rotary-portal
-     Override direkt danach) bewusst auf die vorherige, kleinere Groesse
-     zurueckgesetzt - eindeutig an der tatsaechlichen Ansicht (Portal ja/
-     nein) festgemacht statt an einer gemessenen Pixelbreite. */
+  /* Marktvorteil-Titel/-Beschreibung in der Trommel-VORSCHAU: der Kopf
+     macht nur einen kleinen Teil der Facettenhoehe aus, der Rest (beide
+     Vergleichsboxen mit je 5 Punkten) verlangt weit mehr Platz als die
+     Facette hat - FitToFace staucht deshalb ALLES gemeinsam auf einen
+     Zoom von oft nur 0,3-0,4. Eine simple Erhoehung von font-size half
+     hier nichts (mehrfach erfolglos versucht): sie vergroessert dieselbe
+     Zahl, an der die natuerliche Hoehe haengt, die Messung schraubt den
+     Zoom im gleichen Zug wieder runter - am Bildschirm blieb der Titel
+     dadurch de facto gleich gross, egal wie hoch der Wert im Code stand.
+     Deshalb hier ueber calc(.../var(--face-zoom)) der Zoom aktiv
+     herausgerechnet (der Trick, den .mb-12 oben fuer den Versatz schon
+     nutzt) - die clamp()-Werte sind jetzt die ECHTE Zielgroesse auf dem
+     Bildschirm, unabhaengig davon, wie stark der Rest gestaucht wird. Die
+     Boxen selbst bleiben dabei unangetastet (weiterhin regulaer gezoomt).
+     Vorausgesetzt: FitToFace setzt --face-zoom waehrend der eigenen
+     Messung selbst auf 1 zurueck, sonst wuerde diese Formel die Messung
+     verfaelschen - siehe measure() in RotaryStage.jsx. */
   .rotary-face #results h2 {
-    font-size: clamp(4.8rem, 15cqw, 7.6rem);
+    font-size: calc(clamp(2.75rem, 6.5cqw, 3.5rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #results h2 {
@@ -177,7 +184,7 @@
   }
 
   .rotary-face #results .mb-12 p {
-    font-size: clamp(2rem, 6cqw, 2.75rem);
+    font-size: calc(clamp(1.1rem, 2.6cqw, 1.4rem) / var(--face-zoom, 1));
   }
 
   .rotary-portal #results .mb-12 p {

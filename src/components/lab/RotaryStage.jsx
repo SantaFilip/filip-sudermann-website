@@ -166,6 +166,19 @@ function FitToFace({ children }) {
       if (available <= 0) return;
 
       inner.style.zoom = '1';
+      // --face-zoom ebenfalls auf 1 zuruecksetzen, nicht nur zoom selbst:
+      // CSS-Regeln, die ueber calc(X / var(--face-zoom)) den Zoom aktiv
+      // herausrechnen (siehe #results h2/.mb-12 p in index.css - damit
+      // Titel/Text trotz starker Facetten-Stauchung in echter Zielgroesse
+      // ankommen), wuerden sonst mit dem VORHERIGEN, unter Umstaenden viel
+      // kleineren Zoom-Wert eine ueberhoehte Schriftgroesse berechnen und
+      // damit die gemessene natuerliche Hoehe verfaelschen - bei jeder
+      // weiteren Messung staerker, bis der Zoom gegen 0 laeuft (derselbe
+      // Wettlauf wie beim scrollHeight-Problem oben, nur ueber die
+      // CSS-Variable statt die zoom-Eigenschaft selbst). Mit zurueckgesetzter
+      // Variable misst diese Passage exakt die Groesse, die der kompensierte
+      // Text am Ende tatsaechlich auf dem Bildschirm einnehmen soll.
+      inner.style.setProperty('--face-zoom', '1');
       void inner.offsetHeight;
       const natural = inner.scrollHeight;
       if (!natural) return;
