@@ -5,8 +5,8 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { IMAGES } from '@/lib/links';
 import { Image } from '@/components/ui/image';
 import { scrollToSection } from '@/lib/scrollToSection';
-import BANNER_DE from '@/assets/images/banner-de.png';
-import BANNER_EN from '@/assets/images/banner-en.png';
+import BANNER_DE from '@/assets/images/banner-de.webp';
+import BANNER_EN from '@/assets/images/banner-en.webp';
 
 const NAVY = '#0B1930';
 const GOLD = '#C8A13A';
