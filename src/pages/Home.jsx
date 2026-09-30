@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/sections/Hero';
@@ -42,8 +42,6 @@ function OnePager({ f }) {
           <ServicesContent />
         </InteractiveFolder>
       </FadeIn>
-      <FadeIn><CreatorComparison /></FadeIn>
-      <FadeIn><ArbeitsweiseSection /></FadeIn>
       <FadeIn>
         <InteractiveFolder
           id="about"
@@ -56,6 +54,8 @@ function OnePager({ f }) {
           <AboutContent />
         </InteractiveFolder>
       </FadeIn>
+      <FadeIn><CreatorComparison /></FadeIn>
+      <FadeIn><ArbeitsweiseSection /></FadeIn>
       <FadeIn><GlobalReach /></FadeIn>
       <FadeIn><ConsultationBooking /></FadeIn>
       <FadeIn><FAQ /></FadeIn>
@@ -112,14 +112,35 @@ function Rolle({ f }) {
   );
 }
 
+// Muss zu MOBILE_MAX in RotaryStage passen: dort faellt die Rolle auf dem
+// Handy ohnehin auf einen flachen Stapel zurueck - dann gehoeren 1 / Growth
+// System und 2 / Founder Info an ihren chronologischen Platz vor die 3 statt
+// ans Seitenende.
+const MOBILE_QUERY = '(max-width: 767px)';
+
+function useMobile() {
+  const [mobile, setMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const sync = () => setMobile(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  return mobile;
+}
+
 export default function Home() {
   const { t } = useLanguage();
   const f = t.folders;
+  const mobile = useMobile();
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main><Rolle f={f} /></main>
+      <main>{mobile ? <OnePager f={f} /> : <Rolle f={f} />}</main>
       <Footer />
     </div>
   );
