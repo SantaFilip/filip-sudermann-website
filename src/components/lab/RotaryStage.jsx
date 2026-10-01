@@ -458,9 +458,13 @@ export default function RotaryStage({
       // Eine geoeffnete Facette wird nicht mehr in der Trommel selbst
       // vergroessert - ihr Inhalt lebt komplett im Vollbild-Portal (siehe
       // openIndex/createPortal im Render weiter unten), das ohnehin alles
-      // bedeckt. offen steuert hier nur noch: Dach/Sockel/Saeulen und die
-      // jeweils anderen Facetten ausblenden, solange eine offen steht.
+      // bedeckt. offen steuert hier nur noch Klick-Faenger und Schliessen-
+      // Knopf der offenen Flaeche.
       const offen = Boolean(expandTo) && !mobile && modus === 'open' && offeneFlaeche !== null;
+      // Das Gebaeude (Huelle, Nachbarflaechen, Saeulen) bleibt beim Oeffnen
+      // bewusst sichtbar: das Vollbild-Portal deckt es ohnehin komplett ab,
+      // erscheint aber erst mit dem naechsten React-Render. Hier sofort
+      // auszublenden liess einen Frame lang nur die nackte Folie stehen.
       const turn = (deg) => (lateral ? `rotateY(${-deg}deg)` : `rotateX(${deg}deg)`);
       // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
       // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
@@ -469,7 +473,7 @@ export default function RotaryStage({
       // Dach/Sockel gehoeren zum geschlossenen Baukoerper - steht eine
       // Facette einzeln aufgeklappt (volle Breite, kein Gebaeude-Kontext
       // mehr sichtbar), stoeren sie nur und werden ausgeblendet.
-      if (glWrapRef.current) glWrapRef.current.style.visibility = offen ? 'hidden' : 'visible';
+
 
       // Huelle: immer vorhanden, immer geschlossen. Zwei Pixel nach innen
       // versetzt - lagen Huelle und Inhaltsseite auf exakt derselben Ebene,
@@ -478,7 +482,7 @@ export default function RotaryStage({
       shellRefs.current.forEach((shell, s) => {
         if (!shell) return;
         const deg = kuerzesterWeg(p - s) * step;
-        shell.style.visibility = offen && Math.abs(deg) > 1 ? 'hidden' : 'visible';
+        shell.style.visibility = 'visible';
         shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
         applyShade(shell, deg);
       });
@@ -501,10 +505,8 @@ export default function RotaryStage({
       // sichtbar vor der Wand schweben statt darin zu sitzen.
       // Saeulen sind echte WebGL-Geometrie (ArchitectureGL) - dieselbe
       // Rechnung wie vorher fuer die CSS-transforms, nur als Argumente an
-      // die imperative setColumns()-Methode statt als style.transform. Das
-      // Aus-/Einblenden beim Aufklappen (offen) passiert schon eine Ebene
-      // hoeher ueber glWrapRef.style.visibility, siehe oben - hier nur noch
-      // die Kantenabschneidung (CULL_DEG) je Saeule.
+      // die imperative setColumns()-Methode statt als style.transform - hier
+      // nur die Kantenabschneidung (CULL_DEG) je Saeule.
       const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.03;
       const colDegs = Array.from({ length: sides }, (_, s) => kuerzesterWeg(p - s + 0.5) * step);
       // faceDegs: derselbe Winkel wie fuer Huelle/Inhaltsflaeche je Seite
@@ -520,10 +522,6 @@ export default function RotaryStage({
         if (!face) return;
         const d = kuerzesterWeg(p - i);
         const deg = d * step;
-        if (offen && i !== offeneFlaeche) {
-          face.style.visibility = 'hidden';
-          return;
-        }
         if (Math.abs(deg) > CULL_DEG) {
           face.style.visibility = 'hidden';
           return;
@@ -1111,8 +1109,8 @@ export default function RotaryStage({
             Saeulen/Dach (z-20), aber nur die Knoepfe selbst fangen Klicks -
             Ziehen auf den Flaechen bleibt unberuehrt. */}
         {[
-          { richtung: -1, Icon: ChevronLeft, seite: 'left-4 lg:left-10', label: 'Vorherige Flaeche' },
-          { richtung: 1, Icon: ChevronRight, seite: 'right-4 lg:right-10', label: 'Naechste Flaeche' },
+          { richtung: -1, Icon: ChevronLeft, seite: 'left-3 lg:left-4', label: 'Vorherige Flaeche' },
+          { richtung: 1, Icon: ChevronRight, seite: 'right-3 lg:right-4', label: 'Naechste Flaeche' },
         ].map(({ richtung, Icon, seite, label }) => (
           <button
             key={richtung}
