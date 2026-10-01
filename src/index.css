@@ -1295,3 +1295,34 @@
   }
 
 }
+
+/* Dreh-Pfeile der Rolle: Glas-Kreis mit Goldrand, Gold-Fuellung bei Hover. */
+.rotary-arrow {
+  color: hsl(var(--foreground));
+  background: hsl(0 0% 100% / 0.72);
+  border: 1px solid hsl(var(--accent) / 0.55);
+  box-shadow:
+    0 0 0 4px hsl(0 0% 100% / 0.18),
+    0 14px 34px -14px hsl(217 62% 12% / 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background-color 250ms ease, color 250ms ease, border-color 250ms ease, transform 250ms ease, box-shadow 250ms ease;
+}
+
+.rotary-arrow:hover {
+  color: hsl(var(--card));
+  background: hsl(var(--accent));
+  border-color: hsl(var(--accent));
+  box-shadow:
+    0 0 0 6px hsl(var(--accent) / 0.18),
+    0 18px 40px -14px hsl(217 62% 12% / 0.6);
+}
+
+.rotary-arrow:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.rotary-arrow:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 3px;
+}
