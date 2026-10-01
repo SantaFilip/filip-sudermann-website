@@ -17,7 +17,7 @@ export default function GlobalReach() {
             <p className="text-muted-foreground mt-6 text-lg max-w-lg leading-relaxed">{t.globalReach.subtitle}</p>
             <div className="inline-flex items-center gap-2 mt-8 bg-background border border-border px-4 py-2">
               <span className="w-2 h-2 rounded-full bg-accent glow-node" />
-              <span className="text-xs font-mono tracking-widest text-foreground font-bold">{lang === 'de' ? 'Standort: Deutschland' : 'Location: Germany'}</span>
+              <span className="text-xs font-mono tracking-widest text-foreground font-bold">{lang === 'de' ? 'Standort' : 'Location'}: {t.globalReach.badgeCountry}</span>
             </div>
           </div>
           <div className="relative w-full max-w-md mx-auto aspect-square overflow-hidden">

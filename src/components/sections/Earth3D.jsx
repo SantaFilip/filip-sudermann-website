@@ -178,10 +178,16 @@ export default function Earth3D() {
       renderer.setSize(s.w, s.h);
     };
     window.addEventListener('resize', handleResize);
+    // Die Box aendert ihre Groesse auch ohne Fenster-Resize (Rolle skaliert
+    // die Facette, CSS ueberschreibt max-width) - sonst behaelt der Canvas
+    // das erste Mass und der Globus sitzt aus der Mitte verschoben.
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
 
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
