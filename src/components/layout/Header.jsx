@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Link } from 'react-router-dom';
@@ -69,50 +69,52 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/60 transition-shadow duration-300">
       <div className="max-w-[1500px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 h-16 lg:h-20">
-        <a href="#about" onClick={(e) => handleNav(e, '#about')} className={`shrink-0 whitespace-nowrap font-heading font-bold tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}>
-          Filip Sudermann
-        </a>
-        <nav className="hidden min-[1380px]:flex items-center gap-5 xl:gap-6">
-          {navItems.map((item) => (
-            <a key={item.href} href={item.href} onClick={(e) => handleNav(e, item.href)} className="text-sm whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors">
-              {item.label}
+        {/* Unterhalb von 1380px ersetzt die geoeffnete Liste die gesamte
+            Kopfzeile (Logo, Sprachumschalter, CTA) statt sie als
+            zusaetzliches Panel zu ueberlagern - auf Wunsch, statt einer
+            von links hereinschiebenden Seitenleiste. */}
+        {mobileOpen ? (
+          <nav className="min-[1380px]:hidden flex items-center gap-5 overflow-x-auto flex-1 min-w-0">
+            {navItems.map((item) => (
+              <a key={item.href} href={item.href} onClick={(e) => handleNav(e, item.href)} className="text-sm whitespace-nowrap shrink-0 text-muted-foreground hover:text-foreground">
+                {item.label}
+              </a>
+            ))}
+            <Link to="/inspiration-hub" onClick={() => setMobileOpen(false)} className="text-sm whitespace-nowrap shrink-0 text-muted-foreground hover:text-foreground">
+              {t.nav.inspirationHub}
+            </Link>
+          </nav>
+        ) : (
+          <>
+            <a href="#about" onClick={(e) => handleNav(e, '#about')} className={`shrink-0 whitespace-nowrap font-heading font-bold tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}>
+              Filip Sudermann
             </a>
-          ))}
-        </nav>
+            <nav className="hidden min-[1380px]:flex items-center gap-5 xl:gap-6">
+              {navItems.map((item) => (
+                <a key={item.href} href={item.href} onClick={(e) => handleNav(e, item.href)} className="text-sm whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors">
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </>
+        )}
         <div className="flex items-center gap-3 lg:gap-4 shrink-0">
-          <LangToggle />
-          <Link to="/inspiration-hub" className="hidden min-[1380px]:inline-flex items-center gap-1 text-sm whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors">
-            {t.nav.inspirationHub} <ArrowUpRight size={14} />
-          </Link>
-          <a href="#beratung" onClick={(e) => handleNav(e, '#beratung')} className="hidden sm:inline-block btn-fill relative bg-foreground text-white px-5 py-2.5 text-sm font-medium z-0">
-            {t.nav.cta}
-          </a>
+          {!mobileOpen && <LangToggle />}
+          {!mobileOpen && (
+            <Link to="/inspiration-hub" className="hidden min-[1380px]:inline-flex items-center gap-1 text-sm whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors">
+              {t.nav.inspirationHub} <ArrowUpRight size={14} />
+            </Link>
+          )}
+          {!mobileOpen && (
+            <a href="#beratung" onClick={(e) => handleNav(e, '#beratung')} className="hidden sm:inline-block btn-fill relative bg-foreground text-white px-5 py-2.5 text-sm font-medium z-0">
+              {t.nav.cta}
+            </a>
+          )}
           <button className="min-[1380px]:hidden p-1" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 'min(85vw, 320px)', opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            className="min-[1380px]:hidden fixed top-16 lg:top-20 left-0 bottom-0 overflow-hidden border-r border-border bg-background shadow-xl"
-          >
-            <nav className="flex flex-col px-6 py-4 gap-4 w-[min(85vw,320px)]">
-              {navItems.map((item) => (
-                <a key={item.href} href={item.href} onClick={(e) => handleNav(e, item.href)} className="text-sm whitespace-nowrap text-muted-foreground hover:text-foreground">
-                  {item.label}
-                </a>
-              ))}
-              <Link to="/inspiration-hub" onClick={() => setMobileOpen(false)} className="text-sm whitespace-nowrap text-muted-foreground hover:text-foreground">
-                {t.nav.inspirationHub}
-              </Link>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </header>
   );
 }
