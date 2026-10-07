@@ -95,23 +95,20 @@ export default function Header() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="min-[1380px]:hidden overflow-hidden border-t border-border bg-background"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 'min(85vw, 320px)', opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            className="min-[1380px]:hidden fixed top-16 lg:top-20 left-0 bottom-0 overflow-hidden border-r border-border bg-background shadow-xl"
           >
-            <nav className="flex flex-col px-6 py-4 gap-4">
+            <nav className="flex flex-col px-6 py-4 gap-4 w-[min(85vw,320px)]">
               {navItems.map((item) => (
-                <a key={item.href} href={item.href} onClick={(e) => handleNav(e, item.href)} className="text-sm text-muted-foreground hover:text-foreground">
+                <a key={item.href} href={item.href} onClick={(e) => handleNav(e, item.href)} className="text-sm whitespace-nowrap text-muted-foreground hover:text-foreground">
                   {item.label}
                 </a>
               ))}
-              <Link to="/inspiration-hub" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground">
+              <Link to="/inspiration-hub" onClick={() => setMobileOpen(false)} className="text-sm whitespace-nowrap text-muted-foreground hover:text-foreground">
                 {t.nav.inspirationHub}
               </Link>
-              <a href="#beratung" onClick={(e) => handleNav(e, '#beratung')} className="btn-fill relative bg-foreground text-background px-5 py-2.5 text-sm font-medium text-center z-0">
-                {t.nav.cta}
-              </a>
             </nav>
           </motion.div>
         )}
