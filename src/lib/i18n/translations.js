@@ -175,7 +175,7 @@ export const translations = {
       titleAccent: "Creator.",
       subtitle: "Remote-first. Partnerschaften in Europa, den USA und darüber hinaus. Zeitzonen beugen sich dem Launch, nicht umgekehrt.",
       badgeLocationLabel: "Standort für Deutsch, Location für Englisch",
-      badgeCountry: "DEUTSCHLAND",
+      badgeCountry: "USA",
       badgeYear: "2026"
     },
     process: {
@@ -494,7 +494,7 @@ export const translations = {
       titleAccent: "creators.",
       subtitle: "Remote-first. Partnerships across Europe, the US, and beyond. Time zones bend to the launch, not the other way around.",
       badgeLocationLabel: "Standort für Deutsch, Location für Englisch",
-      badgeCountry: "GERMANY",
+      badgeCountry: "US",
       badgeYear: "2026"
     },
     process: {

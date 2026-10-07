@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 import FaceOrnament from '@/components/lab/FaceOrnament';
 import FadeIn from '@/components/FadeIn';
@@ -59,10 +59,6 @@ const CULL_DEG = 98;
 // in den Grundton der Webseite ueber.
 const TEICH_HAELT = 0.35;
 
-// Eigengeschwindigkeit der Drehung, in Grad pro Sekunde - unabhaengig von der
-// Seitenzahl, damit Wuerfel und Rolle optisch gleich "langsam" wirken, obwohl
-// ihre Flaechen unterschiedlich weit auseinander liegen (90 Grad gegen 30).
-const AUTOPLAY_DEG_PER_SEC = 3;
 
 // Geschwindigkeit der Fahrt zu einer angeklickten Flaeche - schneller als die
 // Eigendrehung, damit ein Klick sich reaktionsschnell anfuehlt, aber weit
@@ -309,6 +305,9 @@ export default function RotaryStage({
   // steuert den Portal-Vollbild-Overlay weiter unten, der React zum Rendern
   // braucht (ein DOM-Knoten ausserhalb dieses Baums, siehe Kommentar dort).
   const [openIndex, setOpenIndex] = useState(null);
+  // Dreh-Funktion der Pfeile - lebt im Dreh-Effekt (braucht pos/modus/apply
+  // aus dessen Closure), der Render ruft sie nur ueber diese Ref auf.
+  const pfeilRef = useRef(null);
   // Kein Groessen-Uebergang mehr (siehe inhaltStyle/apply weiter unten -
   // die Trommel-Flaeche springt beim Auf-/Zuklappen jetzt hart auf ihre
   // Zielgroesse statt zu animieren). Das Portal kann openIndex deshalb
@@ -459,9 +458,13 @@ export default function RotaryStage({
       // Eine geoeffnete Facette wird nicht mehr in der Trommel selbst
       // vergroessert - ihr Inhalt lebt komplett im Vollbild-Portal (siehe
       // openIndex/createPortal im Render weiter unten), das ohnehin alles
-      // bedeckt. offen steuert hier nur noch: Dach/Sockel/Saeulen und die
-      // jeweils anderen Facetten ausblenden, solange eine offen steht.
+      // bedeckt. offen steuert hier nur noch Klick-Faenger und Schliessen-
+      // Knopf der offenen Flaeche.
       const offen = Boolean(expandTo) && !mobile && modus === 'open' && offeneFlaeche !== null;
+      // Das Gebaeude (Huelle, Nachbarflaechen, Saeulen) bleibt beim Oeffnen
+      // bewusst sichtbar: das Vollbild-Portal deckt es ohnehin komplett ab,
+      // erscheint aber erst mit dem naechsten React-Render. Hier sofort
+      // auszublenden liess einen Frame lang nur die nackte Folie stehen.
       const turn = (deg) => (lateral ? `rotateY(${-deg}deg)` : `rotateX(${deg}deg)`);
       // Den Koerper um seinen halben Durchmesser zuruecksetzen, damit die
       // Frontseite buendig auf z = 0 liegt und nicht vor der Buehne schwebt.
@@ -470,7 +473,7 @@ export default function RotaryStage({
       // Dach/Sockel gehoeren zum geschlossenen Baukoerper - steht eine
       // Facette einzeln aufgeklappt (volle Breite, kein Gebaeude-Kontext
       // mehr sichtbar), stoeren sie nur und werden ausgeblendet.
-      if (glWrapRef.current) glWrapRef.current.style.visibility = offen ? 'hidden' : 'visible';
+
 
       // Huelle: immer vorhanden, immer geschlossen. Zwei Pixel nach innen
       // versetzt - lagen Huelle und Inhaltsseite auf exakt derselben Ebene,
@@ -479,7 +482,7 @@ export default function RotaryStage({
       shellRefs.current.forEach((shell, s) => {
         if (!shell) return;
         const deg = kuerzesterWeg(p - s) * step;
-        shell.style.visibility = offen && Math.abs(deg) > 1 ? 'hidden' : 'visible';
+        shell.style.visibility = 'visible';
         shell.style.transform = `${turn(deg)} translateZ(${radius - 2}px)`;
         applyShade(shell, deg);
       });
@@ -502,10 +505,8 @@ export default function RotaryStage({
       // sichtbar vor der Wand schweben statt darin zu sitzen.
       // Saeulen sind echte WebGL-Geometrie (ArchitectureGL) - dieselbe
       // Rechnung wie vorher fuer die CSS-transforms, nur als Argumente an
-      // die imperative setColumns()-Methode statt als style.transform. Das
-      // Aus-/Einblenden beim Aufklappen (offen) passiert schon eine Ebene
-      // hoeher ueber glWrapRef.style.visibility, siehe oben - hier nur noch
-      // die Kantenabschneidung (CULL_DEG) je Saeule.
+      // die imperative setColumns()-Methode statt als style.transform - hier
+      // nur die Kantenabschneidung (CULL_DEG) je Saeule.
       const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.03;
       const colDegs = Array.from({ length: sides }, (_, s) => kuerzesterWeg(p - s + 0.5) * step);
       // faceDegs: derselbe Winkel wie fuer Huelle/Inhaltsflaeche je Seite
@@ -521,10 +522,6 @@ export default function RotaryStage({
         if (!face) return;
         const d = kuerzesterWeg(p - i);
         const deg = d * step;
-        if (offen && i !== offeneFlaeche) {
-          face.style.visibility = 'hidden';
-          return;
-        }
         if (Math.abs(deg) > CULL_DEG) {
           face.style.visibility = 'hidden';
           return;
@@ -654,6 +651,34 @@ export default function RotaryStage({
       }
     };
 
+    // Pfeile links/rechts: eine Flaeche weiter bzw. zurueck, immer auf eine
+    // ganze Flaeche einrastend (auch nach einem Ziehen, das zwischen zwei
+    // Flaechen losgelassen wurde). Mehrfachklicks waehrend der Fahrt setzen
+    // das Ziel einfach eine Flaeche weiter, statt verschluckt zu werden.
+    let pfeilZiel = null;
+    pfeilRef.current = (richtung) => {
+      if (modus === 'dragging' || modus === 'open') return;
+      const basis = modus === 'seeking' && pfeilZiel !== null ? pfeilZiel : pos;
+      const ziel = richtung > 0
+        ? Math.floor(basis + 1e-3) + 1
+        : Math.ceil(basis - 1e-3) - 1;
+      pfeilZiel = ziel;
+      modus = 'seeking';
+      if (seekTween) seekTween.kill();
+      const proxy = { v: pos };
+      seekTween = gsap.to(proxy, {
+        v: ziel,
+        duration: Math.min(SEEK_MAX_DURATION, Math.max(0.7, (Math.abs(ziel - pos) * step) / SEEK_DEG_PER_SEC)),
+        ease: 'power2.inOut',
+        onUpdate: () => apply(proxy.v),
+        onComplete: () => {
+          pfeilZiel = null;
+          modus = 'auto';
+          apply(ziel);
+        },
+      });
+    };
+
     const abmeldeliste = [];
     faceRefs.current.forEach((face, i) => {
       if (!face) return;
@@ -698,10 +723,10 @@ export default function RotaryStage({
 
     const tick = () => {
       drift += 0.035;
-      if (modus === 'auto') {
-        const dt = gsap.ticker.deltaRatio(60) / 60;
-        apply(pos + (AUTOPLAY_DEG_PER_SEC * dt) / step);
-      }
+      // Kein Autoplay mehr: die Trommel steht, bis jemand zieht oder einen
+      // der Pfeile klickt. apply(pos) laeuft trotzdem pro Frame weiter, damit
+      // der Hintergrund (drift) sich weiter sanft bewegt.
+      if (modus === 'auto') apply(pos);
     };
     gsap.ticker.add(tick);
 
@@ -744,6 +769,7 @@ export default function RotaryStage({
     });
 
     return () => {
+      pfeilRef.current = null;
       clearTimeout(layoutTimer);
       abmeldeliste.forEach((fn) => fn());
       window.removeEventListener('load', nachkalibrieren);
@@ -1078,6 +1104,28 @@ export default function RotaryStage({
             />
           </div>
         )}
+
+        {/* Pfeile: drehen die Trommel per Klick eine Flaeche weiter. Ueber
+            Saeulen/Dach (z-20), aber nur die Knoepfe selbst fangen Klicks -
+            Ziehen auf den Flaechen bleibt unberuehrt. */}
+        {[
+          { richtung: -1, Icon: ChevronLeft, seite: 'left-3 lg:left-4', label: 'Vorherige Flaeche' },
+          { richtung: 1, Icon: ChevronRight, seite: 'right-3 lg:right-4', label: 'Naechste Flaeche' },
+        ].map(({ richtung, Icon, seite, label }) => (
+          <button
+            key={richtung}
+            type="button"
+            aria-label={label}
+            onClick={() => pfeilRef.current?.(richtung)}
+            className={`rotary-arrow group absolute top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full lg:h-16 lg:w-16 ${seite}`}
+          >
+            <Icon
+              size={26}
+              strokeWidth={1.75}
+              className={`transition-transform duration-300 ${richtung < 0 ? 'group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'}`}
+            />
+          </button>
+        ))}
       </div>
     </div>
 
