@@ -1157,6 +1157,24 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
         // selben Takt mitdrehen.
         const rib = ribs?.children[s];
         if (rib) {
+          // Kegel + Flagge sitzen genau auf dem Kuppelrand und stecken mit
+          // der inneren Haelfte im Kuppel-Verdeckungskoerper - an der
+          // Silhouette wurde die Spitze dadurch angeschnitten und sah aus,
+          // als ragte sie ins Dach. Fuer Saeulen auf der vorderen Haelfte
+          // (dort verdeckt die Kuppel sie nie wirklich) werden sie deshalb
+          // VOR den Verdeckungskoerpern gezeichnet (renderOrder -2, siehe
+          // occMat unten) und damit nicht mehr von ihnen beschnitten.
+          // Rueckseitige Saeulen bleiben normal verdeckt - sonst schienen
+          // ihre Flaggen durch das Dach.
+          const vorne = Math.cos(rad) > -0.1;
+          if (rib.userData.vorne !== vorne) {
+            rib.userData.vorne = vorne;
+            const order = vorne ? -2 : 0;
+            rib.children.forEach((child, k) => {
+              if (k === 0) return; // Kamm liegt auf der Kuppel, bleibt verdeckt
+              child.traverse((o) => { o.renderOrder = order; });
+            });
+          }
           // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei
           // beta = k*step (in Grad) aufgebaut, mit x=+r*sin(beta). Die
           // Saeule dagegen nutzt x=-colRadius*sin(deg) - ENTGEGENGESETZTES

@@ -265,32 +265,32 @@
     font-size: clamp(1.6rem, 7cqw, 2.8rem);
   }
 
-  /* Kontakt- und FAQ-Badge in der Trommel-Vorschau exakt gleich gross, auf
-     Rueckmeldung. Die Regeln oben reichten dafuer nicht: FitToFace staucht
-     Kontakt (Calendly-Kalender, 58rem hoch) viel staerker als FAQ (Zoom
-     ~0,45 vs. ~0,89 bei 1440px) - dieselbe Rohgroesse kam dadurch am
-     Bildschirm nur halb so gross an. Hier deshalb Schrift UND Box (Padding,
-     Abstand, Rahmen, Radius) ueber calc(.../var(--face-zoom)) vom Zoom
-     befreit - beide Badges landen unabhaengig vom Inhalt darunter auf
-     derselben echten Bildschirmgroesse (Werte = bisheriger FAQ-Look).
-     Das Portal (direktes Kind von .rotary-portal) behaelt seine Groessen. */
+  /* Kontakt- und FAQ-Badge in der Trommel-Vorschau gleich gross - und in
+     derselben Groesse wie "3 Marktvorteil"/"4 Arbeitsweise" (siehe #results
+     oben), damit alle Badges der Trommel zusammenpassen. FitToFace staucht
+     Kontakt (Calendly-Kalender) viel staerker als FAQ, deshalb Schrift und
+     Box ueber calc(.../var(--face-zoom)) vom Zoom befreit. Bewusst klein
+     gehalten: ein zoom-kompensiertes Element nimmt in der natuerlichen Hoehe
+     Groesse/Zoom ein - ein grosses Badge staucht dadurch den Rest der
+     Facette (Kalender, Fragen) sichtbar mit. Das Portal (direktes Kind von
+     .rotary-portal) behaelt seine Groessen. */
   :not(.rotary-portal) > .rotary-face #faq .inline-flex,
   :not(.rotary-portal) > .rotary-face #beratung .inline-flex {
-    padding: calc(0.7rem / var(--face-zoom, 1)) calc(1.35rem / var(--face-zoom, 1));
-    gap: calc(0.9rem / var(--face-zoom, 1));
-    border-width: calc(2px / var(--face-zoom, 1));
-    border-radius: calc(0.75rem / var(--face-zoom, 1));
-    margin-bottom: calc(1.1rem / var(--face-zoom, 1));
+    padding: calc(0.45rem / var(--face-zoom, 1)) calc(0.95rem / var(--face-zoom, 1));
+    gap: calc(0.6rem / var(--face-zoom, 1));
+    border-width: calc(1.5px / var(--face-zoom, 1));
+    border-radius: calc(0.6rem / var(--face-zoom, 1));
+    margin-bottom: calc(0.75rem / var(--face-zoom, 1));
   }
 
   :not(.rotary-portal) > .rotary-face #faq .inline-flex span:first-child,
   :not(.rotary-portal) > .rotary-face #beratung .inline-flex span:first-child {
-    font-size: calc(clamp(1.4rem, 6.4cqw, 3rem) / var(--face-zoom, 1));
+    font-size: calc(clamp(1.4rem, 3.3cqw, 1.7rem) / var(--face-zoom, 1));
   }
 
   :not(.rotary-portal) > .rotary-face #faq .inline-flex span:last-child,
   :not(.rotary-portal) > .rotary-face #beratung .inline-flex span:last-child {
-    font-size: calc(clamp(1.15rem, 5.3cqw, 2.5rem) / var(--face-zoom, 1));
+    font-size: calc(clamp(1.15rem, 2.7cqw, 1.4rem) / var(--face-zoom, 1));
   }
 
   /* Die "5" (Mediaevalziffer, haengt unter die Grundlinie) braucht wie im

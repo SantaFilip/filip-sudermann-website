@@ -40,6 +40,14 @@ const CUBE_WIDTH_DESKTOP = 0.93;
 const GEBAEUDE_SKALIERUNG = 0.9;
 const MOBILE_MAX = 767;
 
+// Abstand der Saeulen (und damit Dach/Sockel, gleicher Ring) vor dem
+// Eckpunkt der Facetten, als Faktor auf den Umkreisradius. 1.03 liess beim
+// Drehen einen sichtbaren Spalt zwischen Wandkante und Saeule, sobald eine
+// Ecke an den Rand der Silhouette lief (Saeule 3% ausserhalb der Ecke, die
+// halbe Saeulenbreite deckte das nicht mehr). 1.015 haelt die Saeule
+// weiterhin knapp vor der Wand, ueberdeckt die Ecke aber bei jedem Winkel.
+const SAEULEN_VORSPRUNG = 1.015;
+
 // Hochskalieren ist keine Option: der Inhalt liegt bereits auf voller
 // Flaechenbreite, ein Faktor ueber 1 schiebt ihn seitlich aus der Flaeche
 // heraus und die Kanten werden abgeschnitten. Die Flaeche wird stattdessen
@@ -500,14 +508,15 @@ export default function RotaryStage({
       // dem groesseren Umkreis durch die Eckpunkte (Umkreisradius = Apothem /
       // cos(halber Aussenwinkel)) - stuende die Saeule nur beim Apothem-
       // Radius, laege sie hinter der tatsaechlichen Kante und waere von der
-      // Kamera aus verdeckt. Ein minimaler Vorsprung (3%) reicht gegen
+      // Kamera aus verdeckt. Ein minimaler Vorsprung reicht gegen
       // Z-Fighting an der Kante - 12% (voriger Wert) liess die Saeule
-      // sichtbar vor der Wand schweben statt darin zu sitzen.
+      // sichtbar vor der Wand schweben statt darin zu sitzen, siehe
+      // SAEULEN_VORSPRUNG.
       // Saeulen sind echte WebGL-Geometrie (ArchitectureGL) - dieselbe
       // Rechnung wie vorher fuer die CSS-transforms, nur als Argumente an
       // die imperative setColumns()-Methode statt als style.transform - hier
       // nur die Kantenabschneidung (CULL_DEG) je Saeule.
-      const colRadius = (radius / Math.cos(Math.PI / sides)) * 1.03;
+      const colRadius = (radius / Math.cos(Math.PI / sides)) * SAEULEN_VORSPRUNG;
       const colDegs = Array.from({ length: sides }, (_, s) => kuerzesterWeg(p - s + 0.5) * step);
       // faceDegs: derselbe Winkel wie fuer Huelle/Inhaltsflaeche je Seite
       // (siehe shellRefs/faceRefs weiter unten) - ArchitectureGL braucht sie,
@@ -844,7 +853,7 @@ export default function RotaryStage({
   // von vorne meist passend aus, klaffte aber bei anderen Rotationswinkeln
   // wieder, weil Saeule und Dach/Sockel schlicht verschiedene Kreise waren.
   const centerOffsetZ = -facettenRadius;
-  const ringRadius = circumRadius * 1.03;
+  const ringRadius = circumRadius * SAEULEN_VORSPRUNG;
   // Verschiebt man Dach/Sockel/Saeulen auf die tatsaechliche Drehachse
   // (centerOffsetZ statt 0), sitzen sie weiter von der Kamera entfernt als
   // die jeweils aktive Frontflaeche (die exakt auf z = 0 faellt und deshalb
