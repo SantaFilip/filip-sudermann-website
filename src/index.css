@@ -265,6 +265,41 @@
     font-size: clamp(1.6rem, 7cqw, 2.8rem);
   }
 
+  /* Kontakt- und FAQ-Badge in der Trommel-Vorschau exakt gleich gross, auf
+     Rueckmeldung. Die Regeln oben reichten dafuer nicht: FitToFace staucht
+     Kontakt (Calendly-Kalender, 58rem hoch) viel staerker als FAQ (Zoom
+     ~0,45 vs. ~0,89 bei 1440px) - dieselbe Rohgroesse kam dadurch am
+     Bildschirm nur halb so gross an. Hier deshalb Schrift UND Box (Padding,
+     Abstand, Rahmen, Radius) ueber calc(.../var(--face-zoom)) vom Zoom
+     befreit - beide Badges landen unabhaengig vom Inhalt darunter auf
+     derselben echten Bildschirmgroesse (Werte = bisheriger FAQ-Look).
+     Das Portal (direktes Kind von .rotary-portal) behaelt seine Groessen. */
+  :not(.rotary-portal) > .rotary-face #faq .inline-flex,
+  :not(.rotary-portal) > .rotary-face #beratung .inline-flex {
+    padding: calc(0.7rem / var(--face-zoom, 1)) calc(1.35rem / var(--face-zoom, 1));
+    gap: calc(0.9rem / var(--face-zoom, 1));
+    border-width: calc(2px / var(--face-zoom, 1));
+    border-radius: calc(0.75rem / var(--face-zoom, 1));
+    margin-bottom: calc(1.1rem / var(--face-zoom, 1));
+  }
+
+  :not(.rotary-portal) > .rotary-face #faq .inline-flex span:first-child,
+  :not(.rotary-portal) > .rotary-face #beratung .inline-flex span:first-child {
+    font-size: calc(clamp(1.4rem, 6.4cqw, 3rem) / var(--face-zoom, 1));
+  }
+
+  :not(.rotary-portal) > .rotary-face #faq .inline-flex span:last-child,
+  :not(.rotary-portal) > .rotary-face #beratung .inline-flex span:last-child {
+    font-size: calc(clamp(1.15rem, 5.3cqw, 2.5rem) / var(--face-zoom, 1));
+  }
+
+  /* Die "5" (Mediaevalziffer, haengt unter die Grundlinie) braucht wie im
+     Original den Versatz nach oben - relativ zur Schrift statt in festen
+     rem, sonst passt er bei der neuen Groesse nicht mehr. */
+  :not(.rotary-portal) > .rotary-face #beratung .inline-flex span:first-child {
+    --tw-translate-y: -0.15em;
+  }
+
   /* Fragen in der Trommel-Vorschau groesser als im Portal, auf
      Rueckmeldung. WICHTIG: beide Regeln rechnen den Facetten-Zoom ueber
      calc(.../var(--face-zoom)) aktiv heraus (derselbe Trick wie bei
@@ -755,6 +790,32 @@
        und Untertitel schweben, siehe Marktvorteil weiter oben. */
     .rotary-face #process .mb-12 {
       text-align: center;
+    }
+
+    /* Arbeitsweise in der Trommel-Vorschau: das Badge sass bisher IN der
+       grauen Section-Flaeche (bg-background auf #process). Auf Rueckmeldung
+       steht es jetzt oberhalb davon - die Section selbst wird durchsichtig
+       (Facettenhintergrund), die graue Flaeche traegt nur noch der Block
+       mit Ueberschrift und Diagrammen darunter. Das Portal (direktes Kind
+       von .rotary-portal) bleibt unveraendert. */
+    :not(.rotary-portal) > .rotary-face #process {
+      background: transparent;
+    }
+
+    /* Seitenrand des Wrappers (px-6/lg:px-12) wandert in die graue Box -
+       so bleibt die Inhaltsbreite und damit der Facetten-Zoom wie zuvor. */
+    :not(.rotary-portal) > .rotary-face #process > div {
+      padding-inline: 0;
+    }
+
+    :not(.rotary-portal) > .rotary-face #process .mb-12 {
+      margin-bottom: 1.25rem;
+    }
+
+    :not(.rotary-portal) > .rotary-face #process > div > .mt-24 {
+      margin-top: 0;
+      padding: 1rem 3rem;
+      background: hsl(var(--background));
     }
 
     /*

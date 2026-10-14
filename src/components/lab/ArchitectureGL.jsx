@@ -61,7 +61,6 @@ import * as THREE from 'three';
 // Zierlinien/Kapitelle - "alt-Geld"-Zurueckhaltung statt Palast.
 const IVORY = 0xf2ead9;
 const STONE = 0xece1cb;
-const STONE_DEEP = 0xd9caa9;
 // Auf Wunsch etwas dunkler als zuvor (0xb28f5c/0xceac78) - metallischer
 // wirken die Materialien vor allem ueber metalness/roughness an den
 // jeweiligen Verwendungsstellen, nicht ueber die Grundfarbe allein.
@@ -701,9 +700,12 @@ function buildDome(circumRadius, heightBudget, sides) {
   const trimTop = new THREE.Mesh(new THREE.LatheGeometry(trimTopProfile, 64), trimMat);
   group.add(trimTop);
 
-  // Fries: glatte, senkrechte Steinwand ohne Woelbung - der ruhige,
-  // unverzierte Mittelteil eines klassischen Gebaelks.
-  const bandMat = new THREE.MeshStandardMaterial({ color: STONE_DEEP, metalness: 0.04, roughness: 0.78, side: THREE.DoubleSide });
+  // Fries: glatte, senkrechte Wand ohne Woelbung - der ruhige,
+  // unverzierte Mittelteil eines klassischen Gebaelks. Im selben Messing wie
+  // Faszie/Tropfkante statt in hellem Stein: der helle Fries las zwischen
+  // goldener Kante und Facette wie ein Spalt zwischen Gebaeude und Balken -
+  // auf Rueckmeldung jetzt durchgehend ausgefuellt, ein geschlossener Balken.
+  const bandMat = trimMat;
   const bandProfile = [
     new THREE.Vector2(circumRadius * 1.006, -capH),
     new THREE.Vector2(circumRadius * 1.006, -friezeH),
