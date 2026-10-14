@@ -567,6 +567,29 @@ function domeProfileYFraction(t) {
 // dieselbe Kuppel beschreiben.
 const DOME_HEIGHT_FRACTION = 0.58;
 
+// Kegel auf den Saeulenkoepfen - Masse relativ zur Kapitellbreite, von
+// buildDomeRibs (Kegel selbst) und domeRadiusFor (Kuppelgroesse) gemeinsam
+// genutzt.
+const CONE_RADIUS_FACTOR = 0.62;
+const CONE_HEIGHT_FACTOR = 0.95;
+// Aeusserster Radius des Gebaelks relativ zum Kuppelradius (trimTop in
+// buildDome) - siehe domeRadiusFor.
+const EAVE_OVERHANG = 1.025;
+
+// Kuppelradius (Traufe) so, dass das Gebaelk die Turmkegel auf den Saeulen
+// nicht mehr schneidet: die aeusserste Gesimskante endet knapp vor der
+// Innenkante der Kegel. Vorher sass die Kuppel auf demselben Ring wie die
+// Saeulen - jeder Kegel steckte mit seiner inneren Haelfte in Dach und
+// Gebaelk. Weil das Dach im hinteren WebGL-Layer liegt, liess sich das nie
+// sauber darstellen (Kegel angeschnitten, bzw. per Render-Trick beim Drehen
+// sichtbar ein-/ausgeblendet). Jetzt stehen die Tuerme real neben dem Dach,
+// wie Ecktuerme an einer Traufe - korrekt aus jedem Blickwinkel, ohne
+// Sonderbehandlung.
+function domeRadiusFor(ringRadius, columnCapWidth) {
+  const capW = columnCapWidth || ringRadius * 0.09;
+  return (ringRadius - capW * CONE_RADIUS_FACTOR * 1.05) / EAVE_OVERHANG;
+}
+
 // Profilkurve fuer buildDome's LatheGeometry UND (mit denselben Argumenten)
 // fuer den unsichtbaren Kuppel-Verdeckungskoerper - ein einzelner
 // Kontrollpunkt-Satz, damit beide garantiert exakt dieselbe Form haben.
@@ -693,8 +716,8 @@ function buildDome(circumRadius, heightBudget, sides) {
   const friezeH = fasciaH * 0.62;
   const trimTopProfile = [
     new THREE.Vector2(circumRadius * 0.998, 0),
-    new THREE.Vector2(circumRadius * 1.025, 0),
-    new THREE.Vector2(circumRadius * 1.025, -capH),
+    new THREE.Vector2(circumRadius * EAVE_OVERHANG, 0),
+    new THREE.Vector2(circumRadius * EAVE_OVERHANG, -capH),
     new THREE.Vector2(circumRadius * 1.006, -capH),
   ];
   const trimTop = new THREE.Mesh(new THREE.LatheGeometry(trimTopProfile, 64), trimMat);
@@ -741,7 +764,7 @@ function buildDome(circumRadius, heightBudget, sides) {
 // Kuppelflaeche - so liegt er ohne Spalt/Durchdringung auf, wirkt aber
 // dreidimensional statt flach aufgemalt. Lebt im FRONT-Layer (mit den
 // Saeulen), weil er mit ihnen mitdrehen muss - siehe setColumns().
-function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
+function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth, domeRadius = circumRadius) {
   const group = new THREE.Group();
   // Muss exakt mit domeH aus buildDome() uebereinstimmen (siehe Kommentar
   // dort) - sonst driften Kamm und Kuppelflaeche auseinander.
@@ -755,8 +778,11 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
   // Kegelmasse einmal vorab (gleich fuer jede Saeule): Basis auf dem
   // Kapitell, Spitze coneHeight darueber - der Kamm setzt dort an, nicht an
   // der Traufe.
-  const coneRadius = capW * 0.62;
-  const coneHeight = capW * 0.95;
+  const coneRadius = capW * CONE_RADIUS_FACTOR;
+  const coneHeight = capW * CONE_HEIGHT_FACTOR;
+  // Der Kamm laeuft ueber die (kleinere) Kuppel und dann flach ueber das
+  // Gebaelk bis in den Kegelfuss hinein - kein Spalt zwischen Kamm und Turm.
+  const ridgeEnd = circumRadius - coneRadius * 0.5;
   const up = new THREE.Vector3(0, 1, 0);
 
   for (let i = 0; i < sides; i++) {
@@ -765,14 +791,14 @@ function buildDomeRibs(circumRadius, heightBudget, sides, columnCapWidth) {
     const indices = [];
     for (let s = 0; s <= steps; s++) {
       const t = s / steps; // 0 = Kuppelspitze, 1 = Traufe/Saeulenkopf
-      const r = t * circumRadius * raise;
+      const r = t * ridgeEnd;
       // Laeuft exakt auf der Kuppel-Profilkurve (ueber domeProfileYFraction,
       // DIESELBEN Kontrollpunkte wie buildDome's LatheGeometry-Profil) - von
       // der Traufe (y=0) bis zur Kuppelspitze (y=domeH). Vorher naeherte
       // eine eigene Potenzfunktion (1-t^1.5) die Kurve nur grob an und wich
       // sichtbar von der tatsaechlichen, mehrfach geknickten Kuppelform ab -
       // der Kamm liegt jetzt garantiert exakt auf der Kuppelflaeche.
-      const y = domeH * domeProfileYFraction(t);
+      const y = domeH * domeProfileYFraction(Math.min(1, r / (domeRadius * raise)));
       const wa = halfAngle * t; // an der Spitze auf einen Punkt zulaufend
       const halfWidthLinear = r * wa;
       const peakY = y + halfWidthLinear * pitch;
@@ -1084,7 +1110,7 @@ export const ArchitectureBackGL = React.memo(function ArchitectureBackGL({
     const renderer = makeRenderer(stageW, stageH, container);
     addLights(scene, ringRadius, perspectivePx);
 
-    const dome = buildDome(ringRadius, drumHalfHeight, sides);
+    const dome = buildDome(domeRadiusFor(ringRadius, colCapWidth), drumHalfHeight, sides);
     dome.position.set(0, drumHalfHeight, centerOffsetZ);
     scene.add(dome);
 
@@ -1157,24 +1183,6 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
         // selben Takt mitdrehen.
         const rib = ribs?.children[s];
         if (rib) {
-          // Kegel + Flagge sitzen genau auf dem Kuppelrand und stecken mit
-          // der inneren Haelfte im Kuppel-Verdeckungskoerper - an der
-          // Silhouette wurde die Spitze dadurch angeschnitten und sah aus,
-          // als ragte sie ins Dach. Fuer Saeulen auf der vorderen Haelfte
-          // (dort verdeckt die Kuppel sie nie wirklich) werden sie deshalb
-          // VOR den Verdeckungskoerpern gezeichnet (renderOrder -2, siehe
-          // occMat unten) und damit nicht mehr von ihnen beschnitten.
-          // Rueckseitige Saeulen bleiben normal verdeckt - sonst schienen
-          // ihre Flaggen durch das Dach.
-          const vorne = Math.cos(rad) > -0.1;
-          if (rib.userData.vorne !== vorne) {
-            rib.userData.vorne = vorne;
-            const order = vorne ? -2 : 0;
-            rib.children.forEach((child, k) => {
-              if (k === 0) return; // Kamm liegt auf der Kuppel, bleibt verdeckt
-              child.traverse((o) => { o.renderOrder = order; });
-            });
-          }
           // Rippen-Basiswinkel: Rippe k wurde in buildDomeRibs bei
           // beta = k*step (in Grad) aufgebaut, mit x=+r*sin(beta). Die
           // Saeule dagegen nutzt x=-colRadius*sin(deg) - ENTGEGENGESETZTES
@@ -1231,7 +1239,8 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     // Rippen sitzen an derselben Stelle, an der (im Back-Layer) der Dach-
     // Ansatz waere - selbe Position wie dort `dome.position` gesetzt wird,
     // nur hier ohne die Kuppel selbst.
-    const ribs = buildDomeRibs(ringRadius, drumHalfHeight, sides, colCapWidth);
+    const domeRadius = domeRadiusFor(ringRadius, colCapWidth);
+    const ribs = buildDomeRibs(ringRadius, drumHalfHeight, sides, colCapWidth, domeRadius);
     ribs.position.set(0, drumHalfHeight, centerOffsetZ);
     scene.add(ribs);
 
@@ -1272,12 +1281,18 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
     // Rippe auf der Gebaeuderueckseite, die hinter der eigentlichen (im
     // Back-Layer sichtbaren) Kuppel-/Sockelflaeche liegt, wird dadurch
     // korrekt verdeckt statt ueber sie hinweg gezeichnet.
-    const domeOcc = new THREE.Mesh(
-      new THREE.LatheGeometry(domeLatheProfile(ringRadius, drumHalfHeight * DOME_HEIGHT_FRACTION, 10), 48),
-      occMat
-    );
+    // Komplette Kuppel inkl. Gebaelk (buildDome selbst, nur mit occMat) -
+    // sonst konnten rueckseitige Flaggen ueber das Gebaelk-Band gezeichnet
+    // werden, das ausserhalb der reinen Kuppel-Profilkurve liegt.
+    const domeOcc = buildDome(domeRadius, drumHalfHeight, sides);
+    domeOcc.traverse((o) => {
+      if (o.isMesh) {
+        o.material.dispose();
+        o.material = occMat;
+        o.renderOrder = -1;
+      }
+    });
     domeOcc.position.set(0, drumHalfHeight, centerOffsetZ);
-    domeOcc.renderOrder = -1;
     scene.add(domeOcc);
 
     const baseOcc = new THREE.Mesh(
