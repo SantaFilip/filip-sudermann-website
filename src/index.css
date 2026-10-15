@@ -757,13 +757,12 @@
        Rueckgrat wirkt nur auf seine Nachkommen. align-self auf dem direkten
        Kind (dem FitToFace-Wrapper) trifft stattdessen einen echten
        Nachkommen und funktioniert. */
-    /* #results (Marktvorteil) bewusst NICHT mehr in dieser Liste: seit der
-       Knopf ("Konkrete Zahlen zeigen") entfernt ist, endet der Inhalt
-       deutlich vor dem unteren Rand der Flaeche - oben verankert blieb
-       darunter ein grosser, unausgeglichener Leerraum stehen. Die
-       Gegenueberstellung wirkt vertikal zentriert (der FitToFace-
-       Standardwert, items-center) ausgeglichener. */
+    /* #results (Marktvorteil) und #process (Arbeitsweise) waren zeitweise
+       vertikal zentriert - auf Rueckmeldung jetzt ebenfalls oben verankert,
+       damit alle Badges (3-6) auf derselben Hoehe stehen. */
     .rotary-face:has(#creator-economy) > div,
+    .rotary-face:has(#results) > div,
+    .rotary-face:has(#process) > div,
     .rotary-face:has(#beratung) > div,
     .rotary-face:has(#faq) > div {
       align-self: flex-start;
@@ -783,8 +782,12 @@
       transform: translateY(calc(-2.5cqh / var(--face-zoom, 1)));
     }
 
-    /* Kontakt: Badge und Kalender zusammen etwas hoeher, wie FAQ. */
-    :not(.rotary-portal) > .rotary-face #beratung > div {
+    /* Kontakt: Badge und Kalender zusammen etwas hoeher, wie FAQ.
+       Marktvorteil und Arbeitsweise genauso - alle vier Badges stehen
+       damit auf derselben Hoehe. */
+    :not(.rotary-portal) > .rotary-face #beratung > div,
+    :not(.rotary-portal) > .rotary-face #results > div,
+    :not(.rotary-portal) > .rotary-face #process > div {
       transform: translateY(calc(-3cqh / var(--face-zoom, 1)));
     }
 
