@@ -151,6 +151,14 @@
     transform: none;
   }
 
+  /* Vorschau: alles ausser dem Badge (Titel, Untertitel, Gegenueberstellung)
+     minimal tiefer, auf Rueckmeldung - das Badge bleibt auf einer Hoehe mit
+     den anderen Facetten. transform verschiebt nur die Darstellung. */
+  :not(.rotary-portal) > .rotary-face #results .mb-12 > :not(.inline-flex),
+  :not(.rotary-portal) > .rotary-face #results > div > div:not(.mb-12) {
+    transform: translateY(calc(2cqh / var(--face-zoom, 1)));
+  }
+
   /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
      darin zentrierte sich, nicht sichtbar innerhalb der ganzen Kopfbreite.
      Ohne die Grenze spannt die Box die volle (zentrierte) Breite auf. */
