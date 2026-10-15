@@ -159,6 +159,12 @@
     transform: translateY(calc(2cqh / var(--face-zoom, 1)));
   }
 
+  /* Titel und Untertitel zusaetzlich tiefer - mehr Luft zum Badge, die
+     Gegenueberstellung bleibt dabei stehen. */
+  :not(.rotary-portal) > .rotary-face #results .mb-12 > :not(.inline-flex) {
+    transform: translateY(calc(4.5cqh / var(--face-zoom, 1)));
+  }
+
   /* max-w-xl haelt die Untertitel-Box selbst links verankert - nur der Text
      darin zentrierte sich, nicht sichtbar innerhalb der ganzen Kopfbreite.
      Ohne die Grenze spannt die Box die volle (zentrierte) Breite auf. */
