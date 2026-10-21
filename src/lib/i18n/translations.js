@@ -222,11 +222,22 @@ export const translations = {
     },
     inspirationHub: {
       title: "Inspiration-Hub für Creator",
-      subtitle: "Themen, Ressourcen und Vorlagen. Unter jedem Thema entstehen Platzhalter für zukünftige Fotos und PDFs.",
-      photo: "Foto",
-      pdf: "PDF",
-      comingSoon: "Demnächst",
-      back: "Zurück zur Startseite"
+      subtitle: "Acht Themen, acht Vorlagen. Für Creator aus Mindset, Spiritualität und Persönlichkeitsentwicklung: ansehen, herunterladen, direkt umsetzen.",
+      example: "Beispiel",
+      pages: "2 Seiten · kostenlos",
+      download: "PDF herunterladen",
+      openImage: "Bild in voller Größe öffnen",
+      back: "Zurück zur Startseite",
+      resources: [
+        { image: "/inspiration/de/01-creator-websites.webp", imageAlt: "Beispiel: Startseite einer Mindset-Coachin mit den vier Elementen, die verkaufen", pdf: "/inspiration/de/01-website-blueprint.pdf", pdfTitle: "Website-Blueprint", pdfDesc: "Die 7 Sektionen einer Creator-Website zum Ausfüllen, plus Pflicht-Checkliste." },
+        { image: "/inspiration/de/02-skool-community.webp", imageAlt: "Beispiel: Skool-Community mit Kategorien, Live-Call und Kursfortschritt", pdf: "/inspiration/de/02-skool-setup.pdf", pdfTitle: "Skool-Setup-Checkliste", pdfDesc: "Kategorien, Classroom-Struktur, Willkommens-Post und Launch-Checkliste." },
+        { image: "/inspiration/de/03-launch.webp", imageAlt: "Zeitstrahl eines 21-Tage-Challenge-Launchs mit Beispielrechnung", pdf: "/inspiration/de/03-challenge-launch.pdf", pdfTitle: "Challenge-Launch-Fahrplan", pdfDesc: "21 Tage Schritt für Schritt, Challenge-Plan zum Ausfüllen und Kennzahlen." },
+        { image: "/inspiration/de/04-newsletter.webp", imageAlt: "Willkommens-Sequenz: vom Opt-in zu fünf E-Mails", pdf: "/inspiration/de/04-willkommens-sequenz.pdf", pdfTitle: "Willkommens-Sequenz", pdfDesc: "5 E-Mail-Vorlagen für die ersten sechs Tage nach dem Opt-in." },
+        { image: "/inspiration/de/05-content.webp", imageAlt: "Ein Live-Call wird zu zehn Inhalten, plus Wochenrhythmus", pdf: "/inspiration/de/05-content-system.pdf", pdfTitle: "Content-Wochenplan & Hooks", pdfDesc: "Das 1-zu-10-Prinzip, Wochenrhythmus und Hook-Vorlagen für die Nische." },
+        { image: "/inspiration/de/06-automation.webp", imageAlt: "Automatisierung vom Kommentar über die DM bis zum Skool-Zugang", pdf: "/inspiration/de/06-automatisierungs-landkarte.pdf", pdfTitle: "Automatisierungs-Landkarte", pdfDesc: "Die vier Automatisierungen, die Geld bringen, plus DSGVO-Check." },
+        { image: "/inspiration/de/07-coaching-funnel.webp", imageAlt: "Premium-Coaching-Funnel mit Bewerbungsformular", pdf: "/inspiration/de/07-coaching-funnel.pdf", pdfTitle: "Bewerbung & Gesprächsleitfaden", pdfDesc: "Bewerbungsfragen und ein 45-Minuten-Leitfaden für Erstgespräche." },
+        { image: "/inspiration/de/08-offer-ladder.webp", imageAlt: "Angebotsleiter vom Freebie bis zur 1:1-Begleitung", pdf: "/inspiration/de/08-angebotsleiter.pdf", pdfTitle: "Arbeitsblatt Angebotsleiter", pdfDesc: "Deine Leiter eintragen, Lücken finden, Launch-Umsatz durchrechnen." }
+      ]
     },
     faq: {
       label: "FAQ",
@@ -541,11 +552,22 @@ export const translations = {
     },
     inspirationHub: {
       title: "Inspiration Hub for Creators",
-      subtitle: "Topics, resources and templates. Under each topic you'll find placeholders for upcoming photos and PDFs.",
-      photo: "Photo",
-      pdf: "PDF",
-      comingSoon: "Coming soon",
-      back: "Back to home"
+      subtitle: "Eight topics, eight templates. For creators in mindset, spirituality and personal growth: view, download, put into practice.",
+      example: "Example",
+      pages: "2 pages · free",
+      download: "Download PDF",
+      openImage: "Open full-size image",
+      back: "Back to home",
+      resources: [
+        { image: "/inspiration/en/01-creator-websites.webp", imageAlt: "Example: homepage of a mindset coach with the four elements that sell", pdf: "/inspiration/en/01-website-blueprint.pdf", pdfTitle: "Website Blueprint", pdfDesc: "The 7 sections of a creator website to fill in, plus an essentials checklist." },
+        { image: "/inspiration/en/02-skool-community.webp", imageAlt: "Example: Skool community with categories, live call and course progress", pdf: "/inspiration/en/02-skool-setup.pdf", pdfTitle: "Skool Setup Checklist", pdfDesc: "Categories, classroom structure, welcome post and launch checklist." },
+        { image: "/inspiration/en/03-launch.webp", imageAlt: "Timeline of a 21-day challenge launch with example math", pdf: "/inspiration/en/03-challenge-launch.pdf", pdfTitle: "Challenge Launch Roadmap", pdfDesc: "21 days step by step, a challenge plan to fill in, and key numbers." },
+        { image: "/inspiration/en/04-newsletter.webp", imageAlt: "Welcome sequence: from opt-in to five emails", pdf: "/inspiration/en/04-welcome-sequence.pdf", pdfTitle: "Welcome Sequence", pdfDesc: "5 email templates for the first six days after opt-in." },
+        { image: "/inspiration/en/05-content.webp", imageAlt: "One live call becomes ten pieces of content, plus a weekly rhythm", pdf: "/inspiration/en/05-content-system.pdf", pdfTitle: "Weekly Content Plan & Hooks", pdfDesc: "The 1-to-10 principle, weekly rhythm and hook templates for the niche." },
+        { image: "/inspiration/en/06-automation.webp", imageAlt: "Automation from comment to DM to Skool access", pdf: "/inspiration/en/06-automation-map.pdf", pdfTitle: "Automation Map", pdfDesc: "The four automations that make money, plus a privacy check." },
+        { image: "/inspiration/en/07-coaching-funnel.webp", imageAlt: "Premium coaching funnel with application form", pdf: "/inspiration/en/07-coaching-funnel.pdf", pdfTitle: "Application & Call Guide", pdfDesc: "Application questions and a 45-minute discovery call guide." },
+        { image: "/inspiration/en/08-offer-ladder.webp", imageAlt: "Offer ladder from freebie to 1:1 guidance", pdf: "/inspiration/en/08-offer-ladder.pdf", pdfTitle: "Offer Ladder Worksheet", pdfDesc: "Fill in your ladder, find the gaps, calculate launch revenue." }
+      ]
     },
     faq: {
       label: "FAQ",
