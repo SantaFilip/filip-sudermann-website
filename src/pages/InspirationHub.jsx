@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Globe, Users, Rocket, Mail, Clapperboard, Bot, TrendingUp, Package, FileText, Download, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Globe, Users, Rocket, Mail, Clapperboard, Bot, TrendingUp, Package, Download, Maximize2 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const iconMap = { Globe, Users, Rocket, Mail, Clapperboard, Bot, TrendingUp, Package };
@@ -33,9 +33,9 @@ export default function InspirationHub() {
               const res = hub.resources[i];
               return (
                 <section id={`topic-${i}`} key={i} className="border-t border-border pt-10 scroll-mt-24">
-                  <div className="inline-flex flex-col border-2 border-accent rounded-xl px-6 py-3 mb-5">
-                    <span className="text-[34px] lg:text-[40px] font-heading font-extrabold tracking-tight text-accent leading-tight -translate-y-1 lg:-translate-y-1.5">{num}</span>
-                    <span className="text-[28px] lg:text-[34px] font-heading font-extrabold tracking-tight text-foreground leading-tight mt-1">{item.title}</span>
+                  <div className="inline-flex items-baseline gap-4 lg:gap-5 border-2 border-accent rounded-xl px-6 lg:px-8 py-3 lg:py-4 mb-5 max-w-full">
+                    <span className="text-[34px] lg:text-[40px] font-heading font-extrabold tracking-tight text-accent leading-tight shrink-0">{num}</span>
+                    <span className="text-[28px] lg:text-[34px] font-heading font-extrabold tracking-tight text-foreground leading-tight">{item.title}</span>
                   </div>
                   <div className="flex items-start gap-3 mb-8 max-w-2xl">
                     <Icon size={20} className="text-accent mt-1 shrink-0" />
@@ -69,10 +69,7 @@ export default function InspirationHub() {
                         className="group flex flex-col justify-between rounded-xl bg-primary text-primary-foreground p-7 lg:p-8 hover:-translate-y-0.5 transition-transform"
                       >
                         <div>
-                          <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-[0.14em]">
-                            <FileText size={16} /> {hub.template}
-                          </div>
-                          <h3 className="mt-4 text-3xl lg:text-4xl font-heading font-bold leading-tight">{res.pdfTitle}</h3>
+                          <h3 className="text-3xl lg:text-4xl font-heading font-bold leading-tight">{res.pdfTitle}</h3>
                           <p className="mt-3 text-primary-foreground/75 leading-relaxed">{res.pdfDesc}</p>
                         </div>
                         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
