@@ -294,6 +294,7 @@ export default function RotaryStage({
   const shellRefs = useRef([]);
   const glWrapRef = useRef(null);
   const architectureRef = useRef(null);
+  const backRef = useRef(null);
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
   // wirkt nur auf die Ausdehnung in Drehrichtung. stageW/stageH sind die
   // volle Buehnengroesse (sticky.clientWidth/-Height) - fuer die echte
@@ -497,7 +498,8 @@ export default function RotaryStage({
 
       // Saeulen: eine je Nahtstelle zwischen zwei Facetten, auf halbem Winkel
       // zwischen den Nachbarn positioniert (Versatz 0.5 Schritt). Sie drehen
-      // sich mit dem Koerper mit - anders als Sockel/Dach, die fest stehen -
+      // sich mit dem Koerper mit - wie der Sockel, anders als das Dach,
+      // das fest steht -
       // und markieren so visuell, wo eine Facette endet und die naechste
       // beginnt. Beim Aufklappen ausgeblendet: nur eine Facette ist dann
       // sichtbar, eine einzelne Saeule daneben wuerde verloren wirken.
@@ -525,6 +527,16 @@ export default function RotaryStage({
       // koennen, siehe setColumns() in ArchitectureGL.jsx.
       const faceDegs = Array.from({ length: sides }, (_, s) => kuerzesterWeg(p - s) * step);
       architectureRef.current?.setColumns(colDegs, colRadius, -radius, radius, faceDegs);
+
+      // Sockel: dreht mit dem Baukoerper mit (Back-Layer, siehe
+      // ArchitectureGL.setRotation). Bewusst der FORTLAUFENDE Winkel
+      // (p * step), nicht der per kuerzesterWeg umgebrochene wie bei
+      // Saeulen/Facetten: dort braucht jede Flaeche einzeln den kuerzesten
+      // Weg zur Front, damit sie nicht quer durch den Koerper springt. Der
+      // Sockel ist dagegen EIN zusammenhaengender Koerper - ein Umbruch des
+      // Winkels wuerde ihn bei jedem halben Umlauf sichtbar zurueckschnappen
+      // lassen, obwohl die Trommel gleichmaessig weiterdreht.
+      backRef.current?.setRotation(p * step);
 
       // Inhaltsseiten darueber.
       faceRefs.current.forEach((face, i) => {
@@ -988,8 +1000,9 @@ export default function RotaryStage({
           <RotatingBackdrop />
         </div>
 
-        {/* Dach+Sockel: eigener, statischer WebGL-Layer VOR der Trommel im
-            DOM - liegt damit HINTER dem Inhalt. Der undurchsichtige
+        {/* Dach+Sockel: eigener WebGL-Layer VOR der Trommel im DOM - liegt
+            damit HINTER dem Inhalt. Der Sockel dreht ueber backRef mit der
+            Trommel mit (siehe apply()), das Dach steht fest. Der undurchsichtige
             Facetten-Hintergrund deckt ihn dadurch immer vollstaendig ab,
             unabhaengig davon, was auf dieser Ebene passiert (siehe
             ArchitectureGL.jsx). Nur die Saeulen (weiter unten, NACH der
@@ -997,6 +1010,7 @@ export default function RotaryStage({
             Nahtstelle zwischen zwei Facetten. */}
         {cube.h > 0 && ringRadius > 0 && (
           <ArchitectureBackGL
+            ref={backRef}
             stageW={cube.stageW}
             stageH={cube.stageH}
             perspectivePx={perspektivePx}
@@ -1087,7 +1101,7 @@ export default function RotaryStage({
             Layer NACH box im DOM (siehe ArchitectureGL.jsx - Dach/Sockel
             sitzen als eigener Layer VOR box, siehe oben). Saeulen sitzen an
             der Nahtstelle zwischen zwei Facetten und muessen praktisch immer
-            vor dem Inhalt liegen - anders als Dach/Sockel, die nichts vor
+            vor dem Inhalt liegen - anders als Dach und Sockel, die nichts vor
             dem Inhalt zu suchen haben. Wird wie die Huelle ausgeblendet,
             wenn eine Facette einzeln aufgeklappt ist. */}
         {cube.h > 0 && ringRadius > 0 && (

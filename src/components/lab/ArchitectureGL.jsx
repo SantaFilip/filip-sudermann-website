@@ -12,8 +12,10 @@ import * as THREE from 'three';
  * `perspective`) anders verkleinert/verschoben projiziert.
  *
  * ZWEI getrennte WebGL-Layer statt einem, bewusst:
- * - ArchitectureBackGL (Dach + Sockel): statisch, dreht nicht mit. Sitzt im
- *   DOM VOR der Facetten-Trommel - liegt also HINTER dem Inhalt. Jede
+ * - ArchitectureBackGL (Dach + Sockel): Sitzt im DOM VOR der
+ *   Facetten-Trommel - liegt also HINTER dem Inhalt. Der Sockel dreht mit
+ *   der Trommel mit (setRotation), das Dach nicht - bei reinen
+ *   Rotationsflaechen waere eine Drehung unsichtbar, siehe dort. Jede
  *   Inhaltsflaeche (undurchsichtiger CSS-Hintergrund) deckt sie vollstaendig
  *   ab, egal was auf dieser Ebene passiert. Frueher lebten Dach/Sockel in
  *   derselben Ebene wie die Saeulen, NACH der Trommel im DOM (vor dem
@@ -949,6 +951,19 @@ function buildBaseRing(circumRadius, columnCapWidth) {
 
 function buildBase(circumRadius, heightBudget, columnCapWidth) {
   const group = new THREE.Group();
+  // Mitdrehender Teil des Sockels, als eigene Untergruppe. Der Sockel dreht
+  // sich mit dem Baukoerper mit (ArchitectureBackGL.setRotation dreht genau
+  // diese Gruppe, siehe group.userData.spin dort) - aber NICHT alles daran
+  // darf mitdrehen, siehe die Marmor-Umrandung weiter unten.
+  //
+  // Dass die Drehung ueberhaupt sichtbar ist, liegt allein an der Textur:
+  // die Stufen-Silhouette selbst ist eine Rotationsflaeche (LatheGeometry)
+  // und sieht aus jedem Winkel gleich aus - die Blockfugen der Marmortextur
+  // (siehe buildBaseMarbleTexture, 6 Bloecke x repeat 3 = 18 um den Umfang)
+  // und ihre Adern wandern dagegen sichtbar mit.
+  const spin = new THREE.Group();
+  group.add(spin);
+  group.userData.spin = spin;
   // topR = circumRadius (hier: der Ring-Radius, exakt derselbe wie bei den
   // Saeulen) statt vorher *0.93 - die Plattformkante muss exakt dort
   // sitzen, wo die Saeulenfuesse ankommen, nicht knapp daneben.
@@ -979,16 +994,29 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
     roughness: 0.45,
     side: THREE.DoubleSide,
   });
-  group.add(new THREE.Mesh(geo, mat));
+  spin.add(new THREE.Mesh(geo, mat));
 
   // Goldkante am Plattformrand.
   const rimGeo = new THREE.TorusGeometry(topR, circumRadius * 0.006, 10, 64);
   const rimMat = new THREE.MeshStandardMaterial({ color: BRASS_LIGHT, metalness: 0.78, roughness: 0.2 });
   const rim = new THREE.Mesh(rimGeo, rimMat);
   rim.rotation.x = Math.PI / 2;
-  group.add(rim);
+  spin.add(rim);
 
   // Marmor-Umrandung um die Saeulenfuesse, edler als das nackte Fliesenfeld.
+  //
+  // Bewusst AUSSERHALB von `spin`, also der einzige Teil des Sockels, der
+  // nicht mitdreht: die Platte ist absichtlich zur Ellipse gestaucht
+  // (group.scale.x = 0.9 in buildBaseRing), und diese Stauchung ist eine
+  // Korrektur im Kamera-/Bildschirmraum - links/rechts stehen die
+  // seitlichen Saeulen, vorne die kameranahe, die durch die Perspektive
+  // mehr radialen Puffer braucht. Wuerde die Ellipse mitdrehen, schwenkte
+  // ihre schmale Achse aus der Bildschirm-X-Richtung heraus und die
+  // Saeulenfuesse ragten bei manchen Winkeln ueber die weisse Flaeche
+  // hinaus. Optisch kostet das nichts: die Platte ist eine gleichmaessige
+  // weisse Ringflaeche mit Goldkanten, hat also - anders als die
+  // Stufentextur - ueberhaupt kein Winkelmerkmal, an dem eine Drehung
+  // sichtbar wuerde.
   group.add(buildBaseRing(topR, columnCapWidth || circumRadius * 0.1));
 
   // Dezente Messinglinie an der Vorderkante jeder Trittstufe (wo Tritt- auf
@@ -1001,7 +1029,7 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
     const edge = new THREE.Mesh(new THREE.TorusGeometry(r, circumRadius * 0.003, 8, 64), stepEdgeMat);
     edge.rotation.x = Math.PI / 2;
     edge.position.y = y;
-    group.add(edge);
+    spin.add(edge);
   });
 
   // Aeusserste Plattformkante: duenner Navy-Ring statt Messing - fasst die
@@ -1013,7 +1041,7 @@ function buildBase(circumRadius, heightBudget, columnCapWidth) {
   );
   botEdge.rotation.x = Math.PI / 2;
   botEdge.position.y = y3;
-  group.add(botEdge);
+  spin.add(botEdge);
 
   return group;
 }
@@ -1092,14 +1120,50 @@ function disposeScene(scene, renderer, container) {
   renderer.dispose();
 }
 
-// Dach + Sockel: statisch, dreht nicht mit. Muss im DOM VOR der
-// Facetten-Trommel stehen (siehe RotaryStage) - liegt damit HINTER dem
-// Inhalt, der ihn so immer vollstaendig verdeckt, egal was auf dieser
-// Ebene passiert.
-export const ArchitectureBackGL = React.memo(function ArchitectureBackGL({
-  stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colCapWidth,
-}) {
+// Dach + Sockel. Muss im DOM VOR der Facetten-Trommel stehen (siehe
+// RotaryStage) - liegt damit HINTER dem Inhalt, der ihn so immer
+// vollstaendig verdeckt, egal was auf dieser Ebene passiert.
+//
+// Der SOCKEL dreht sich mit dem Baukoerper mit (setRotation, von
+// RotaryStage.apply() aufgerufen) - er gehoert als Stufenplattform
+// sichtbar zum drehenden Gebaeude, nicht zum Untergrund. Das DACH dreht
+// weiterhin nicht: Kuppel und Gebaelk sind reine Rotationsflaechen
+// (LatheGeometry/Torus) ohne Winkelmerkmal, eine Drehung waere dort
+// buchstaeblich nicht zu sehen - die sichtbar mitdrehenden Dachteile
+// (Rippen, Flaggen) liegen ohnehin im Front-Layer.
+export const ArchitectureBackGL = React.memo(forwardRef(function ArchitectureBackGL(
+  { stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ = 0, sides = 8, colCapWidth },
+  ref
+) {
   const containerRef = useRef(null);
+  const stateRef = useRef({});
+  // Letzter gesetzter Drehwinkel, bewusst AUSSERHALB des Effekts gehalten:
+  // bei jedem Resize/Neuaufbau der Szene (Effekt laeuft neu) wuerde der
+  // frisch gebaute Sockel sonst auf 0 Grad zurueckspringen, obwohl die
+  // Trommel daneben weitergedreht steht.
+  const degRef = useRef(0);
+
+  useImperativeHandle(ref, () => ({
+    // deg: fortlaufender Drehwinkel des Baukoerpers in Grad, in DERSELBEN
+    // Parametrisierung wie die Saeulenwinkel in setColumns (dort
+    // world_x = -R*sin(deg)). Eine Three.js-Y-Drehung um theta bildet den
+    // lokalen Punkt (0,0,R) dagegen auf (+R*sin(theta), R*cos(theta)) ab -
+    // entgegengesetztes Vorzeichen in x, also theta = -deg. Dieselbe
+    // Umrechnung wie bei den Dachrippen im Front-Layer.
+    setRotation(deg) {
+      degRef.current = deg;
+      const { spin, renderer, scene, camera } = stateRef.current;
+      if (!spin || !renderer) return;
+      const rad = (-deg * Math.PI) / 180;
+      // Die Trommel dreht nicht von selbst (siehe RotaryStage: kein
+      // Autoplay) - apply() laeuft aber trotzdem jeden Frame. Ohne diesen
+      // Vergleich kostete der an sich statische Back-Layer dauerhaft einen
+      // zweiten WebGL-Render pro Frame, nur um dasselbe Bild zu zeichnen.
+      if (spin.rotation.y === rad) return;
+      spin.rotation.y = rad;
+      renderer.render(scene, camera);
+    },
+  }));
 
   useEffect(() => {
     const container = containerRef.current;
@@ -1118,9 +1182,19 @@ export const ArchitectureBackGL = React.memo(function ArchitectureBackGL({
     base.position.set(0, -drumHalfHeight, centerOffsetZ);
     scene.add(base);
 
-    renderer.render(scene, camera);
+    // Mitdrehender Teil des Sockels (siehe buildBase) - direkt auf den
+    // zuletzt bekannten Winkel setzen, damit ein Neuaufbau der Szene
+    // nahtlos an der aktuellen Drehung anschliesst.
+    const spin = base.userData.spin ?? null;
+    if (spin) spin.rotation.y = (-degRef.current * Math.PI) / 180;
 
-    return () => disposeScene(scene, renderer, container);
+    renderer.render(scene, camera);
+    stateRef.current = { renderer, scene, camera, spin };
+
+    return () => {
+      disposeScene(scene, renderer, container);
+      stateRef.current = {};
+    };
   }, [stageW, stageH, perspectivePx, ringRadius, drumHalfHeight, centerOffsetZ, sides, colCapWidth]);
 
   return (
@@ -1131,7 +1205,7 @@ export const ArchitectureBackGL = React.memo(function ArchitectureBackGL({
       aria-hidden="true"
     />
   );
-});
+}));
 
 // Saeulen + Rippen: dreht mit der Trommel mit. Muss im DOM NACH der
 // Facetten-Trommel stehen - liegt damit VOR dem Inhalt, das ist hier
