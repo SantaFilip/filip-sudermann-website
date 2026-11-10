@@ -21,7 +21,9 @@ import mondKarte from '@/assets/moon-map.jpg';
 // Position bei Drehwinkel 0: oben rechts neben dem rechten Turm, auf der
 // Seite, von der das Hauptlicht in ArchitectureGL kommt.
 const MOND_X = 0.93;
-const MOND_Y = 0.11;
+// Der Himmel reicht bis hinter die Kopfleiste - 0.18 haelt den Mond
+// darunter im freien Himmel.
+const MOND_Y = 0.18;
 const MILCHSTRASSE_X = 0.32;
 
 // Deterministischer Zufall: jede Seite zeigt denselben Sternenhimmel.

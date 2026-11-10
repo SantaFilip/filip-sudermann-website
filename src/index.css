@@ -1421,3 +1421,26 @@
   outline: 2px solid hsl(var(--accent));
   outline-offset: 3px;
 }
+
+/* Kopfleiste ueber dem Nachthimmel der Rolle (gesetzt von RotaryStage):
+   kein eigener Hintergrund, nur die Beschriftung bleibt stehen. */
+html[data-kopfleiste] .kopfleiste {
+  background-color: transparent;
+  border-color: transparent;
+}
+/* Solange der Himmel dahinter dunkel ist: Farbtokens innerhalb der
+   Kopfleiste umkehren, damit Logo, Links, Sprachschalter und Button lesbar
+   bleiben, ohne jede Klasse einzeln umzuschalten. */
+html[data-kopfleiste='nacht'] .kopfleiste {
+  --foreground: 40 46% 95%;
+  --background: 217 62% 12%;
+  --muted-foreground: 40 22% 80%;
+  --border: 217 30% 42%;
+  --card: 217 50% 16%;
+  /* Logo und Menue-Icon haben keine eigene Farbklasse und erben sonst die
+     dunkle Schriftfarbe des body. */
+  color: hsl(var(--foreground));
+}
+html[data-kopfleiste='nacht'] .kopfleiste .btn-fill {
+  color: hsl(217 62% 12%);
+}

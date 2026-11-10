@@ -67,7 +67,9 @@ export default function Header() {
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/60 transition-shadow duration-300">
+    // kopfleiste: ueber dem Nachthimmel der Rolle durchsichtig, siehe
+    // data-kopfleiste in index.css und kopfleisteMelden in RotaryStage.
+    <header className="kopfleiste fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/60 transition-colors duration-300">
       <div className="max-w-[1500px] mx-auto px-6 lg:px-16 flex items-center justify-between gap-6 h-16 lg:h-20">
         {/* Logo: auf dem Handy (<640px) bleibt es beim Oeffnen stehen (wie
             bisher, das Dropdown erscheint dort separat darunter) - nur im

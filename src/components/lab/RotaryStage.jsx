@@ -420,6 +420,7 @@ export default function RotaryStage({
       return x;
     };
     let depth = 0;
+    let tintWert = 0;
 
     const layout = () => {
       const vorgabe = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
@@ -782,9 +783,31 @@ export default function RotaryStage({
       scrub: true,
       onUpdate: (self) => {
         const rest = (self.progress - TEICH_HAELT) / (1 - TEICH_HAELT);
-        backdropRef.current?.style.setProperty('--tint', String(Math.min(1, Math.max(0, rest))));
+        tintWert = Math.min(1, Math.max(0, rest));
+        backdropRef.current?.style.setProperty('--tint', String(tintWert));
+        kopfleisteMelden();
       },
     });
+
+    // Die Kopfleiste ist durchsichtig, solange ihre Unterkante ueber dem
+    // Himmel liegt; erreicht die Textsektion darunter sie, wird sie wieder
+    // deckend. Ihre Hoehe ist genau der Header-Ausgleich (padding-top).
+    // 'nacht' = Himmel dahinter noch dunkel, Beschriftung hell; danach ist
+    // er schon weitgehend in den Seitenton uebergeblendet und die normale
+    // dunkle Beschriftung liest besser.
+    function kopfleisteMelden() {
+      const kopf = parseFloat(getComputedStyle(root).paddingTop) || 0;
+      const r = root.getBoundingClientRect();
+      const html = document.documentElement;
+      if (r.top < kopf && r.bottom > kopf) {
+        html.dataset.kopfleiste = tintWert < 0.5 ? 'nacht' : 'transparent';
+      } else {
+        delete html.dataset.kopfleiste;
+      }
+    }
+    kopfleisteMelden();
+    window.addEventListener('scroll', kopfleisteMelden, { passive: true });
+    window.addEventListener('resize', kopfleisteMelden);
 
     return () => {
       pfeilRef.current = null;
@@ -795,6 +818,9 @@ export default function RotaryStage({
       gsap.ticker.remove(tick);
       if (seekTween) seekTween.kill();
       teichTrigger.kill();
+      window.removeEventListener('scroll', kopfleisteMelden);
+      window.removeEventListener('resize', kopfleisteMelden);
+      delete document.documentElement.dataset.kopfleiste;
       // Falls dieser Effekt neu aufgesetzt wird (z.B. Umschalten auf mobile)
       // waehrend eine Facette offen stand: den Vollbild-Portal-State mit
       // aufraeumen, sonst bliebe er verwaist stehen.
@@ -971,8 +997,14 @@ export default function RotaryStage({
     // Header-Ausgleich; mehr Luftraum kommt stattdessen ueber
     // GEBAEUDE_SKALIERUNG (siehe unten) - der bleibt INNERHALB der Buehne,
     // vom blauen Hintergrund gedeckt.
+    // Der Himmel liegt deshalb auf dem Wrapper statt in der Buehne: er
+    // reicht bis an den oberen Seitenrand, hinter die durchsichtige
+    // Kopfleiste (siehe kopfleisteMelden).
     <>
-    <div ref={rootRef} data-rotary-root="" className="pt-16 lg:pt-20">
+    <div ref={rootRef} data-rotary-root="" className="relative pt-16 lg:pt-20">
+      <div ref={backdropRef} className="absolute inset-0">
+        <RotatingBackdrop ref={himmelRef} perspektive={perspektivePx} />
+      </div>
       <div
         ref={stickyRef}
         // Normales Fluss-Element, nicht mehr gepinnt: die Buehne dreht sich
@@ -993,10 +1025,6 @@ export default function RotaryStage({
           perspectiveOrigin: '50% 50%',
         }}
       >
-        <div ref={backdropRef} className="absolute inset-0">
-          <RotatingBackdrop ref={himmelRef} perspektive={perspektivePx} />
-        </div>
-
         {/* Dach+Sockel: eigener WebGL-Layer VOR der Trommel im DOM - liegt
             damit HINTER dem Inhalt. Der Sockel dreht ueber backRef mit der
             Trommel mit (siehe apply()), das Dach steht fest. Der undurchsichtige
