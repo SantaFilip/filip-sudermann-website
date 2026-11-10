@@ -1,22 +1,23 @@
 import React from 'react';
 
 /**
- * Kristallblauer Teich unter den Folien.
+ * Dunkler Nachthimmel hinter dem Gebaeude, in den Markenfarben statt in
+ * einem unabhaengigen Hellblau/Cyan.
  *
- * Drei Lagen uebereinander: das tiefe Wasser als Grund, darueber Ringe, die
- * sich mit dem Scroll drehen und die Wasseroberflaeche andeuten, und ganz
+ * Drei Lagen uebereinander: das tiefe Navy als Grund, darueber Ringe, die
+ * sich mit dem Scroll drehen und wie Lichtspuren am Himmel lesen, und ganz
  * oben die Farbe der Webseite, die ueber --tint langsam eingeblendet wird.
- * Am Ende der Folien steht damit nicht mehr der Teich, sondern der Grundton
- * der Seite - der Uebergang in den Footer bleibt fugenlos.
+ * Am Ende der Folien steht damit nicht mehr der Nachthimmel, sondern der
+ * Grundton der Seite - der Uebergang in den Footer bleibt fugenlos.
  *
  * Gesteuert wird alles ueber CSS-Variablen, die die Buehne pro Frame setzt:
  * --spin fuer die Drehung, --tint fuer den Fortschritt von 0 bis 1. React
  * bei 60fps neu zu rendern waere um ein Vielfaches teurer.
  */
-const TIEF = 'hsl(203 72% 22%)';
-const MITTE = 'hsl(196 76% 38%)';
-const HELL = 'hsl(187 74% 62%)';
-const SCHAUM = 'hsl(184 80% 84%)';
+const TIEF = 'hsl(217 62% 7%)';
+const MITTE = 'hsl(217 58% 16%)';
+const HELL = 'hsl(217 45% 28%)';
+const SCHAUM = 'hsl(42 58% 68%)';
 
 export default function RotatingBackdrop() {
   return (
