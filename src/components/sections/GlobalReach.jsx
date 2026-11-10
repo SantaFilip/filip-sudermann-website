@@ -20,8 +20,20 @@ export default function GlobalReach() {
               <span className="text-xs font-mono tracking-widest text-foreground font-bold">{lang === 'de' ? 'Standort' : 'Location'}: {t.globalReach.badgeCountry}</span>
             </div>
           </div>
-          <div className="relative w-full max-w-md mx-auto aspect-square overflow-hidden">
-            <Earth3D />
+          <div className="relative w-full max-w-md mx-auto aspect-square">
+            {/* Glut hinter dem Globus: ohne sie verliert sich die Kugel vor dem
+                hellen Seitenhintergrund, mit ihr liest sie als leuchtender
+                Koerper statt als flaches Foto. */}
+            <div
+              className="pointer-events-none absolute inset-[-18%] rounded-full blur-3xl"
+              style={{
+                background:
+                  'radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, hsl(var(--primary) / 0.18) 45%, transparent 72%)',
+              }}
+            />
+            <div className="relative w-full h-full overflow-hidden">
+              <Earth3D />
+            </div>
           </div>
         </div>
       </div>

@@ -101,7 +101,10 @@ export default function Earth3D() {
       earthGroup.add(pin, halo);
     });
 
-    const atmGeo = new THREE.SphereGeometry(1.2, 72, 72);
+    // Atmosphaere in den Markenfarben (Gold-Akzent aussen, Navy im Kern)
+    // statt des alten neutralen Blaus - der Globus leuchtet dadurch wie ein
+    // Markenobjekt statt wie eine generische Stock-Grafik.
+    const atmGeo = new THREE.SphereGeometry(1.22, 72, 72);
     const atmMat = new THREE.ShaderMaterial({
       vertexShader: `
         varying vec3 vNormal;
@@ -113,8 +116,11 @@ export default function Earth3D() {
       fragmentShader: `
         varying vec3 vNormal;
         void main() {
-          float intensity = pow(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-          gl_FragColor = vec4(0.3, 0.55, 1.0, 1.0) * intensity;
+          float rim = pow(0.6 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.4);
+          vec3 core = vec3(0.09, 0.17, 0.35);
+          vec3 edge = vec3(0.93, 0.72, 0.32);
+          vec3 color = mix(core, edge, smoothstep(0.0, 0.9, rim));
+          gl_FragColor = vec4(color, 1.0) * rim * 1.6;
         }
       `,
       side: THREE.BackSide,
@@ -124,10 +130,41 @@ export default function Earth3D() {
     const atmosphere = new THREE.Mesh(atmGeo, atmMat);
     scene.add(atmosphere);
 
-    scene.add(new THREE.AmbientLight(0x3a3a4a, 0.7));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+    // Zweite, engere Glutschicht direkt auf der Oberflaeche: gibt der Kugel
+    // einen harten, satten Rand statt des weichen Verlaufs allein.
+    const rimGeo = new THREE.SphereGeometry(1.03, 72, 72);
+    const rimMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec3 vNormal;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vNormal;
+        void main() {
+          float rim = pow(1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 3.2);
+          gl_FragColor = vec4(0.95, 0.76, 0.35, 1.0) * rim * 1.1;
+        }
+      `,
+      side: THREE.FrontSide,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      depthWrite: false,
+    });
+    const rimLight = new THREE.Mesh(rimGeo, rimMat);
+    earthGroup.add(rimLight);
+
+    scene.add(new THREE.AmbientLight(0x3a3a4a, 0.55));
+    const sun = new THREE.DirectionalLight(0xfff3dc, 2.2);
     sun.position.set(5, 2.5, 4);
     scene.add(sun);
+    // Kaltes Gegenlicht aus der Navy-Palette, damit die Schattenseite nicht
+    // komplett schwarz absaeuft, sondern als Teil der Markenfarbwelt liest.
+    const fill = new THREE.DirectionalLight(0x3a5fb0, 0.6);
+    fill.position.set(-4, -1.5, -3);
+    scene.add(fill);
 
     earthGroup.rotation.x = -0.35;
 
@@ -200,6 +237,8 @@ export default function Earth3D() {
       cloudMat.dispose();
       atmGeo.dispose();
       atmMat.dispose();
+      rimGeo.dispose();
+      rimMat.dispose();
       renderer.dispose();
     };
   }, []);
