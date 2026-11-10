@@ -8,12 +8,14 @@ import PageNotFound from './lib/PageNotFound';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { ToastProvider } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { MusikProvider } from '@/lib/MusikContext';
 
 function App() {
   return (
     <SmoothScroll>
       <LanguageProvider>
         <ToastProvider>
+          <MusikProvider>
           <Router>
             <ScrollToTop />
             <Routes>
@@ -26,6 +28,7 @@ function App() {
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </Router>
+          </MusikProvider>
           <Toaster />
         </ToastProvider>
       </LanguageProvider>

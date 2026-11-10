@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import MusikRegler from '@/components/MusikRegler';
 
 export default function Legal({ doc }) {
   const { t, lang, toggleLang } = useLanguage();
@@ -16,6 +17,7 @@ export default function Legal({ doc }) {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 flex items-center justify-between h-16">
           <Link to="/" className="font-heading font-bold tracking-tight">Filip Sudermann</Link>
           <div className="flex items-center gap-4">
+            <MusikRegler />
             <div className="flex items-center border border-border">
               <button
                 onClick={() => lang !== 'de' && toggleLang()}

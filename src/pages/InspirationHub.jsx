@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Globe, Users, Rocket, Mail, Clapperboard, Bot, TrendingUp, Package, Download, Maximize2 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import MusikRegler from '@/components/MusikRegler';
 
 const iconMap = { Globe, Users, Rocket, Mail, Clapperboard, Bot, TrendingUp, Package };
 
@@ -15,9 +16,12 @@ export default function InspirationHub() {
       <div className="border-b border-border sticky top-0 bg-background/85 backdrop-blur-md z-40">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
           <Link to="/" className="font-heading font-bold tracking-tight">Filip Sudermann</Link>
-          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-            <ArrowLeft size={14} /> {hub.back}
-          </Link>
+          <div className="flex items-center gap-4">
+            <MusikRegler />
+            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+              <ArrowLeft size={14} /> {hub.back}
+            </Link>
+          </div>
         </div>
       </div>
       <main className="py-16 lg:py-24">

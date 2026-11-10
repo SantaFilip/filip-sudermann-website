@@ -1444,3 +1444,38 @@ html[data-kopfleiste='nacht'] .kopfleiste {
 html[data-kopfleiste='nacht'] .kopfleiste .btn-fill {
   color: hsl(217 62% 12%);
 }
+
+/* Lautstaerkeregler der Hintergrundmusik (Kopfleiste). Farben ueber die
+   Tokens, damit er ueber dem Nachthimmel automatisch hell wird. */
+.musik-schieber {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(to right,
+    hsl(var(--foreground)) 0 var(--wert),
+    hsl(var(--border)) var(--wert) 100%);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.musik-schieber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: hsl(var(--foreground));
+  border: 2px solid hsl(var(--background));
+  box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.25);
+}
+.musik-schieber::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: hsl(var(--foreground));
+  border: 2px solid hsl(var(--background));
+}
+.musik-schieber:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 4px;
+}
