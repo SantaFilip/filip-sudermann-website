@@ -295,6 +295,7 @@ export default function RotaryStage({
   const glWrapRef = useRef(null);
   const architectureRef = useRef(null);
   const backRef = useRef(null);
+  const himmelRef = useRef(null);
   // Flaechenmasse. Breite und Hoehe getrennt: der Verkleinerungsfaktor
   // wirkt nur auf die Ausdehnung in Drehrichtung. stageW/stageH sind die
   // volle Buehnengroesse (sticky.clientWidth/-Height) - fuer die echte
@@ -419,7 +420,6 @@ export default function RotaryStage({
       return x;
     };
     let depth = 0;
-    let drift = 0;
 
     const layout = () => {
       const vorgabe = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches
@@ -569,10 +569,9 @@ export default function RotaryStage({
         if (closeBtn) closeBtn.style.visibility = auf ? 'visible' : 'hidden';
       });
 
-      const backdrop = backdropRef.current;
-      if (backdrop) {
-        backdrop.style.setProperty('--spin', `${p * 42 + drift}deg`);
-      }
+      // Fortlaufender Winkel wie beim Sockel: der Himmel ist ein
+      // zusammenhaengender Rundhimmel und darf nicht zurueckschnappen.
+      himmelRef.current?.setDreh(p * step);
     };
 
     layout();
@@ -743,10 +742,8 @@ export default function RotaryStage({
     });
 
     const tick = () => {
-      drift += 0.035;
       // Kein Autoplay mehr: die Trommel steht, bis jemand zieht oder einen
-      // der Pfeile klickt. apply(pos) laeuft trotzdem pro Frame weiter, damit
-      // der Hintergrund (drift) sich weiter sanft bewegt.
+      // der Pfeile klickt.
       if (modus === 'auto') apply(pos);
     };
     gsap.ticker.add(tick);
@@ -997,7 +994,7 @@ export default function RotaryStage({
         }}
       >
         <div ref={backdropRef} className="absolute inset-0">
-          <RotatingBackdrop />
+          <RotatingBackdrop ref={himmelRef} perspektive={perspektivePx} />
         </div>
 
         {/* Dach+Sockel: eigener WebGL-Layer VOR der Trommel im DOM - liegt
