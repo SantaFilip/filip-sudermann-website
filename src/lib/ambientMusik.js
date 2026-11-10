@@ -7,10 +7,11 @@
  *   verstimmten Saegezahn-Paaren hinter einem langsam atmenden Tiefpass.
  * - Arpeggio: weiche Sinus-Pluck-Toene aus den Akkordtoenen, mit
  *   punktiertem Echo - das "Technische".
- * - Sub-Bass auf dem Grundton und ein sehr leises, gefiltertes Ticken auf
- *   den Offbeats.
+ * - Ein sehr leises, gefiltertes Ticken auf den Offbeats.
  * - Alles laeuft durch einen kuenstlichen Hall (selbst erzeugte
- *   Impulsantwort) und einen Kompressor.
+ *   Impulsantwort), einen Hochpass und einen Kompressor. Bewusst ohne
+ *   Bass: der Hochpass nimmt auch das Wummern, das der Hall aus den
+ *   Flaechen zieht.
  *
  * Takt-Planung nach dem ueblichen Lookahead-Muster: ein Timer plant alle
  * 25 ms die Noten der naechsten 200 ms auf der Audio-Uhr ein. So bleibt das
@@ -23,12 +24,12 @@ const ACHTEL_PRO_AKKORD = 24;
 
 const midiZuHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
-// Am9 - Fmaj7 - Cmaj7 - G6sus, als MIDI-Noten. bass = Grundton tief.
+// Am9 - Fmaj7 - Cmaj7 - G6sus, als MIDI-Noten.
 const AKKORDE = [
-  { bass: 45, toene: [57, 60, 64, 67, 71] },
-  { bass: 41, toene: [57, 60, 64, 65, 69] },
-  { bass: 48, toene: [55, 59, 60, 64, 67] },
-  { bass: 43, toene: [55, 59, 62, 64, 67] },
+  { toene: [57, 60, 64, 67, 71] },
+  { toene: [57, 60, 64, 65, 69] },
+  { toene: [55, 59, 60, 64, 67] },
+  { toene: [55, 59, 62, 64, 67] },
 ];
 
 // Arpeggio-Muster als Index in die Akkordtoene (+5 = eine Oktave hoeher),
@@ -65,10 +66,18 @@ export function erzeugeAmbientMusik() {
 
   const master = ctx.createGain();
   master.gain.value = 0;
+  const hochpass = ctx.createBiquadFilter();
+  hochpass.type = 'highpass';
+  hochpass.frequency.value = 120;
+  hochpass.Q.value = 0.6;
   const kompressor = ctx.createDynamicsCompressor();
   kompressor.threshold.value = -18;
   kompressor.ratio.value = 3;
-  master.connect(kompressor).connect(ctx.destination);
+  // Ausgleich fuer den entfernten Sub-Bass: der trug viel Pegel, ohne ihn
+  // laege dieselbe Reglerstellung rund 13 dB leiser.
+  const ausgleich = ctx.createGain();
+  ausgleich.gain.value = 3.2;
+  master.connect(ausgleich).connect(hochpass).connect(kompressor).connect(ctx.destination);
 
   const hall = erzeugeHall(ctx, 4.5);
   const hallPegel = ctx.createGain();
@@ -129,18 +138,6 @@ export function erzeugeAmbientMusik() {
         osz.stop(start + dauer + ausklang + 0.1);
       });
     });
-
-    const sub = ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.value = midiZuHz(akkord.bass);
-    const subHuelle = ctx.createGain();
-    subHuelle.gain.setValueAtTime(0, start);
-    subHuelle.gain.linearRampToValueAtTime(0.16, start + 1.5);
-    subHuelle.gain.setValueAtTime(0.16, start + dauer);
-    subHuelle.gain.linearRampToValueAtTime(0, start + dauer + 2);
-    sub.connect(subHuelle).connect(trocken);
-    sub.start(start);
-    sub.stop(start + dauer + 2.1);
   };
 
   const spielePluck = (note, zeit, staerke) => {

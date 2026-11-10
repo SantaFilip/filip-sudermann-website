@@ -28,15 +28,23 @@ const zuPegel = (prozent) => Math.pow(prozent / 100, 2);
 const MusikContext = createContext(null);
 
 /**
- * Haelt die Hintergrundmusik ueber Seitenwechsel hinweg. Browser lassen Ton
- * erst nach einer Nutzeraktion zu: die Musik startet beim ersten Klick oder
- * Tastendruck irgendwo auf der Seite, es sei denn, der Besucher hat sie
- * frueher ausgeschaltet. Klicks auf den Regler selbst (data-musik-regler)
- * zaehlen dabei nicht - der regelt sein Verhalten allein. Im Hintergrund-Tab
- * pausiert die Musik.
+ * Haelt die Hintergrundmusik ueber Seitenwechsel hinweg.
+ *
+ * Standard ist "an". Browser geben Ton fuer neue Besucher aber erst nach
+ * einer Nutzeraktion frei - das kann keine Seite umgehen. Deshalb zwei
+ * Zustaende: `an` (die Einstellung, so zeigt es der Regler) und `hoerbar`
+ * (der Browser gibt wirklich Ton aus). Beim Laden wird sofort ein Start
+ * versucht; wo der Browser das erlaubt, laeuft die Musik direkt. Sonst
+ * startet sie bei der ersten Aktivierung (schon beim Druecken der
+ * Maustaste). Klicks auf den Regler selbst (data-musik-regler) zaehlen
+ * nicht - der regelt sein Verhalten allein. Wer ausschaltet, bleibt beim
+ * naechsten Besuch aus. Im Hintergrund-Tab pausiert die Musik.
  */
+const GESTEN = ['pointerdown', 'mousedown', 'click', 'keydown', 'touchend'];
+
 export function MusikProvider({ children }) {
-  const [spielt, setSpielt] = useState(false);
+  const [an, setAn] = useState(() => lesen(WAHL) !== 'aus');
+  const [hoerbar, setHoerbar] = useState(false);
   const [lautstaerke, setLautstaerke] = useState(() => {
     const gespeichert = lesen(LAUTSTAERKE);
     const zahl = Number(gespeichert);
@@ -44,51 +52,62 @@ export function MusikProvider({ children }) {
     return Math.min(100, Math.max(0, zahl));
   });
   const musikRef = useRef(null);
-  const spieltRef = useRef(false);
+  const anRef = useRef(an);
+  const hoerbarRef = useRef(false);
   const lautstaerkeRef = useRef(lautstaerke);
   const gesteRef = useRef(null);
 
   const gesteAbmelden = useCallback(() => {
     if (!gesteRef.current) return;
-    ['click', 'keydown', 'touchend'].forEach((typ) => window.removeEventListener(typ, gesteRef.current, true));
+    GESTEN.forEach((typ) => window.removeEventListener(typ, gesteRef.current, true));
     gesteRef.current = null;
   }, []);
 
   const starten = useCallback(async () => {
-    gesteAbmelden();
     if (!musikRef.current) musikRef.current = erzeugeAmbientMusik();
     const musik = musikRef.current;
     if (!musik) return;
+    anRef.current = true;
+    setAn(true);
     musik.setzePegel(zuPegel(lautstaerkeRef.current));
-    spieltRef.current = true;
-    setSpielt(true);
     try {
+      // Ohne Freigabe durch den Browser bleibt das haengen, bis eine Geste
+      // kommt - die ruft starten() erneut auf und loest es damit auf.
       await musik.start();
     } catch {
-      spieltRef.current = false;
-      setSpielt(false);
+      return;
     }
+    if (!anRef.current) {
+      musik.stop();
+      return;
+    }
+    hoerbarRef.current = true;
+    setHoerbar(true);
+    gesteAbmelden();
   }, [gesteAbmelden]);
 
   const stoppen = useCallback(() => {
     gesteAbmelden();
     musikRef.current?.stop();
-    spieltRef.current = false;
-    setSpielt(false);
+    anRef.current = false;
+    hoerbarRef.current = false;
+    setAn(false);
+    setHoerbar(false);
   }, [gesteAbmelden]);
 
   useEffect(() => {
-    if (lesen(WAHL) !== 'aus') {
+    if (anRef.current) {
       gesteRef.current = (e) => {
         if (e.target instanceof Element && e.target.closest('[data-musik-regler]')) return;
         starten();
       };
-      ['click', 'keydown', 'touchend'].forEach((typ) => window.addEventListener(typ, gesteRef.current, true));
+      GESTEN.forEach((typ) => window.addEventListener(typ, gesteRef.current, true));
+      starten();
     }
 
     const sichtbarkeit = () => {
       const musik = musikRef.current;
-      if (!musik || !spieltRef.current) return;
+      if (!musik || !hoerbarRef.current) return;
       if (document.hidden) musik.pausieren();
       else musik.fortsetzen();
     };
@@ -103,7 +122,7 @@ export function MusikProvider({ children }) {
   }, [starten, gesteAbmelden]);
 
   const umschalten = useCallback(() => {
-    if (spieltRef.current) {
+    if (anRef.current) {
       stoppen();
       schreiben(WAHL, 'aus');
     } else {
@@ -126,15 +145,15 @@ export function MusikProvider({ children }) {
     musikRef.current?.setzePegel(zuPegel(prozent));
     // Am Regler drehen heisst "ich will Musik" - also auch starten, falls
     // sie noch aus ist.
-    if (prozent > 0 && !spieltRef.current) {
+    if (prozent > 0 && !hoerbarRef.current) {
       schreiben(WAHL, 'an');
       starten();
     }
   }, [starten]);
 
   const wert = useMemo(
-    () => ({ spielt, lautstaerke, umschalten, setzeLautstaerke }),
-    [spielt, lautstaerke, umschalten, setzeLautstaerke],
+    () => ({ an, hoerbar, lautstaerke, umschalten, setzeLautstaerke }),
+    [an, hoerbar, lautstaerke, umschalten, setzeLautstaerke],
   );
 
   return <MusikContext.Provider value={wert}>{children}</MusikContext.Provider>;

@@ -12,14 +12,18 @@ export default function MusikRegler({ variante = 'leiste' }) {
   const musik = useMusik();
   const { lang } = useLanguage();
   if (!musik) return null;
-  const { spielt, lautstaerke, umschalten, setzeLautstaerke } = musik;
+  const { an, hoerbar, lautstaerke, umschalten, setzeLautstaerke } = musik;
 
   const de = lang === 'de';
-  const stumm = !spielt || lautstaerke === 0;
-  const Icon = stumm ? VolumeX : lautstaerke < 50 ? Volume1 : Volume2;
-  const knopfLabel = spielt
+  const Icon = !an || lautstaerke === 0 ? VolumeX : lautstaerke < 50 ? Volume1 : Volume2;
+  // Eingeschaltet, aber der Browser wartet noch auf die erste Interaktion.
+  const wartet = an && !hoerbar;
+  const knopfLabel = an
     ? (de ? 'Hintergrundmusik ausschalten' : 'Turn background music off')
     : (de ? 'Hintergrundmusik einschalten' : 'Turn background music on');
+  const hinweis = wartet
+    ? (de ? 'Musik ist an und startet beim ersten Klick' : 'Music is on and starts with your first click')
+    : knopfLabel;
   const breit = variante === 'breit';
 
   return (
@@ -28,11 +32,11 @@ export default function MusikRegler({ variante = 'leiste' }) {
         type="button"
         onClick={umschalten}
         aria-label={knopfLabel}
-        aria-pressed={spielt}
-        title={knopfLabel}
+        aria-pressed={an}
+        title={hinweis}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
       >
-        <Icon size={18} aria-hidden="true" />
+        <Icon size={18} aria-hidden="true" className={wartet ? 'animate-pulse' : undefined} />
       </button>
       {breit && <span className="text-sm text-muted-foreground">{de ? 'Musik' : 'Music'}</span>}
       <input
@@ -44,7 +48,7 @@ export default function MusikRegler({ variante = 'leiste' }) {
         onChange={(e) => setzeLautstaerke(Number(e.target.value))}
         aria-label={de ? 'Lautstärke der Hintergrundmusik' : 'Background music volume'}
         aria-valuetext={`${lautstaerke} %`}
-        className={`musik-schieber ${breit ? 'ml-auto w-40' : 'hidden w-16 sm:block lg:w-20'} ${spielt ? '' : 'opacity-50'}`}
+        className={`musik-schieber ${breit ? 'ml-auto w-40' : 'hidden w-16 sm:block lg:w-20'} ${an ? '' : 'opacity-50'}`}
         style={{ '--wert': `${lautstaerke}%` }}
       />
     </div>
