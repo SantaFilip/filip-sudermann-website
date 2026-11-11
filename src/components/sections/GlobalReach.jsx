@@ -27,21 +27,13 @@ export default function GlobalReach() {
               gesetzt (siehe index.css). Dort steht die halbe Bildschirmbreite
               zur Verfuegung, auf 28rem gedeckelt wirkte sie daneben verloren. */}
           <div className="globe-frame relative w-full max-w-md mx-auto aspect-square">
-            {/* Glut hinter dem Globus: ohne sie verliert sich die Kugel vor dem
-                hellen Seitenhintergrund, mit ihr liest sie als leuchtender
-                Koerper statt als flaches Foto. */}
-            {/* inset-[-18%] mit blur-3xl legte einen Hof von fast einem
-                Fuenftel Durchmesser um die Kugel - auf dem grossen Globus im
-                Portal ein grauer Schleier, der weit in die Flaeche
-                hineinlief. Eng und schwaecher: die Glut soll die Kugel vom
-                hellen Grund abheben, nicht selbst als Scheibe lesen. */}
-            <div
-              className="pointer-events-none absolute inset-[-5%] rounded-full blur-2xl"
-              style={{
-                background:
-                  'radial-gradient(circle, hsl(var(--accent) / 0.22) 0%, hsl(var(--primary) / 0.1) 46%, transparent 66%)',
-              }}
-            />
+            {/* Hier lag eine "Glut": ein radialer Verlauf in Gold und
+                Nachtblau, weichgezeichnet und ueber die Box hinausgezogen.
+                Auf dem cremefarbenen Grund las er als grauer Schatten rund
+                um die Kugel. Ersatzlos gestrichen - der Bereich neben dem
+                Globus hat jetzt exakt die Farbe des uebrigen Hintergrunds.
+                Den Koerper gibt ihm stattdessen die Randaufhellung INNEN
+                an der Kugel selbst (siehe Earth3D.jsx). */}
             <div className="relative w-full h-full overflow-hidden">
               <Earth3D />
             </div>

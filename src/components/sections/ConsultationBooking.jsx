@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, CalendarDays, Check, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -138,35 +138,7 @@ export default function ConsultationBooking() {
             Calendly rendert im iFrame eine Karte fester Maximalbreite und
             zentriert sie - in einem breiteren Kasten stand sie deshalb klein
             in der Mitte, mit leerem Weiss links und rechts. */}
-        {/* Auf einer Facette der Rolle steht statt des Kalenders eine Tafel.
-            Grund: Calendly meldet fuer diese Seite rund 830 px Hoehe,
-            unabhaengig von der Breite (bei 720, 900, 1040 und 1160 px
-            gemessen: 832 / 832 / 894 / 894). Die Facette ist aber nur rund
-            490 px hoch - der Kalender wurde dort unten abgeschnitten und
-            stand klein in einer Spalte, die Padding und Satzspiegel auf
-            rund 310 px eingeschnuert haben. Aufgeklappt (Vollbild-Portal)
-            und auf dem Handy laeuft der echte Kalender. */}
-        <div className="buchung-tafel hidden">
-          <div className="relative mx-auto w-full max-w-[560px] bg-card border border-border p-8 text-center">
-            <div className="absolute inset-3 border border-accent/25 pointer-events-none" />
-            <div className="relative">
-              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-accent/40 bg-accent/10">
-                <CalendarDays size={24} className="text-accent" />
-              </div>
-              {/* Bewusst div statt p: fuer die schmale Facette gilt
-                  .rotary-face #beratung p { display: none } - die Regel
-                  raeumt den Infotext neben dem Kalender weg und wuerde
-                  sonst auch die Tafel leerfegen. */}
-              <div className="font-heading text-2xl font-bold tracking-tight">{t.booking.facetTitle}</div>
-              <div className="mt-2 text-sm text-muted-foreground">{t.booking.subtitle}</div>
-              <span className="mt-6 inline-flex items-center gap-2 border border-accent px-6 py-2.5 text-sm font-medium text-accent">
-                {t.booking.facetHint} <ArrowRight size={15} />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="buchung-kalender relative mx-auto w-full max-w-[720px] bg-card border border-border p-3 md:p-5">
+        <div className="relative mx-auto w-full max-w-[720px] bg-card border border-border p-3 md:p-5">
           <div className="absolute inset-2 md:inset-3 border border-accent/25 pointer-events-none" />
           <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: `${hoehe}px` }} />
         </div>

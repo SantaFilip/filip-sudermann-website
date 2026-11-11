@@ -102,33 +102,45 @@ export default function Earth3D() {
       earthGroup.add(pin, halo);
     });
 
-    // Lufthuelle. Radius 1.2 hiess: der Schein stand einen fuenftel
-    // Erdradius weit ueber dem Rand - auf dem grossen Globus im Portal war
-    // das ein breiter blauer Reif, kein Atmosphaerensaum. 1.075 legt ihn eng
-    // an die Kugel; der hoehere Exponent laesst ihn ausserdem schneller
-    // abfallen, statt als Flaeche nach aussen zu leuchten.
-    const atmGeo = new THREE.SphereGeometry(1.075, 72, 72);
+    // Lufthuelle - und zwar NACH INNEN. Vorher sass sie als Kugel mit
+    // Radius 1.2 (spaeter 1.075) auf der Rueckseite um die Erde herum: jeder
+    // Pixel dieses Scheins lag AUSSERHALB der Erdscheibe und faerbte den
+    // cremefarbenen Grund blau ein. Genau das sollte weg - der Bereich um
+    // das Modell muss exakt die Hintergrundfarbe behalten.
+    //
+    // Stattdessen Vorderseite auf Radius 1.004, also knapp innerhalb der
+    // Silhouette, und die Helligkeit steigt zum Rand hin (Randaufhellung,
+    // wie sie eine echte Atmosphaere zeigt, weil der Blick dort durch mehr
+    // Luft geht). Die Kugel bekommt dadurch ihren Saum, ohne dass neben ihr
+    // irgendetwas leuchtet.
+    const atmGeo = new THREE.SphereGeometry(1.004, 72, 72);
     const atmMat = new THREE.ShaderMaterial({
       vertexShader: `
         varying vec3 vNormal;
+        varying vec3 vBlick;
         void main() {
+          vec4 sicht = modelViewMatrix * vec4(position, 1.0);
           vNormal = normalize(normalMatrix * normal);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vBlick = normalize(-sicht.xyz);
+          gl_Position = projectionMatrix * sicht;
         }
       `,
       fragmentShader: `
         varying vec3 vNormal;
+        varying vec3 vBlick;
         void main() {
-          float intensity = pow(max(0.0, 0.54 - dot(vNormal, vec3(0.0, 0.0, 1.0))), 3.0) * 2.2;
-          gl_FragColor = vec4(0.32, 0.56, 1.0, 1.0) * intensity;
+          float rand = 1.0 - max(dot(vNormal, vBlick), 0.0);
+          float intensity = pow(rand, 4.0) * 0.85;
+          gl_FragColor = vec4(0.36, 0.6, 1.0, 1.0) * intensity;
         }
       `,
-      side: THREE.BackSide,
+      side: THREE.FrontSide,
       blending: THREE.AdditiveBlending,
       transparent: true,
+      depthWrite: false,
     });
     const atmosphere = new THREE.Mesh(atmGeo, atmMat);
-    scene.add(atmosphere);
+    earthGroup.add(atmosphere);
 
     scene.add(new THREE.AmbientLight(0x3a3a4a, 0.7));
     const sun = new THREE.DirectionalLight(0xffffff, 1.7);

@@ -202,10 +202,6 @@ export const translations = {
       label: "Kontakt",
       title: "5 Kontakt",
       subtitle: "Wähle einen Tag und eine Uhrzeit zwischen 15:00 und 20:00 Uhr. Ich melde mich innerhalb von 24 Stunden zur Bestätigung.",
-      // Steht auf der Facette der Rolle anstelle des Kalenders: der
-      // Calendly-Rahmen ist rund 830 px hoch und passt dort nicht hinein.
-      facetTitle: "Erstgespräch, 30 Minuten",
-      facetHint: "Zum Buchen aufklappen",
       name: "Name",
       email: "E-Mail",
       message: "Nachricht (optional)",
@@ -536,8 +532,6 @@ export const translations = {
       label: "Contact",
       title: "5 Contact",
       subtitle: "Pick a day and a time between 15:00 and 20:00. I'll get back to you within 24 hours to confirm.",
-      facetTitle: "Intro call, 30 minutes",
-      facetHint: "Open to book",
       name: "Name",
       email: "Email",
       message: "Message (optional)",

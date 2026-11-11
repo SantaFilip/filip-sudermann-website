@@ -1571,27 +1571,3 @@ html[data-kopfleiste-logo='nacht'] .kopfleiste .kopfleiste-logo {
   z-index: 1;
 }
 
-/* ------------------------------------------------------------------
-   Buchung auf der Rolle
-   Auf einer geschlossenen Facette steht die Tafel, aufgeklappt und auf
-   dem Handy der echte Kalender. Calendly meldet fuer diese Seite rund
-   830 px Hoehe, unabhaengig von der Rahmenbreite - eine Facette ist rund
-   490 px hoch, der Kalender wurde dort unten abgeschnitten.
-   Reihenfolge zaehlt: beide Regelpaare haben dieselbe Spezifitaet, die
-   Portal-Regeln stehen deshalb hinten und gewinnen.
-   ------------------------------------------------------------------ */
-.rotary-face .buchung-kalender {
-  display: none;
-}
-
-.rotary-face .buchung-tafel {
-  display: block;
-}
-
-.rotary-portal .buchung-kalender {
-  display: block;
-}
-
-.rotary-portal .buchung-tafel {
-  display: none;
-}
