@@ -84,7 +84,8 @@ export default function Earth3D() {
       { lat: 48.2, lon: 16.4, color: 0xffd24a },
       { lat: 40.7, lon: -74.0, color: 0xffd24a },
       { lat: 34.0, lon: -118.2, color: 0xffd24a },
-      { lat: 51.0, lon: 10.0, color: 0xff3b30 },
+      // Eigener Standort (rot): Vermont, USA.
+      { lat: 44.1, lon: -72.6, color: 0xff3b30 },
     ];
     PIN_LOCATIONS.forEach((p) => {
       const pos = latLngToVector3(p.lat, p.lon, 1.018);

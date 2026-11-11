@@ -112,9 +112,13 @@ export default function ConsultationBooking() {
             duenne Gold-Zierlinie innen) - liest wie eine in die
             Architektur eingelassene Tafel, nicht wie ein eingebettetes
             Drittanbieter-Widget. */}
-        <div className="relative bg-card border border-border p-3 md:p-5">
+        {/* Der Rahmen bekommt die Breite des Widgets, nicht die der Spalte.
+            Calendly rendert im iFrame eine Karte fester Maximalbreite und
+            zentriert sie - in einem breiteren Kasten stand sie deshalb klein
+            in der Mitte, mit leerem Weiss links und rechts. */}
+        <div className="relative mx-auto w-full max-w-[720px] bg-card border border-border p-3 md:p-5">
           <div className="absolute inset-2 md:inset-3 border border-accent/25 pointer-events-none" />
-          <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: '680px' }} />
+          <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: '760px' }} />
         </div>
       </div>
     </section>
