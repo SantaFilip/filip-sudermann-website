@@ -20,7 +20,14 @@ export default function Earth3D() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, w / h, 0.1, 100);
-    camera.position.z = 4;
+    // 4.25 statt 4: die Lufthuelle reicht 34.5 Prozent des scheinbaren
+    // Erdradius nach aussen. Bei Blickweite 4 nimmt die Erde 0.75 der
+    // halben Bildhoehe ein, die Huelle kaeme damit auf 1.01 - sie waere
+    // oben und unten am Rand der Leinwand abgeschnitten. Ein Stueck weiter
+    // weg nimmt die Erde 0.70 ein, die Huelle endet bei 0.95 und hat Luft.
+    // Die Kugel wird dadurch rund 6 Prozent kleiner; mit dem Saum darum
+    // wirkt sie trotzdem groesser als vorher.
+    camera.position.z = 4.25;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
@@ -163,12 +170,16 @@ export default function Earth3D() {
     // Bildpunkten, uAussen das Ende des Saums. Dazwischen faellt die
     // Deckkraft ab, ausserhalb wird verworfen - der Ring sitzt damit exakt
     // auf der Kante, egal wie gross die Kugel gerade dargestellt wird.
-    const SAUM_FAKTOR = 1.115;
+    const SAUM_FAKTOR = 1.345;
     // tan(scheinbarer Radius) / tan(halber Blickwinkel), in Bildhoehen-Halben.
     const kanteRelativ =
       (1 / Math.sqrt(camera.position.z ** 2 - 1)) /
       Math.tan(((camera.fov / 2) * Math.PI) / 180);
-    const saumGeo = new THREE.SphereGeometry(1.4, 64, 64);
+    // Die Kugel traegt nur die Flaeche, auf der gezeichnet wird - wie breit
+    // der Ring ist, entscheidet allein die Messung im Bild. Sie muss nur
+    // weit genug ueber den Saum hinausreichen: 1.9 projiziert auf das
+    // 2.09-fache des Erdradius, der Saum braucht 1.345.
+    const saumGeo = new THREE.SphereGeometry(1.9, 64, 64);
     const saumMat = new THREE.ShaderMaterial({
       uniforms: {
         uMitte: { value: new THREE.Vector2(0, 0) },
