@@ -71,7 +71,7 @@ export default function Header() {
     // kopfleiste: ueber dem Nachthimmel der Rolle durchsichtig, siehe
     // data-kopfleiste in index.css und kopfleisteMelden in RotaryStage.
     <header className="kopfleiste fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/60 transition-colors duration-300">
-      <div className="max-w-[1500px] mx-auto px-6 lg:px-16 min-[1380px]:px-10 min-[1536px]:px-16 flex items-center justify-between gap-6 min-[1380px]:gap-4 min-[1536px]:gap-6 h-16 lg:h-20">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-16 min-[1380px]:px-10 min-[1536px]:px-16 flex items-center justify-between gap-3 sm:gap-6 min-[1380px]:gap-4 min-[1536px]:gap-6 h-16 lg:h-20">
         {/* Logo: auf dem Handy (<640px) bleibt es beim Oeffnen stehen (wie
             bisher, das Dropdown erscheint dort separat darunter) - nur im
             Bereich 640-1380px weicht es der horizontalen Begriffszeile. */}
@@ -104,7 +104,7 @@ export default function Header() {
             </Link>
           </nav>
         )}
-        <div className="flex items-center gap-3 lg:gap-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0">
           <MusikRegler />
           <span className={mobileOpen ? 'sm:hidden' : ''}><LangToggle /></span>
           <Link to="/inspiration-hub" className="hidden min-[1380px]:inline-flex items-center gap-1 text-sm whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors">

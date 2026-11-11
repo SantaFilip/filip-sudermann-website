@@ -6,7 +6,10 @@ export default function GlobalReach() {
   const { t, lang } = useLanguage();
 
   return (
-    <section id="global-reach" className="py-20 lg:py-32 bg-card/30 border-t border-border">
+    // overflow-hidden: der Glow hinter dem Globus ragt ueber seine Box
+    // hinaus - auf dem Handy sonst ueber den Bildschirmrand, die Seite
+    // wuerde seitlich scrollbar.
+    <section id="global-reach" className="overflow-hidden py-20 lg:py-32 bg-card/30 border-t border-border">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div>
