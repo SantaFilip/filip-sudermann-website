@@ -145,6 +145,26 @@ export default function Home() {
   const f = t.folders;
   const mobile = useMobile();
 
+  // Beim Neuladen stellte der Browser die alte Scrollposition wieder her
+  // (history.scrollRestoration steht von Haus aus auf 'auto'). Wer weiter
+  // unten war, landete nach einem Neuladen im Mappenteil oder im
+  // Fussbereich - nicht vor dem Gebaeude, mit dem die Seite anfaengt.
+  // Ein Anker in der Adresse (#beratung o.ae.) bleibt unangetastet, der
+  // soll ja genau dorthin fuehren.
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    if (window.location.hash) return undefined;
+    window.scrollTo(0, 0);
+    // Noch einmal nach dem load-Ereignis: Bilder und Schriften koennen die
+    // Seitenhoehe nachtraeglich aendern, und manche Browser setzen die
+    // gemerkte Position erst dann.
+    const obenBleiben = () => window.scrollTo(0, 0);
+    window.addEventListener('load', obenBleiben);
+    return () => window.removeEventListener('load', obenBleiben);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />

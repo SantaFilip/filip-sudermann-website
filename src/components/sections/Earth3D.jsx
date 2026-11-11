@@ -163,7 +163,7 @@ export default function Earth3D() {
     // Bildpunkten, uAussen das Ende des Saums. Dazwischen faellt die
     // Deckkraft ab, ausserhalb wird verworfen - der Ring sitzt damit exakt
     // auf der Kante, egal wie gross die Kugel gerade dargestellt wird.
-    const SAUM_FAKTOR = 1.055;
+    const SAUM_FAKTOR = 1.115;
     // tan(scheinbarer Radius) / tan(halber Blickwinkel), in Bildhoehen-Halben.
     const kanteRelativ =
       (1 / Math.sqrt(camera.position.z ** 2 - 1)) /
@@ -188,7 +188,7 @@ export default function Earth3D() {
           float r = length(gl_FragCoord.xy - uMitte);
           if (r < uKante || r > uAussen) discard;
           float t = (r - uKante) / (uAussen - uKante);
-          float alpha = pow(1.0 - t, 2.0) * 0.85;
+          float alpha = pow(1.0 - t, 1.9) * 0.8;
           gl_FragColor = vec4(0.17, 0.42, 0.88, alpha);
         }
       `,
