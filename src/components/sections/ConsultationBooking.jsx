@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, Check, X } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -19,7 +19,15 @@ export default function ConsultationBooking() {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
   const [done, setDone] = useState(false);
+  // Calendly meldet die wirkliche Hoehe seiner Seite (calendly.page_height).
+  // Eine feste Hoehe passt nie: sie haengt an der Breite des Rahmens und an
+  // der Zahl der Tage im Monat. War sie zu gross, stand unter dem Kalender
+  // eine leere Flaeche mit einem verlorenen "Cookie-Einstellungen"-Link; war
+  // sie zu klein, wurde unten abgeschnitten. 760 ist nur der Startwert, bis
+  // die erste Meldung da ist.
+  const [hoehe, setHoehe] = useState(760);
   const containerRef = useRef(null);
+  const rahmenRef = useRef(null);
 
   useEffect(() => {
     const url = CALENDLY_URLS[lang] || CALENDLY_URLS.en;
@@ -30,6 +38,7 @@ export default function ConsultationBooking() {
         url,
         parentElement: containerRef.current,
       });
+      rahmenRef.current = containerRef.current.querySelector('iframe');
     };
 
     if (window.Calendly) {
@@ -53,7 +62,20 @@ export default function ConsultationBooking() {
   useEffect(() => {
     const handler = (e) => {
       const data = e.data;
-      if (data && typeof data === 'object' && data.event === 'calendly.event_scheduled') {
+      if (!data || typeof data !== 'object') return;
+      if (data.event === 'calendly.page_height') {
+        // Calendly spritzt fuer seinen Cookie-Hinweis ein zweites, winziges
+        // iFrame ein, das ebenfalls Hoehen meldet (2px, 26px). Nur die
+        // Meldungen des Buchungsrahmens zaehlen - ohne diese Pruefung faellt
+        // der Kasten auf 2px zusammen.
+        if (rahmenRef.current && e.source !== rahmenRef.current.contentWindow) return;
+        const gemeldet = parseInt(data.payload?.height, 10);
+        if (Number.isFinite(gemeldet) && gemeldet > 300) {
+          setHoehe(Math.min(gemeldet, 1100));
+        }
+        return;
+      }
+      if (data.event === 'calendly.event_scheduled') {
         setDone(true);
         toast({ title: lang === 'de' ? 'Termin gebucht!' : 'Meeting booked!' });
       }
@@ -116,9 +138,37 @@ export default function ConsultationBooking() {
             Calendly rendert im iFrame eine Karte fester Maximalbreite und
             zentriert sie - in einem breiteren Kasten stand sie deshalb klein
             in der Mitte, mit leerem Weiss links und rechts. */}
-        <div className="relative mx-auto w-full max-w-[720px] bg-card border border-border p-3 md:p-5">
+        {/* Auf einer Facette der Rolle steht statt des Kalenders eine Tafel.
+            Grund: Calendly meldet fuer diese Seite rund 830 px Hoehe,
+            unabhaengig von der Breite (bei 720, 900, 1040 und 1160 px
+            gemessen: 832 / 832 / 894 / 894). Die Facette ist aber nur rund
+            490 px hoch - der Kalender wurde dort unten abgeschnitten und
+            stand klein in einer Spalte, die Padding und Satzspiegel auf
+            rund 310 px eingeschnuert haben. Aufgeklappt (Vollbild-Portal)
+            und auf dem Handy laeuft der echte Kalender. */}
+        <div className="buchung-tafel hidden">
+          <div className="relative mx-auto w-full max-w-[560px] bg-card border border-border p-8 text-center">
+            <div className="absolute inset-3 border border-accent/25 pointer-events-none" />
+            <div className="relative">
+              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-accent/40 bg-accent/10">
+                <CalendarDays size={24} className="text-accent" />
+              </div>
+              {/* Bewusst div statt p: fuer die schmale Facette gilt
+                  .rotary-face #beratung p { display: none } - die Regel
+                  raeumt den Infotext neben dem Kalender weg und wuerde
+                  sonst auch die Tafel leerfegen. */}
+              <div className="font-heading text-2xl font-bold tracking-tight">{t.booking.facetTitle}</div>
+              <div className="mt-2 text-sm text-muted-foreground">{t.booking.subtitle}</div>
+              <span className="mt-6 inline-flex items-center gap-2 border border-accent px-6 py-2.5 text-sm font-medium text-accent">
+                {t.booking.facetHint} <ArrowRight size={15} />
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="buchung-kalender relative mx-auto w-full max-w-[720px] bg-card border border-border p-3 md:p-5">
           <div className="absolute inset-2 md:inset-3 border border-accent/25 pointer-events-none" />
-          <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: '760px' }} />
+          <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: `${hoehe}px` }} />
         </div>
       </div>
     </section>

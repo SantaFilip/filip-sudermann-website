@@ -102,7 +102,12 @@ export default function Earth3D() {
       earthGroup.add(pin, halo);
     });
 
-    const atmGeo = new THREE.SphereGeometry(1.2, 72, 72);
+    // Lufthuelle. Radius 1.2 hiess: der Schein stand einen fuenftel
+    // Erdradius weit ueber dem Rand - auf dem grossen Globus im Portal war
+    // das ein breiter blauer Reif, kein Atmosphaerensaum. 1.075 legt ihn eng
+    // an die Kugel; der hoehere Exponent laesst ihn ausserdem schneller
+    // abfallen, statt als Flaeche nach aussen zu leuchten.
+    const atmGeo = new THREE.SphereGeometry(1.075, 72, 72);
     const atmMat = new THREE.ShaderMaterial({
       vertexShader: `
         varying vec3 vNormal;
@@ -114,8 +119,8 @@ export default function Earth3D() {
       fragmentShader: `
         varying vec3 vNormal;
         void main() {
-          float intensity = pow(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-          gl_FragColor = vec4(0.3, 0.55, 1.0, 1.0) * intensity;
+          float intensity = pow(max(0.0, 0.54 - dot(vNormal, vec3(0.0, 0.0, 1.0))), 3.0) * 2.2;
+          gl_FragColor = vec4(0.32, 0.56, 1.0, 1.0) * intensity;
         }
       `,
       side: THREE.BackSide,

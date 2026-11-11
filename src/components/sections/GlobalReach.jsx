@@ -30,11 +30,16 @@ export default function GlobalReach() {
             {/* Glut hinter dem Globus: ohne sie verliert sich die Kugel vor dem
                 hellen Seitenhintergrund, mit ihr liest sie als leuchtender
                 Koerper statt als flaches Foto. */}
+            {/* inset-[-18%] mit blur-3xl legte einen Hof von fast einem
+                Fuenftel Durchmesser um die Kugel - auf dem grossen Globus im
+                Portal ein grauer Schleier, der weit in die Flaeche
+                hineinlief. Eng und schwaecher: die Glut soll die Kugel vom
+                hellen Grund abheben, nicht selbst als Scheibe lesen. */}
             <div
-              className="pointer-events-none absolute inset-[-18%] rounded-full blur-3xl"
+              className="pointer-events-none absolute inset-[-5%] rounded-full blur-2xl"
               style={{
                 background:
-                  'radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, hsl(var(--primary) / 0.18) 45%, transparent 72%)',
+                  'radial-gradient(circle, hsl(var(--accent) / 0.22) 0%, hsl(var(--primary) / 0.1) 46%, transparent 66%)',
               }}
             />
             <div className="relative w-full h-full overflow-hidden">
