@@ -142,6 +142,79 @@ export default function Earth3D() {
     const atmosphere = new THREE.Mesh(atmGeo, atmMat);
     earthGroup.add(atmosphere);
 
+    // Und der Saum AUSSEN: die sichtbare Lufthuelle, ein schmaler blauer
+    // Ring ueber dem Rand der Kugel.
+    //
+    // Zwei Anlaeufe davor sind gescheitert, beide lehrreich:
+    //   1. Additives Blenden. Auf dem cremefarbenen Grund kann das nur
+    //      aufhellen - der Saum wurde weiss statt blau. Deshalb hier
+    //      normales Alpha, die Farbe traegt selbst.
+    //   2. Das Leuchten am Abstand zur Blickachse gemessen
+    //      (length(viewPos.xy)). Durch die Perspektive liegt die SCHEINBARE
+    //      Kante der Kugel weiter aussen als ihr Radius: bei Blickweite 4
+    //      und Radius 1 erscheint sie unter asin(1/4) = 14.48 Grad, ein
+    //      Punkt bei xy = 1 auf der Rueckseite dagegen nur unter 13.0 Grad.
+    //      Der helle Teil des Saums lag damit INNERHALB der Erdscheibe und
+    //      wurde von ihr verdeckt; sichtbar blieb nur sein schwaches Ende.
+    //
+    // Jetzt wird im Bild selbst gemessen: Abstand des Bildpunkts von der
+    // Bildmitte (die Kugel steht auf der Blickachse, ihre Mitte ist also
+    // die Bildmitte). uKante ist der scheinbare Radius der Erde in
+    // Bildpunkten, uAussen das Ende des Saums. Dazwischen faellt die
+    // Deckkraft ab, ausserhalb wird verworfen - der Ring sitzt damit exakt
+    // auf der Kante, egal wie gross die Kugel gerade dargestellt wird.
+    const SAUM_FAKTOR = 1.055;
+    // tan(scheinbarer Radius) / tan(halber Blickwinkel), in Bildhoehen-Halben.
+    const kanteRelativ =
+      (1 / Math.sqrt(camera.position.z ** 2 - 1)) /
+      Math.tan(((camera.fov / 2) * Math.PI) / 180);
+    const saumGeo = new THREE.SphereGeometry(1.4, 64, 64);
+    const saumMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uMitte: { value: new THREE.Vector2(0, 0) },
+        uKante: { value: 0 },
+        uAussen: { value: 0 },
+      },
+      vertexShader: `
+        void main() {
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec2 uMitte;
+        uniform float uKante;
+        uniform float uAussen;
+        void main() {
+          float r = length(gl_FragCoord.xy - uMitte);
+          if (r < uKante || r > uAussen) discard;
+          float t = (r - uKante) / (uAussen - uKante);
+          float alpha = pow(1.0 - t, 2.0) * 0.85;
+          gl_FragColor = vec4(0.17, 0.42, 0.88, alpha);
+        }
+      `,
+      // Kein Tiefentest noetig und auch nicht erwuenscht: welcher Bildpunkt
+      // zum Saum gehoert, entscheidet allein der Abstand oben. Die
+      // Rueckseite sorgt dafuer, dass jeder Bildpunkt nur einmal gefuellt
+      // wird (sonst laege der Ring doppelt uebereinander).
+      side: THREE.BackSide,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const saum = new THREE.Mesh(saumGeo, saumMat);
+    // renderOrder: zuletzt zeichnen, damit der Ring ueber Wolken und Nadeln
+    // liegt und nicht von ihnen ueberschrieben wird.
+    saum.renderOrder = 10;
+    scene.add(saum);
+
+    const saumMessen = () => {
+      const puffer = renderer.getDrawingBufferSize(new THREE.Vector2());
+      saumMat.uniforms.uMitte.value.set(puffer.x / 2, puffer.y / 2);
+      saumMat.uniforms.uKante.value = (kanteRelativ * puffer.y) / 2;
+      saumMat.uniforms.uAussen.value = saumMat.uniforms.uKante.value * SAUM_FAKTOR;
+    };
+    saumMessen();
+
     scene.add(new THREE.AmbientLight(0x3a3a4a, 0.7));
     const sun = new THREE.DirectionalLight(0xffffff, 1.7);
     sun.position.set(5, 2.5, 4);
@@ -194,6 +267,7 @@ export default function Earth3D() {
       camera.aspect = s.w / s.h;
       camera.updateProjectionMatrix();
       renderer.setSize(s.w, s.h);
+      saumMessen();
     };
     window.addEventListener('resize', handleResize);
     // Die Box aendert ihre Groesse auch ohne Fenster-Resize (Rolle skaliert
@@ -218,6 +292,8 @@ export default function Earth3D() {
       cloudMat.dispose();
       atmGeo.dispose();
       atmMat.dispose();
+      saumGeo.dispose();
+      saumMat.dispose();
       renderer.dispose();
     };
   }, []);

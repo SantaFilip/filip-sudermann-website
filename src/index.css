@@ -1501,67 +1501,46 @@ html[data-kopfleiste-logo='nacht'] .kopfleiste .kopfleiste-logo {
 
 /* ------------------------------------------------------------------
    Sternentapete (siehe components/lab/Sternentapete.jsx)
-   Halbtransparente Gestirne als Wandbespannung hinter dem Mappenteil.
-   Die Farben kommen aus den Tokens, damit das Muster dem Haus folgt:
-   Gold fuer die Gestirne, Nachtblau fuer die Hilfslinien. Alle Werte
-   bleiben unter 0.5 Deckkraft - die Tapete soll den Grund tragen, nicht
-   den Text bedraengen.
+   Zweiter Entwurf, deutlich zurueckgenommen. Die Werte des ersten waren
+   etwa doppelt so hoch - zusammen mit grossen, gefuellten Strahlensternen
+   las das Muster laut und illustrativ statt als Bespannung. Der hellste
+   Wert liegt jetzt bei 0.26, die Haarlinien bei 0.09 bis 0.12. Farben
+   aus den Tokens: Gold fuer die Gestirne, Nachtblau fuer den Staub.
    ------------------------------------------------------------------ */
 .sternentapete {
   z-index: 0;
 }
 
 .tapete-stern {
-  fill: hsl(var(--accent) / 0.3);
+  fill: hsl(var(--accent) / 0.19);
 }
 
 .tapete-stern-schwach {
-  fill: hsl(var(--accent) / 0.15);
+  fill: hsl(var(--accent) / 0.12);
 }
 
 .tapete-kern {
-  fill: hsl(var(--accent) / 0.46);
-}
-
-.tapete-funke {
-  fill: hsl(var(--accent) / 0.28);
-}
-
-.tapete-funke-gross {
-  fill: hsl(var(--accent) / 0.2);
+  fill: hsl(var(--accent) / 0.26);
 }
 
 .tapete-staub {
-  fill: hsl(var(--foreground) / 0.16);
+  fill: hsl(var(--foreground) / 0.08);
 }
 
 .tapete-staub-hell {
-  fill: hsl(var(--accent) / 0.4);
+  fill: hsl(var(--accent) / 0.2);
 }
 
 .tapete-ring {
   fill: none;
-  stroke: hsl(var(--accent) / 0.22);
-  stroke-width: 0.9;
+  stroke: hsl(var(--accent) / 0.12);
+  stroke-width: 0.35;
 }
 
 .tapete-ring-fein {
   fill: none;
-  stroke: hsl(var(--foreground) / 0.1);
-  stroke-width: 0.5;
-}
-
-.tapete-bahn {
-  fill: none;
-  stroke: hsl(var(--foreground) / 0.12);
-  stroke-width: 0.8;
-}
-
-.tapete-bahn-fein {
-  fill: none;
-  stroke: hsl(var(--accent) / 0.18);
-  stroke-width: 0.6;
-  stroke-dasharray: 3 4.5;
+  stroke: hsl(var(--foreground) / 0.055);
+  stroke-width: 0.35;
 }
 
 /* Der Inhalt vor der Tapete. Ohne eigenen Stapelplatz laegen die
