@@ -19,7 +19,15 @@ export default function ConsultationBooking() {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
   const [done, setDone] = useState(false);
+  // Calendly meldet die wirkliche Hoehe seiner Seite (calendly.page_height).
+  // Eine feste Hoehe passt nie: sie haengt an der Breite des Rahmens und an
+  // der Zahl der Tage im Monat. War sie zu gross, stand unter dem Kalender
+  // eine leere Flaeche mit einem verlorenen "Cookie-Einstellungen"-Link; war
+  // sie zu klein, wurde unten abgeschnitten. 760 ist nur der Startwert, bis
+  // die erste Meldung da ist.
+  const [hoehe, setHoehe] = useState(760);
   const containerRef = useRef(null);
+  const rahmenRef = useRef(null);
 
   useEffect(() => {
     const url = CALENDLY_URLS[lang] || CALENDLY_URLS.en;
@@ -30,6 +38,7 @@ export default function ConsultationBooking() {
         url,
         parentElement: containerRef.current,
       });
+      rahmenRef.current = containerRef.current.querySelector('iframe');
     };
 
     if (window.Calendly) {
@@ -53,7 +62,20 @@ export default function ConsultationBooking() {
   useEffect(() => {
     const handler = (e) => {
       const data = e.data;
-      if (data && typeof data === 'object' && data.event === 'calendly.event_scheduled') {
+      if (!data || typeof data !== 'object') return;
+      if (data.event === 'calendly.page_height') {
+        // Calendly spritzt fuer seinen Cookie-Hinweis ein zweites, winziges
+        // iFrame ein, das ebenfalls Hoehen meldet (2px, 26px). Nur die
+        // Meldungen des Buchungsrahmens zaehlen - ohne diese Pruefung faellt
+        // der Kasten auf 2px zusammen.
+        if (rahmenRef.current && e.source !== rahmenRef.current.contentWindow) return;
+        const gemeldet = parseInt(data.payload?.height, 10);
+        if (Number.isFinite(gemeldet) && gemeldet > 300) {
+          setHoehe(Math.min(gemeldet, 1100));
+        }
+        return;
+      }
+      if (data.event === 'calendly.event_scheduled') {
         setDone(true);
         toast({ title: lang === 'de' ? 'Termin gebucht!' : 'Meeting booked!' });
       }
@@ -118,7 +140,7 @@ export default function ConsultationBooking() {
             in der Mitte, mit leerem Weiss links und rechts. */}
         <div className="relative mx-auto w-full max-w-[720px] bg-card border border-border p-3 md:p-5">
           <div className="absolute inset-2 md:inset-3 border border-accent/25 pointer-events-none" />
-          <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: '760px' }} />
+          <div ref={containerRef} className="calendly-embed" style={{ minWidth: '320px', height: `${hoehe}px` }} />
         </div>
       </div>
     </section>

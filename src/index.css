@@ -420,22 +420,13 @@
     width: 100% !important;
   }
 
-  /* Calendly-Kalender: die feste Hoehe (680px, siehe ConsultationBooking.jsx)
-     gilt fuer die eigenstaendige Seite genauso wie fuer die Facette - dort
-     wird sie von FitToFace zusammen mit Badge/Infotext gleichmaessig
-     herunterskaliert und wirkt dadurch kleiner als auf der normalen Seite.
-     Nur hier (Facette) deutlich groesser, damit mehr vom Kalender ohne
-     internes Scrollen sichtbar ist - ein fixer, groesserer rem-Wert statt
-     cqw/cqh: die Breite haengt an verschachtelten Spalten mit eigenem
-     Padding, ein cqw-Wert wuerde (wie beim Globus zuvor) gegen die falsche
-     Bezugsgroesse rechnen und die Karte seitlich ueberlaufen lassen.
-     !important noetig: die Hoehe steht als inline style im JSX (React
-     schreibt sie dort, weil Calendly sie zur Laufzeit braucht) - ein
-     inline style schlaegt jede externe Regel unabhaengig von deren
-     Spezifitaet, nur !important kommt dagegen an. */
-  .rotary-face #beratung .calendly-embed {
-    height: 58rem !important;
-  }
+  /* Hier stand ein Hoehen-Deckel von 58rem fuer den Kalender auf der
+     Facette. Er ist weg: auf der geschlossenen Facette steht jetzt die
+     Tafel statt des Kalenders, und im Vollbild-Portal meldet Calendly
+     seine wirkliche Seitenhoehe selbst (calendly.page_height, siehe
+     ConsultationBooking.jsx). Ein fester Wert waere dort entweder zu
+     gross (leere Flaeche unter dem Kalender) oder zu klein (unten
+     abgeschnitten) - beides war zu sehen. */
 
   /* Kontakt im Vollbild-Portal: zweispaltig statt gestapelt - links Titel/
      Infotext vertikal mittig (viel Luft sonst ungenutzt, weil der Text
@@ -1579,3 +1570,4 @@ html[data-kopfleiste-logo='nacht'] .kopfleiste .kopfleiste-logo {
   position: relative;
   z-index: 1;
 }
+
