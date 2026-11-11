@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, MapPin, Phone, Linkedin, Instagram, Youtube } from 'lucide-react';
 import SkoolLogo from '@/components/SkoolLogo';
+import Milchstrasse from '@/components/lab/Milchstrasse';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { CONTACT_EMAIL, CONTACT_PHONE, SOCIAL_LINKS, SKOOL_PROFILE_URL } from '@/lib/links';
 
@@ -15,8 +16,12 @@ export default function Footer() {
   ];
 
   return (
-    <footer id="contact" className="bg-foreground text-background">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
+    // relative + overflow-hidden: die Milchstrasse liegt als Leinwand im
+    // Fussbereich und darf nicht ueber ihn hinausragen. Der Grundton bleibt
+    // bg-foreground - die Leinwand malt nur das Band darauf.
+    <footer id="contact" className="relative overflow-hidden bg-foreground text-background">
+      <Milchstrasse />
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
             <p className="font-heading font-bold text-lg mb-3">Filip Sudermann</p>

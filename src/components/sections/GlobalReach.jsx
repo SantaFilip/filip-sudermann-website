@@ -23,7 +23,10 @@ export default function GlobalReach() {
               <span className="text-xs font-mono tracking-widest text-foreground font-bold">{lang === 'de' ? 'Standort' : 'Location'}: {t.globalReach.badgeCountry}</span>
             </div>
           </div>
-          <div className="relative w-full max-w-md mx-auto aspect-square">
+          {/* globe-frame: im Vollbild-Portal der Rolle wird die Kugel groesser
+              gesetzt (siehe index.css). Dort steht die halbe Bildschirmbreite
+              zur Verfuegung, auf 28rem gedeckelt wirkte sie daneben verloren. */}
+          <div className="globe-frame relative w-full max-w-md mx-auto aspect-square">
             {/* Glut hinter dem Globus: ohne sie verliert sich die Kugel vor dem
                 hellen Seitenhintergrund, mit ihr liest sie als leuchtender
                 Koerper statt als flaches Foto. */}
