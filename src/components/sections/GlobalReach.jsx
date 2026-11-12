@@ -12,9 +12,8 @@ export default function GlobalReach() {
   const globusNah = useInDerNaehe(globusRef);
 
   return (
-    // overflow-hidden: der Glow hinter dem Globus ragt ueber seine Box
-    // hinaus - auf dem Handy sonst ueber den Bildschirmrand, die Seite
-    // wuerde seitlich scrollbar.
+    // overflow-hidden: nichts aus dieser Sektion darf ueber den Bildschirmrand
+    // ragen - auf dem Handy wuerde die Seite sonst seitlich scrollbar.
     <section id="global-reach" className="overflow-hidden py-20 lg:py-32 bg-card/30 border-t border-border">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -29,17 +28,17 @@ export default function GlobalReach() {
               <span className="text-xs font-mono tracking-widest text-foreground font-bold">{lang === 'de' ? 'Standort' : 'Location'}: {t.globalReach.badgeCountry}</span>
             </div>
           </div>
-          <div className="relative w-full max-w-md mx-auto aspect-square">
-            {/* Glut hinter dem Globus: ohne sie verliert sich die Kugel vor dem
-                hellen Seitenhintergrund, mit ihr liest sie als leuchtender
-                Koerper statt als flaches Foto. */}
-            <div
-              className="pointer-events-none absolute inset-[-18%] rounded-full blur-3xl"
-              style={{
-                background:
-                  'radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, hsl(var(--primary) / 0.18) 45%, transparent 72%)',
-              }}
-            />
+          {/* globe-frame: im Vollbild-Portal der Rolle wird die Kugel groesser
+              gesetzt (siehe index.css). Dort steht die halbe Bildschirmbreite
+              zur Verfuegung, auf 28rem gedeckelt wirkte sie daneben verloren. */}
+          <div className="globe-frame relative w-full max-w-md mx-auto aspect-square">
+            {/* Hier lag eine "Glut": ein radialer Verlauf in Gold und
+                Nachtblau, weichgezeichnet und ueber die Box hinausgezogen.
+                Auf dem cremefarbenen Grund las er als grauer Schatten rund
+                um die Kugel. Ersatzlos gestrichen - der Bereich neben dem
+                Globus hat jetzt exakt die Farbe des uebrigen Hintergrunds.
+                Den Koerper gibt ihm stattdessen die Randaufhellung INNEN
+                an der Kugel selbst (siehe Earth3D.jsx). */}
             <div ref={globusRef} className="relative w-full h-full overflow-hidden">
               {globusNah && (
                 <Suspense fallback={null}>

@@ -90,7 +90,8 @@ export default function Earth3D() {
       { lat: 48.2, lon: 16.4, color: 0xffd24a },
       { lat: 40.7, lon: -74.0, color: 0xffd24a },
       { lat: 34.0, lon: -118.2, color: 0xffd24a },
-      { lat: 51.0, lon: 10.0, color: 0xff3b30 },
+      // Eigener Standort (rot): Vermont, USA.
+      { lat: 44.1, lon: -72.6, color: 0xff3b30 },
     ];
     PIN_LOCATIONS.forEach((p) => {
       const pos = latLngToVector3(p.lat, p.lon, 1.018);
@@ -107,28 +108,118 @@ export default function Earth3D() {
       earthGroup.add(pin, halo);
     });
 
-    const atmGeo = new THREE.SphereGeometry(1.2, 72, 72);
+    // Lufthuelle - und zwar NACH INNEN. Vorher sass sie als Kugel mit
+    // Radius 1.2 (spaeter 1.075) auf der Rueckseite um die Erde herum: jeder
+    // Pixel dieses Scheins lag AUSSERHALB der Erdscheibe und faerbte den
+    // cremefarbenen Grund blau ein. Genau das sollte weg - der Bereich um
+    // das Modell muss exakt die Hintergrundfarbe behalten.
+    //
+    // Stattdessen Vorderseite auf Radius 1.004, also knapp innerhalb der
+    // Silhouette, und die Helligkeit steigt zum Rand hin (Randaufhellung,
+    // wie sie eine echte Atmosphaere zeigt, weil der Blick dort durch mehr
+    // Luft geht). Die Kugel bekommt dadurch ihren Saum, ohne dass neben ihr
+    // irgendetwas leuchtet.
+    const atmGeo = new THREE.SphereGeometry(1.004, 72, 72);
     const atmMat = new THREE.ShaderMaterial({
       vertexShader: `
         varying vec3 vNormal;
+        varying vec3 vBlick;
         void main() {
+          vec4 sicht = modelViewMatrix * vec4(position, 1.0);
           vNormal = normalize(normalMatrix * normal);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vBlick = normalize(-sicht.xyz);
+          gl_Position = projectionMatrix * sicht;
         }
       `,
       fragmentShader: `
         varying vec3 vNormal;
+        varying vec3 vBlick;
         void main() {
-          float intensity = pow(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-          gl_FragColor = vec4(0.3, 0.55, 1.0, 1.0) * intensity;
+          float rand = 1.0 - max(dot(vNormal, vBlick), 0.0);
+          float intensity = pow(rand, 4.0) * 0.85;
+          gl_FragColor = vec4(0.36, 0.6, 1.0, 1.0) * intensity;
         }
       `,
-      side: THREE.BackSide,
+      side: THREE.FrontSide,
       blending: THREE.AdditiveBlending,
       transparent: true,
+      depthWrite: false,
     });
     const atmosphere = new THREE.Mesh(atmGeo, atmMat);
-    scene.add(atmosphere);
+    earthGroup.add(atmosphere);
+
+    // Und der Saum AUSSEN: die sichtbare Lufthuelle, ein schmaler blauer
+    // Ring ueber dem Rand der Kugel.
+    //
+    // Zwei Anlaeufe davor sind gescheitert, beide lehrreich:
+    //   1. Additives Blenden. Auf dem cremefarbenen Grund kann das nur
+    //      aufhellen - der Saum wurde weiss statt blau. Deshalb hier
+    //      normales Alpha, die Farbe traegt selbst.
+    //   2. Das Leuchten am Abstand zur Blickachse gemessen
+    //      (length(viewPos.xy)). Durch die Perspektive liegt die SCHEINBARE
+    //      Kante der Kugel weiter aussen als ihr Radius: bei Blickweite 4
+    //      und Radius 1 erscheint sie unter asin(1/4) = 14.48 Grad, ein
+    //      Punkt bei xy = 1 auf der Rueckseite dagegen nur unter 13.0 Grad.
+    //      Der helle Teil des Saums lag damit INNERHALB der Erdscheibe und
+    //      wurde von ihr verdeckt; sichtbar blieb nur sein schwaches Ende.
+    //
+    // Jetzt wird im Bild selbst gemessen: Abstand des Bildpunkts von der
+    // Bildmitte (die Kugel steht auf der Blickachse, ihre Mitte ist also
+    // die Bildmitte). uKante ist der scheinbare Radius der Erde in
+    // Bildpunkten, uAussen das Ende des Saums. Dazwischen faellt die
+    // Deckkraft ab, ausserhalb wird verworfen - der Ring sitzt damit exakt
+    // auf der Kante, egal wie gross die Kugel gerade dargestellt wird.
+    const SAUM_FAKTOR = 1.055;
+    // tan(scheinbarer Radius) / tan(halber Blickwinkel), in Bildhoehen-Halben.
+    const kanteRelativ =
+      (1 / Math.sqrt(camera.position.z ** 2 - 1)) /
+      Math.tan(((camera.fov / 2) * Math.PI) / 180);
+    const saumGeo = new THREE.SphereGeometry(1.4, 64, 64);
+    const saumMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uMitte: { value: new THREE.Vector2(0, 0) },
+        uKante: { value: 0 },
+        uAussen: { value: 0 },
+      },
+      vertexShader: `
+        void main() {
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec2 uMitte;
+        uniform float uKante;
+        uniform float uAussen;
+        void main() {
+          float r = length(gl_FragCoord.xy - uMitte);
+          if (r < uKante || r > uAussen) discard;
+          float t = (r - uKante) / (uAussen - uKante);
+          float alpha = pow(1.0 - t, 2.0) * 0.85;
+          gl_FragColor = vec4(0.17, 0.42, 0.88, alpha);
+        }
+      `,
+      // Kein Tiefentest noetig und auch nicht erwuenscht: welcher Bildpunkt
+      // zum Saum gehoert, entscheidet allein der Abstand oben. Die
+      // Rueckseite sorgt dafuer, dass jeder Bildpunkt nur einmal gefuellt
+      // wird (sonst laege der Ring doppelt uebereinander).
+      side: THREE.BackSide,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const saum = new THREE.Mesh(saumGeo, saumMat);
+    // renderOrder: zuletzt zeichnen, damit der Ring ueber Wolken und Nadeln
+    // liegt und nicht von ihnen ueberschrieben wird.
+    saum.renderOrder = 10;
+    scene.add(saum);
+
+    const saumMessen = () => {
+      const puffer = renderer.getDrawingBufferSize(new THREE.Vector2());
+      saumMat.uniforms.uMitte.value.set(puffer.x / 2, puffer.y / 2);
+      saumMat.uniforms.uKante.value = (kanteRelativ * puffer.y) / 2;
+      saumMat.uniforms.uAussen.value = saumMat.uniforms.uKante.value * SAUM_FAKTOR;
+    };
+    saumMessen();
 
     scene.add(new THREE.AmbientLight(0x3a3a4a, 0.7));
     const sun = new THREE.DirectionalLight(0xffffff, 1.7);
@@ -182,6 +273,7 @@ export default function Earth3D() {
       camera.aspect = s.w / s.h;
       camera.updateProjectionMatrix();
       renderer.setSize(s.w, s.h);
+      saumMessen();
     };
     window.addEventListener('resize', handleResize);
     // Die Box aendert ihre Groesse auch ohne Fenster-Resize (Rolle skaliert
@@ -206,6 +298,8 @@ export default function Earth3D() {
       cloudMat.dispose();
       atmGeo.dispose();
       atmMat.dispose();
+      saumGeo.dispose();
+      saumMat.dispose();
       renderer.dispose();
     };
   }, []);

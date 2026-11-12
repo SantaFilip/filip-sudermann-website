@@ -13,6 +13,7 @@ import GlobalReach from '@/components/sections/GlobalReach';
 import ConsultationBooking from '@/components/sections/ConsultationBooking';
 import FAQ from '@/components/sections/FAQ';
 import FadeIn from '@/components/FadeIn';
+import Sternentapete from '@/components/lab/Sternentapete';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 // Muss zu MOBILE_MAX in RotaryStage passen: dort faellt die Rolle auf dem
@@ -110,30 +111,37 @@ function Rolle({ f }) {
       </RotaryStage>
       </Suspense>
 
-      <FadeIn>
-        <InteractiveFolder
-          id="services"
-          tab={f.services.tab}
-          title={f.services.title}
-          subtitle={f.services.subtitle}
-          openLabel={f.services.openLabel}
-          closeLabel={f.services.closeLabel}
-        >
-          <ServicesContent />
-        </InteractiveFolder>
-      </FadeIn>
-      <FadeIn>
-        <InteractiveFolder
-          id="about"
-          tab={f.about.tab}
-          title={f.about.title}
-          subtitle={f.about.subtitle}
-          openLabel={f.about.openLabel}
-          closeLabel={f.about.closeLabel}
-        >
-          <AboutContent />
-        </InteractiveFolder>
-      </FadeIn>
+      {/* Der Mappenteil lag als leere cremefarbene Flaeche zwischen
+          Rotunde und Fussbereich. Er bekommt die Sternentapete als
+          Wandbespannung - sie haengt hinter den Mappen, nicht hinter der
+          Rotunde, die ihren eigenen Nachthimmel mitbringt. */}
+      <div className="sternenfeld relative">
+        <Sternentapete />
+        <FadeIn>
+          <InteractiveFolder
+            id="services"
+            tab={f.services.tab}
+            title={f.services.title}
+            subtitle={f.services.subtitle}
+            openLabel={f.services.openLabel}
+            closeLabel={f.services.closeLabel}
+          >
+            <ServicesContent />
+          </InteractiveFolder>
+        </FadeIn>
+        <FadeIn>
+          <InteractiveFolder
+            id="about"
+            tab={f.about.tab}
+            title={f.about.title}
+            subtitle={f.about.subtitle}
+            openLabel={f.about.openLabel}
+            closeLabel={f.about.closeLabel}
+          >
+            <AboutContent />
+          </InteractiveFolder>
+        </FadeIn>
+      </div>
     </>
   );
 }

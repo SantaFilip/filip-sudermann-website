@@ -800,14 +800,41 @@ export default function RotaryStage({
       const r = root.getBoundingClientRect();
       const html = document.documentElement;
       if (r.top < kopf && r.bottom > kopf) {
-        html.dataset.kopfleiste = tintWert < 0.5 ? 'nacht' : 'transparent';
+        // Nicht am Einblend-Fortschritt (tintWert) messen: der steigt erst,
+        // wenn die Buehne fast durchgescrollt ist. Hinter der Kopfleiste wird
+        // es viel frueher hell - naemlich sobald Kuppel und Facetten von
+        // unten in das Band steigen. An tintWert 0.5 gemessen lief die helle
+        // Schrift deshalb Hunderte Pixel lang ueber cremeweissen Karten und
+        // ging darin unter (das war der 'einheitliche', aber unlesbare
+        // Uebergang). Massgeblich ist die Geometrie: sobald die Oberkante der
+        // Trommel das Band erreicht, steht die Beschriftung auf Creme und
+        // die dunkle Schrift traegt.
+        // Der Uebergang darf NICHT einheitlich sein: hinter der Mitte und der
+        // rechten Haelfte steht die cremeweisse Kuppel schon, waehrend ganz
+        // links noch der Nachthimmel steht. Deshalb zwei Schwellen aus
+        // derselben Geometrie - die Kuppel laeuft der Trommel um rund 120px
+        // voraus.
+        const koerper = boxRef.current?.getBoundingClientRect();
+        const kuppelImBand = koerper ? koerper.top < kopf + 120 : tintWert >= 0.3;
+        const trommelImBand = koerper ? koerper.top < kopf : tintWert >= 0.3;
+        html.dataset.kopfleiste = kuppelImBand ? 'transparent' : 'nacht';
+        // Das Logo steht ganz links, wo der Himmel am laengsten dunkel
+        // bleibt - es wechselt erst, wenn auch dort Creme steht.
+        if (trommelImBand) delete html.dataset.kopfleisteLogo;
+        else html.dataset.kopfleisteLogo = 'nacht';
       } else {
         delete html.dataset.kopfleiste;
+        delete html.dataset.kopfleisteLogo;
       }
     }
     kopfleisteMelden();
     window.addEventListener('scroll', kopfleisteMelden, { passive: true });
     window.addEventListener('resize', kopfleisteMelden);
+    // Beim ersten Lauf steht die Trommel noch nicht (cube wird erst gemessen),
+    // die Geometrie meldet dann faelschlich "Creme" und der Namenszug stuende
+    // dunkel auf dem Nachthimmel. Sobald sie ihre Masse hat, neu entscheiden.
+    const kopfBeobachter = new ResizeObserver(kopfleisteMelden);
+    if (boxRef.current) kopfBeobachter.observe(boxRef.current);
 
     return () => {
       pfeilRef.current = null;
@@ -818,9 +845,11 @@ export default function RotaryStage({
       gsap.ticker.remove(tick);
       if (seekTween) seekTween.kill();
       teichTrigger.kill();
+      kopfBeobachter.disconnect();
       window.removeEventListener('scroll', kopfleisteMelden);
       window.removeEventListener('resize', kopfleisteMelden);
       delete document.documentElement.dataset.kopfleiste;
+      delete document.documentElement.dataset.kopfleisteLogo;
       // Falls dieser Effekt neu aufgesetzt wird (z.B. Umschalten auf mobile)
       // waehrend eine Facette offen stand: den Vollbild-Portal-State mit
       // aufraeumen, sonst bliebe er verwaist stehen.

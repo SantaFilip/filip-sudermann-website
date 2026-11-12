@@ -35,7 +35,10 @@ export default function Header() {
   };
 
   const LangToggle = () => (
-    <div className="flex items-center border border-border bg-card/50 rounded-full">
+    // overflow-hidden: die aktive Pille (motion.div, inset-0) ist ein
+    // Rechteck. Ohne Beschnitt standen ihre Ecken ueber die runde Huelle
+    // hinaus, die aktive Sprache sah eckig aus statt halbkreisfoermig.
+    <div className="flex items-center overflow-hidden border border-border bg-card/50 rounded-full">
       <button
         onClick={() => lang !== 'de' && toggleLang()}
         className="relative px-2.5 py-1 text-xs font-semibold tracking-wide"
@@ -70,7 +73,10 @@ export default function Header() {
   return (
     // kopfleiste: ueber dem Nachthimmel der Rolle durchsichtig, siehe
     // data-kopfleiste in index.css und kopfleisteMelden in RotaryStage.
-    <header className="kopfleiste fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/60 transition-colors duration-300">
+    // Der Trennstrich erscheint erst beim Scrollen. Fest gesetzt blitzte er
+    // beim Laden kurz auf, bevor RotaryStage data-kopfleiste setzt und ihn
+    // wieder durchsichtig schaltet - ein Strich quer ueber den Nachthimmel.
+    <header className={`kopfleiste fixed top-0 left-0 right-0 z-50 bg-background transition-colors duration-300 border-b ${scrolled ? 'border-border/60' : 'border-transparent'}`}>
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-16 min-[1380px]:px-10 min-[1536px]:px-16 flex items-center justify-between gap-3 sm:gap-6 min-[1380px]:gap-4 min-[1536px]:gap-6 h-16 lg:h-20">
         {/* Logo: auf dem Handy (<640px) bleibt es beim Oeffnen stehen (wie
             bisher, das Dropdown erscheint dort separat darunter) - nur im
@@ -78,7 +84,7 @@ export default function Header() {
         <a
           href="#about"
           onClick={(e) => handleNav(e, '#about')}
-          className={`${mobileOpen ? 'sm:hidden' : ''} shrink-0 whitespace-nowrap font-heading font-bold tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}
+          className={`kopfleiste-logo ${mobileOpen ? 'sm:hidden' : ''} shrink-0 whitespace-nowrap font-heading font-bold tracking-tight transition-all duration-300 ${scrolled ? 'text-base' : 'text-lg'}`}
         >
           Filip Sudermann
         </a>

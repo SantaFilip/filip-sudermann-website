@@ -418,22 +418,13 @@
     width: 100% !important;
   }
 
-  /* Calendly-Kalender: die feste Hoehe (680px, siehe ConsultationBooking.jsx)
-     gilt fuer die eigenstaendige Seite genauso wie fuer die Facette - dort
-     wird sie von FitToFace zusammen mit Badge/Infotext gleichmaessig
-     herunterskaliert und wirkt dadurch kleiner als auf der normalen Seite.
-     Nur hier (Facette) deutlich groesser, damit mehr vom Kalender ohne
-     internes Scrollen sichtbar ist - ein fixer, groesserer rem-Wert statt
-     cqw/cqh: die Breite haengt an verschachtelten Spalten mit eigenem
-     Padding, ein cqw-Wert wuerde (wie beim Globus zuvor) gegen die falsche
-     Bezugsgroesse rechnen und die Karte seitlich ueberlaufen lassen.
-     !important noetig: die Hoehe steht als inline style im JSX (React
-     schreibt sie dort, weil Calendly sie zur Laufzeit braucht) - ein
-     inline style schlaegt jede externe Regel unabhaengig von deren
-     Spezifitaet, nur !important kommt dagegen an. */
-  .rotary-face #beratung .calendly-embed {
-    height: 58rem !important;
-  }
+  /* Hier stand ein Hoehen-Deckel von 58rem fuer den Kalender auf der
+     Facette. Er ist weg: auf der geschlossenen Facette steht jetzt die
+     Tafel statt des Kalenders, und im Vollbild-Portal meldet Calendly
+     seine wirkliche Seitenhoehe selbst (calendly.page_height, siehe
+     ConsultationBooking.jsx). Ein fester Wert waere dort entweder zu
+     gross (leere Flaeche unter dem Kalender) oder zu klein (unten
+     abgeschnitten) - beides war zu sehen. */
 
   /* Kontakt im Vollbild-Portal: zweispaltig statt gestapelt - links Titel/
      Infotext vertikal mittig (viel Luft sonst ungenutzt, weil der Text
@@ -1443,6 +1434,14 @@ html[data-kopfleiste='nacht'] .kopfleiste .btn-fill {
   color: hsl(217 62% 12%);
 }
 
+/* Der Namenszug steht ganz links aussen. Dort bleibt der Nachthimmel am
+   laengsten stehen, waehrend in der Mitte schon die cremeweisse Kuppel
+   hochkommt - er wechselt deshalb spaeter als der Rest der Leiste und
+   behaelt bis dahin die helle Schrift. */
+html[data-kopfleiste-logo='nacht'] .kopfleiste .kopfleiste-logo {
+  color: hsl(40 46% 95%);
+}
+
 /* Lautstaerkeregler der Hintergrundmusik (Kopfleiste). Farben ueber die
    Tokens, damit er ueber dem Nachthimmel automatisch hell wird. */
 .musik-schieber {
@@ -1477,3 +1476,75 @@ html[data-kopfleiste='nacht'] .kopfleiste .btn-fill {
   outline: 2px solid hsl(var(--accent));
   outline-offset: 4px;
 }
+
+/* Globus im aufgeklappten Zustand.
+   Die Rolle rendert eine geoeffnete Flaeche in ein Vollbild-Portal
+   (.rotary-portal). Dort steht dem Globus die halbe Bildschirmbreite zur
+   Verfuegung; der Deckel von 28rem aus der Trommel-Ansicht liess ihn neben
+   der grossen Ueberschrift verloren wirken. */
+.rotary-portal #global-reach .grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+}
+
+.rotary-portal .globe-frame {
+  /* Im Vollbild-Portal faellt der Hoehen-Deckel weg, der die Trommel-Ansicht
+     schuetzt (.rotary-face [class*="aspect-"] { max-height: 52vh }): dort
+     kostet jeder Pixel Hoehe Skalierung und damit Breite, hier steht ein
+     ganzer Bildschirm zur Verfuegung. Mit dem Deckel blieb die quadratische
+     Box bei 592x468 stehen - die Kugel sass also in einem flachgedrueckten
+     Rahmen und wirkte neben der grossen Ueberschrift klein. */
+  max-height: min(76vh, 100%);
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------------
+   Sternentapete (siehe components/lab/Sternentapete.jsx)
+   Zweiter Entwurf, deutlich zurueckgenommen. Die Werte des ersten waren
+   etwa doppelt so hoch - zusammen mit grossen, gefuellten Strahlensternen
+   las das Muster laut und illustrativ statt als Bespannung. Der hellste
+   Wert liegt jetzt bei 0.26, die Haarlinien bei 0.09 bis 0.12. Farben
+   aus den Tokens: Gold fuer die Gestirne, Nachtblau fuer den Staub.
+   ------------------------------------------------------------------ */
+.sternentapete {
+  z-index: 0;
+}
+
+.tapete-stern {
+  fill: hsl(var(--accent) / 0.19);
+}
+
+.tapete-stern-schwach {
+  fill: hsl(var(--accent) / 0.12);
+}
+
+.tapete-kern {
+  fill: hsl(var(--accent) / 0.26);
+}
+
+.tapete-staub {
+  fill: hsl(var(--foreground) / 0.08);
+}
+
+.tapete-staub-hell {
+  fill: hsl(var(--accent) / 0.2);
+}
+
+.tapete-ring {
+  fill: none;
+  stroke: hsl(var(--accent) / 0.12);
+  stroke-width: 0.35;
+}
+
+.tapete-ring-fein {
+  fill: none;
+  stroke: hsl(var(--foreground) / 0.055);
+  stroke-width: 0.35;
+}
+
+/* Der Inhalt vor der Tapete. Ohne eigenen Stapelplatz laegen die
+   Mappen auf derselben Ebene wie das Muster. */
+.sternenfeld > :not(.sternentapete) {
+  position: relative;
+  z-index: 1;
+}
+
