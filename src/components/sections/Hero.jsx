@@ -6,7 +6,16 @@ import { IMAGES } from '@/lib/links';
 import { Image } from '@/components/ui/image';
 import { scrollToSection } from '@/lib/scrollToSection';
 import BANNER_DE from '@/assets/images/banner-de.webp';
+import BANNER_DE_800 from '@/assets/images/banner-de-800.webp';
+import BANNER_DE_1200 from '@/assets/images/banner-de-1200.webp';
 import BANNER_EN from '@/assets/images/banner-en.webp';
+import BANNER_EN_800 from '@/assets/images/banner-en-800.webp';
+import BANNER_EN_1200 from '@/assets/images/banner-en-1200.webp';
+
+const BANNER = {
+  de: { src: BANNER_DE, srcSet: `${BANNER_DE_800} 800w, ${BANNER_DE_1200} 1200w, ${BANNER_DE} 2000w` },
+  en: { src: BANNER_EN, srcSet: `${BANNER_EN_800} 800w, ${BANNER_EN_1200} 1200w, ${BANNER_EN} 2000w` },
+};
 
 const NAVY = '#0B1930';
 const GOLD = '#C8A13A';
@@ -15,7 +24,7 @@ const CREAM = '#F8F4EC';
 
 export default function Hero() {
   const { t, lang } = useLanguage();
-  const bannerUrl = lang === 'de' ? BANNER_DE : BANNER_EN;
+  const banner = BANNER[lang] || BANNER.de;
 
   return (
     <section
@@ -34,7 +43,20 @@ export default function Hero() {
       </div>
 
       <div className="w-full">
-        <img src={bannerUrl} alt="With Systematic Growth — Scale your business" className="w-full h-auto block" />
+        {/* Erstes grosses Bild der Seite: hohe Prioritaet, Groesse passend
+            zum Bildschirm, feste Masse gegen Nachrutschen beim Laden. */}
+        <img
+          src={banner.src}
+          srcSet={banner.srcSet}
+          sizes="(max-width: 767px) 100vw, 45vw"
+          width={2000}
+          height={667}
+          // Kleingeschrieben: React 18 reicht fetchPriority sonst nicht durch.
+          fetchpriority="high"
+          decoding="async"
+          alt="With Systematic Growth — Scale your business"
+          className="w-full h-auto block"
+        />
       </div>
       <div className="relative max-w-[1500px] mx-auto px-8 lg:px-16 mt-8 lg:mt-12">
         <div className="hidden lg:grid lg:grid-cols-[48fr_52fr] gap-0 items-center" style={{ minHeight: '640px' }}>
@@ -136,7 +158,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="relative"
           >
-            {/* aspect-square statt aspect-[4/5]: die Quelle (hero-portrait.jpg)
+            {/* aspect-square statt aspect-[4/5]: die Quelle (hero-portrait.webp)
                 ist selbst quadratisch (1024x1024). Ein 4:5-Rahmen (schmaler
                 als das Quadrat) liess object-cover ca. 10% links/rechts
                 wegschneiden - knapp genug, um den Laptop-Rand abzuschneiden.

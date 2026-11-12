@@ -1,8 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
-
-const TEXTURE_BASE =
-  'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets';
+// three.js-Beispieltexturen, auf 1024 px verkleinert und selbst gehostet:
+// 278 KB statt 1,3 MB von GitHub, im Cache mit dem Rest der Seite.
+import erdeFarbe from '@/assets/erde/atmos-1024.jpg';
+import erdeRelief from '@/assets/erde/relief-1024.jpg';
+import erdeGlanz from '@/assets/erde/glanz-1024.jpg';
+import erdeWolken from '@/assets/erde/wolken-1024.jpg';
 
 export default function Earth3D() {
   const containerRef = useRef(null);
@@ -35,10 +38,12 @@ export default function Earth3D() {
     const textureLoader = new THREE.TextureLoader(manager);
     textureLoader.setCrossOrigin('anonymous');
 
-    const earthMap = textureLoader.load(`${TEXTURE_BASE}/earth_atmos_2048.jpg`);
-    const bumpMap = textureLoader.load(`${TEXTURE_BASE}/earth_normal_2048.jpg`);
-    const specMap = textureLoader.load(`${TEXTURE_BASE}/earth_specular_2048.jpg`);
-    const cloudMap = textureLoader.load(`${TEXTURE_BASE}/earth_clouds_1024.png`);
+    const earthMap = textureLoader.load(erdeFarbe);
+    const bumpMap = textureLoader.load(erdeRelief);
+    const specMap = textureLoader.load(erdeGlanz);
+    // Nur der Alphakanal der Original-Wolken (dort, wo sie sichtbar sind, sind
+    // sie ohnehin weiss) - als Graustufen-JPEG ein Drittel der PNG-Groesse.
+    const cloudMap = textureLoader.load(erdeWolken);
 
     const earthGroup = new THREE.Group();
     scene.add(earthGroup);
@@ -57,7 +62,8 @@ export default function Earth3D() {
 
     const cloudGeo = new THREE.SphereGeometry(1.016, 64, 64);
     const cloudMat = new THREE.MeshPhongMaterial({
-      map: cloudMap,
+      color: 0xffffff,
+      alphaMap: cloudMap,
       transparent: true,
       opacity: 0.4,
       depthWrite: false,

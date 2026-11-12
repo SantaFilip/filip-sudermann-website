@@ -37,9 +37,17 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Schriften direkt hier statt per @import im CSS: der Browser kennt sie
+         dann sofort und laedt sie parallel zum JavaScript. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Serif+Display:ital@0;1&display=swap" />
+    <!-- Banner ganz oben: ohne Preload entdeckt der Browser es erst, wenn das
+         JavaScript gelaufen ist. Deutsch ist die Standardsprache. -->
+    <link rel="preload" as="image" href="/src/assets/images/banner-de-800.webp" imagesrcset="/src/assets/images/banner-de-800.webp 800w, /src/assets/images/banner-de-1200.webp 1200w, /src/assets/images/banner-de.webp 2000w" imagesizes="(max-width: 767px) 100vw, 45vw" fetchpriority="high" />
     <title>Filip Sudermann – Growth Operations</title>
-    <!-- Metricool Web-Tracking (JavaScript-Tag aus dem Metricool-Dashboard) -->
-    <script>function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}loadScript(function(){beTracker.t({hash:"3aa7356b818ff69f4683f56bca8800e0"})});</script>
+    <!-- Metricool Web-Tracking (JavaScript-Tag aus dem Metricool-Dashboard).
+         Erst nach dem Laden der Seite, damit es nicht mit Inhalt und Bildern
+         um die Leitung konkurriert. -->
+    <script>function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}window.addEventListener("load",function(){loadScript(function(){beTracker.t({hash:"3aa7356b818ff69f4683f56bca8800e0"})})});</script>
   </head>
   <body>
     <div id="root"></div>

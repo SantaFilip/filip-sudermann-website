@@ -102,8 +102,13 @@ export function MusikProvider({ children }) {
         starten();
       };
       GESTEN.forEach((typ) => window.addEventListener(typ, gesteRef.current, true));
-      starten();
     }
+    // Der Startversuch ohne Geste baut die Klang-Engine auf (Hall-Puffer usw.)
+    // und kostet spuerbar Rechenzeit - erst, wenn der Browser nach dem Laden
+    // Luft hat. Ton waere vorher ohnehin fast nie erlaubt.
+    const imLeerlauf = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+    const abbrechen = window.cancelIdleCallback || clearTimeout;
+    const leerlauf = anRef.current ? imLeerlauf(() => { if (anRef.current && !hoerbarRef.current) starten(); }, { timeout: 4000 }) : null;
 
     const sichtbarkeit = () => {
       const musik = musikRef.current;
@@ -114,6 +119,7 @@ export function MusikProvider({ children }) {
     document.addEventListener('visibilitychange', sichtbarkeit);
 
     return () => {
+      if (leerlauf !== null) abbrechen(leerlauf);
       gesteAbmelden();
       document.removeEventListener('visibilitychange', sichtbarkeit);
       musikRef.current?.schliessen();

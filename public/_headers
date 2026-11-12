@@ -1,0 +1,4 @@
+# Dateien mit Hash im Namen aendern sich nie - ein Jahr im Browser-Cache.
+# Ohne diese Regel fragt der Browser bei jedem Besuch jede Datei neu nach.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { Suspense, lazy, useRef } from 'react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import Earth3D from '@/components/sections/Earth3D';
+import { useInDerNaehe } from '@/hooks/use-in-der-naehe';
+
+// three.js ist das schwerste Paket der Seite - erst laden, wenn der Globus
+// in die Naehe des Bildschirms kommt, nicht schon beim Seitenstart.
+const Earth3D = lazy(() => import('@/components/sections/Earth3D'));
 
 export default function GlobalReach() {
   const { t, lang } = useLanguage();
+  const globusRef = useRef(null);
+  const globusNah = useInDerNaehe(globusRef);
 
   return (
     // overflow-hidden: der Glow hinter dem Globus ragt ueber seine Box
@@ -34,8 +40,12 @@ export default function GlobalReach() {
                   'radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, hsl(var(--primary) / 0.18) 45%, transparent 72%)',
               }}
             />
-            <div className="relative w-full h-full overflow-hidden">
-              <Earth3D />
+            <div ref={globusRef} className="relative w-full h-full overflow-hidden">
+              {globusNah && (
+                <Suspense fallback={null}>
+                  <Earth3D />
+                </Suspense>
+              )}
             </div>
           </div>
         </div>

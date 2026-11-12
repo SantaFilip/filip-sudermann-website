@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/sections/Hero';
@@ -13,8 +13,32 @@ import GlobalReach from '@/components/sections/GlobalReach';
 import ConsultationBooking from '@/components/sections/ConsultationBooking';
 import FAQ from '@/components/sections/FAQ';
 import FadeIn from '@/components/FadeIn';
-import RotaryStage from '@/components/lab/RotaryStage';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+
+// Muss zu MOBILE_MAX in RotaryStage passen: dort faellt die Rolle auf dem
+// Handy ohnehin auf einen flachen Stapel zurueck - dann gehoeren 1 / Growth
+// System und 2 / Founder Info an ihren chronologischen Platz vor die 3 statt
+// ans Seitenende.
+const MOBILE_QUERY = '(max-width: 767px)';
+
+// Die 3D-Buehne (Gebaeude, Himmel, three.js) ist ein eigenes Paket: das Handy
+// zeigt sie nie und laedt sie damit auch nicht. Auf dem Desktop startet der
+// Download sofort hier, parallel zum Rest, nicht erst beim ersten Rendern.
+const ladeBuehne = () => import('@/components/lab/RotaryStage');
+if (typeof window !== 'undefined' && !window.matchMedia(MOBILE_QUERY).matches) ladeBuehne();
+const RotaryStage = lazy(ladeBuehne);
+
+// Platzhalter in Hoehe und Farbe der Buehne (Header-Ausgleich + 90vh,
+// Nachthimmel), damit beim Nachladen nichts springt oder weiss aufblitzt.
+function BuehnePlatzhalter() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pt-16 lg:pt-20"
+      style={{ boxSizing: 'content-box', height: '90vh', background: 'hsl(222 58% 5%)' }}
+    />
+  );
+}
 
 // Die Rolle zeigte leere Flaechen, verursacht durch einen Float-Vergleich
 // (d !== 0 statt i !== vorne) in RotaryStage - siehe dortiger Commit. Per
@@ -66,6 +90,7 @@ function OnePager({ f }) {
 function Rolle({ f }) {
   return (
     <>
+      <Suspense fallback={<BuehnePlatzhalter />}>
       <RotaryStage
         axis="y"
         fill={0.42}
@@ -83,6 +108,7 @@ function Rolle({ f }) {
         <ConsultationBooking />
         <FAQ />
       </RotaryStage>
+      </Suspense>
 
       <FadeIn>
         <InteractiveFolder
@@ -111,12 +137,6 @@ function Rolle({ f }) {
     </>
   );
 }
-
-// Muss zu MOBILE_MAX in RotaryStage passen: dort faellt die Rolle auf dem
-// Handy ohnehin auf einen flachen Stapel zurueck - dann gehoeren 1 / Growth
-// System und 2 / Founder Info an ihren chronologischen Platz vor die 3 statt
-// ans Seitenende.
-const MOBILE_QUERY = '(max-width: 767px)';
 
 function useMobile() {
   const [mobile, setMobile] = useState(

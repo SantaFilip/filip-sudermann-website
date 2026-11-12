@@ -1,5 +1,5 @@
-import heroPortrait from '@/assets/images/hero-portrait.jpg';
-import aboutPortrait from '@/assets/images/about-portrait.jpg';
+import heroPortrait from '@/assets/images/hero-portrait.webp';
+import aboutPortrait from '@/assets/images/about-portrait.webp';
 
 export const SKOOL_URL = 'https://www.skool.com';
 export const SKOOL_PROFILE_URL = 'https://www.skool.com/@filip-sudermann-1274';
