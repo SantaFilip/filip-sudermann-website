@@ -48,42 +48,87 @@
     <script>function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}window.addEventListener("load",function(){loadScript(function(){beTracker.t({hash:"3aa7356b818ff69f4683f56bca8800e0"})})});</script>
   </head>
   <body>
-    <!-- Ladevorhang: die Seite erscheint auf einen Schlag, sobald alles
-         Sichtbare fertig ist (src/lib/ladeSchranke.js), statt Stueck fuer
-         Stueck. Steht ab dem ersten Byte, ohne Schrift- oder JS-Abhaengigkeit.
-         Notausgaenge: Zeitlimit per Skript (7 s) und, falls JavaScript gar
-         nicht laeuft, eine reine CSS-Animation (9 s). -->
+    <!-- Ladevorhang als kurze Ladeanimation: "Filip Sudermann - Growth
+         Operations" mit Punkten, die von eins auf drei wachsen. Die Seite
+         laedt dahinter fertig und erscheint auf einen Schlag
+         (src/lib/ladeSchranke.js meldet "alles fertig" ueber
+         window.__seiteZeigen). Aufgezogen wird immer dann, wenn gerade alle
+         drei Punkte stehen - nie mitten in der Animation. Steht ab dem ersten
+         Byte, ohne Schrift- oder JS-Abhaengigkeit. Notausgaenge: 7 s per
+         Skript und, falls JavaScript gar nicht laeuft, 9 s per CSS. -->
     <style>
       #lade-vorhang {
         position: fixed; inset: 0; z-index: 2147483647;
         display: flex; align-items: center; justify-content: center;
+        padding: 0 16px;
         background: #f8f4ec; color: #0c1a32;
-        font: 400 22px/1 Georgia, 'Times New Roman', serif; letter-spacing: 0.04em;
+        font: 400 clamp(15px, 4.4vw, 26px)/1.2 Georgia, 'Times New Roman', serif;
+        letter-spacing: 0.03em; white-space: nowrap;
         transition: opacity 0.45s ease, visibility 0s linear 0.45s;
         animation: vorhang-notaus 0s linear 9s forwards;
       }
       #lade-vorhang.nacht { background: hsl(222 58% 5%); color: #f3ece0; }
       #lade-vorhang.weg { opacity: 0; visibility: hidden; pointer-events: none; }
-      #lade-vorhang span { opacity: 0.8; animation: vorhang-atmen 1.8s ease-in-out infinite alternate; }
-      @keyframes vorhang-atmen { from { opacity: 0.35; } to { opacity: 0.85; } }
+      /* Beim Aufziehen einfrieren: sonst sprangen die Punkte mitten im
+         Ausblenden zurueck auf null. */
+      #lade-vorhang.weg .punkte i { animation-play-state: paused; }
+      #lade-vorhang .zusatz { opacity: 0.6; }
+      /* Feste Breite fuer drei Punkte: der Text rutscht nicht, waehrend sie wachsen. */
+      #lade-vorhang .punkte { display: inline-block; width: 1.4em; text-align: left; }
+      #lade-vorhang .punkte i { font-style: normal; opacity: 0; animation: 1.6s steps(1, end) infinite; }
+      #lade-vorhang .punkte i:nth-child(1) { animation-name: lade-punkt-1; }
+      #lade-vorhang .punkte i:nth-child(2) { animation-name: lade-punkt-2; }
+      #lade-vorhang .punkte i:nth-child(3) { animation-name: lade-punkt-3; }
+      /* Ein Durchlauf 1,6 s: Punkte bei 0,4 / 0,8 / 1,2 s, dann kurz alle drei. */
+      @keyframes lade-punkt-1 { 0% { opacity: 0; } 25% { opacity: 1; } }
+      @keyframes lade-punkt-2 { 0% { opacity: 0; } 50% { opacity: 1; } }
+      @keyframes lade-punkt-3 { 0% { opacity: 0; } 75% { opacity: 1; } }
       @keyframes vorhang-notaus { to { opacity: 0; visibility: hidden; pointer-events: none; } }
-      @media (prefers-reduced-motion: reduce) { #lade-vorhang span { animation: none; } }
+      @media (prefers-reduced-motion: reduce) {
+        #lade-vorhang .punkte i { animation: none; opacity: 1; }
+      }
     </style>
-    <div id="lade-vorhang" aria-hidden="true"><span>Filip Sudermann</span></div>
+    <div id="lade-vorhang" aria-hidden="true">
+      <span>Filip Sudermann<span class="zusatz"> &ndash; Growth Operations</span><span class="punkte"><i>.</i><i>.</i><i>.</i></span></span>
+    </div>
     <script>
       (function () {
         var v = document.getElementById('lade-vorhang');
+        var start = performance.now();
+        var ZYKLUS = 1600;
+        var ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches;
         // Auf der Startseite mit 3D-Buehne nachtblau wie der Himmel, sonst in
         // der Seitenfarbe - kein Farbblitz beim Aufziehen.
-        if (location.pathname === '/' && matchMedia('(min-width: 768px)').matches
-            && !matchMedia('(prefers-reduced-motion: reduce)').matches) v.className = 'nacht';
-        window.__seiteZeigen = function () {
+        if (location.pathname === '/' && matchMedia('(min-width: 768px)').matches && !ruhig) v.className = 'nacht';
+
+        function aufziehen() {
           if (!v) return;
           v.classList.add('weg');
           var weg = v; v = null;
           setTimeout(function () { weg.remove(); }, 600);
+        }
+        // Seite fertig: aufziehen, sobald gerade alle drei Punkte stehen (in
+        // jedem Durchlauf von 1,2 bis 1,6 s) - nie mitten im Wachsen, und
+        // ohne unnoetig auf das Ende des Durchlaufs zu warten. Geprueft wird
+        // in jedem Bild an der laufenden Animation selbst statt per Timer:
+        // sie startet erst mit dem ersten Zeichnen, und ein Timer feuert auf
+        // einem ausgelasteten Handy zu spaet - beides traf das Fenster nicht.
+        var DREI_PUNKTE = 1230;
+        var dritter = v.querySelector('.punkte i:nth-child(3)');
+        function pruefe() {
+          if (!v) return;
+          var anim = dritter.getAnimations ? dritter.getAnimations()[0] : null;
+          var t = anim && anim.currentTime != null ? anim.currentTime : performance.now() - start;
+          var phase = t % ZYKLUS;
+          if (phase >= DREI_PUNKTE && phase < ZYKLUS - 80) aufziehen();
+          else requestAnimationFrame(pruefe);
+        }
+        window.__seiteZeigen = function () {
+          if (!v) return;
+          if (ruhig) aufziehen();
+          else requestAnimationFrame(pruefe);
         };
-        setTimeout(window.__seiteZeigen, 7000);
+        setTimeout(aufziehen, 7000);
       })();
     </script>
     <div id="root"></div>
