@@ -35,11 +35,6 @@
     <!-- /favicon.ico: Fallback fuer Dienste, die nur diesen Pfad abfragen -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Schriften direkt hier statt per @import im CSS: der Browser kennt sie
-         dann sofort und laedt sie parallel zum JavaScript. -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Serif+Display:ital@0;1&display=swap" />
     <!-- Banner ganz oben: ohne Preload entdeckt der Browser es erst, wenn das
          JavaScript gelaufen ist. Deutsch ist die Standardsprache. -->
     <link rel="preload" as="image" href="/src/assets/images/banner-de-800.webp" imagesrcset="/src/assets/images/banner-de-800.webp 800w, /src/assets/images/banner-de-1200.webp 1200w, /src/assets/images/banner-de.webp 2000w" imagesizes="(max-width: 767px) 100vw, 45vw" fetchpriority="high" />

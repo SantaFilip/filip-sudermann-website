@@ -59,9 +59,18 @@ export function scrollToSection(id) {
     return;
   }
 
-  // window.scrollTo mit Koordinaten ignoriert scroll-padding, hier also
-  // die 5rem von Hand abziehen.
-  const y = el.getBoundingClientRect().top + window.pageYOffset - 80;
+  // Ohne Lenis (Touch-Geraete, reduzierte Bewegung). window.scrollTo mit
+  // Koordinaten ignoriert scroll-padding, hier also die 5rem von Hand
+  // abziehen; offsetTop-Kette aus demselben Grund wie oben.
+  let y = -80;
+  for (let node = el; node; node = node.offsetParent) y += node.offsetTop;
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // Zwei Frames warten: der Menue-Link klappt im selben Klick das
+    // Handy-Menue zu, und das bricht ein gleichzeitig gestartetes natives
+    // sanftes Scrollen sofort wieder ab.
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'smooth' })));
+    return;
+  }
   const html = document.documentElement;
   const prev = html.style.scrollBehavior;
   html.style.scrollBehavior = 'auto';
