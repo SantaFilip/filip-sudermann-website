@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { IMAGES } from '@/lib/links';
 import { Image } from '@/components/ui/image';
 import { scrollToSection } from '@/lib/scrollToSection';
+import { erledigt } from '@/lib/ladeSchranke';
 import BANNER_DE from '@/assets/images/banner-de.webp';
 import BANNER_DE_800 from '@/assets/images/banner-de-800.webp';
 import BANNER_DE_1200 from '@/assets/images/banner-de-1200.webp';
@@ -25,9 +26,18 @@ const CREAM = '#F8F4EC';
 export default function Hero() {
   const { t, lang } = useLanguage();
   const banner = BANNER[lang] || BANNER.de;
+  const sectionRef = useRef(null);
+
+  // Banner und Portrait erst melden, wenn sie wirklich gemalt werden koennen
+  // (decode) - sonst fiele der Ladevorhang ueber leeren Bildrahmen.
+  useEffect(() => {
+    const bilder = [...(sectionRef.current?.querySelectorAll('img') ?? [])];
+    Promise.all(bilder.map((img) => img.decode().catch(() => {}))).then(() => erledigt('bilder'));
+  }, []);
 
   return (
     <section
+      ref={sectionRef}
       id="top"
       className="relative pt-24 lg:pt-32 pb-8 lg:pb-12 overflow-hidden"
       style={{ background: CREAM }}

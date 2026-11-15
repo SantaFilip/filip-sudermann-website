@@ -37,6 +37,9 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- Banner ganz oben: ohne Preload entdeckt der Browser es erst, wenn das
          JavaScript gelaufen ist. Deutsch ist die Standardsprache. -->
+    <!-- Portrait: auf dem Desktop das groesste Element im ersten Bild (LCP),
+         ohne Preload erst angefordert, wenn die Buehne gerendert ist. -->
+    <link rel="preload" as="image" href="/src/assets/images/hero-portrait.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="/src/assets/images/banner-de-800.webp" imagesrcset="/src/assets/images/banner-de-800.webp 800w, /src/assets/images/banner-de-1200.webp 1200w, /src/assets/images/banner-de.webp 2000w" imagesizes="(max-width: 767px) 100vw, 45vw" fetchpriority="high" />
     <title>Filip Sudermann – Growth Operations</title>
     <!-- Metricool Web-Tracking (JavaScript-Tag aus dem Metricool-Dashboard).
@@ -45,6 +48,44 @@
     <script>function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}window.addEventListener("load",function(){loadScript(function(){beTracker.t({hash:"3aa7356b818ff69f4683f56bca8800e0"})})});</script>
   </head>
   <body>
+    <!-- Ladevorhang: die Seite erscheint auf einen Schlag, sobald alles
+         Sichtbare fertig ist (src/lib/ladeSchranke.js), statt Stueck fuer
+         Stueck. Steht ab dem ersten Byte, ohne Schrift- oder JS-Abhaengigkeit.
+         Notausgaenge: Zeitlimit per Skript (7 s) und, falls JavaScript gar
+         nicht laeuft, eine reine CSS-Animation (9 s). -->
+    <style>
+      #lade-vorhang {
+        position: fixed; inset: 0; z-index: 2147483647;
+        display: flex; align-items: center; justify-content: center;
+        background: #f8f4ec; color: #0c1a32;
+        font: 400 22px/1 Georgia, 'Times New Roman', serif; letter-spacing: 0.04em;
+        transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+        animation: vorhang-notaus 0s linear 9s forwards;
+      }
+      #lade-vorhang.nacht { background: hsl(222 58% 5%); color: #f3ece0; }
+      #lade-vorhang.weg { opacity: 0; visibility: hidden; pointer-events: none; }
+      #lade-vorhang span { opacity: 0.8; animation: vorhang-atmen 1.8s ease-in-out infinite alternate; }
+      @keyframes vorhang-atmen { from { opacity: 0.35; } to { opacity: 0.85; } }
+      @keyframes vorhang-notaus { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+      @media (prefers-reduced-motion: reduce) { #lade-vorhang span { animation: none; } }
+    </style>
+    <div id="lade-vorhang" aria-hidden="true"><span>Filip Sudermann</span></div>
+    <script>
+      (function () {
+        var v = document.getElementById('lade-vorhang');
+        // Auf der Startseite mit 3D-Buehne nachtblau wie der Himmel, sonst in
+        // der Seitenfarbe - kein Farbblitz beim Aufziehen.
+        if (location.pathname === '/' && matchMedia('(min-width: 768px)').matches
+            && !matchMedia('(prefers-reduced-motion: reduce)').matches) v.className = 'nacht';
+        window.__seiteZeigen = function () {
+          if (!v) return;
+          v.classList.add('weg');
+          var weg = v; v = null;
+          setTimeout(function () { weg.remove(); }, 600);
+        };
+        setTimeout(window.__seiteZeigen, 7000);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

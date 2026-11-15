@@ -14,8 +14,9 @@ const DESKTOP_ABFRAGE = '(min-width: 768px)'
 /**
  * Traegt nach dem Build Preloads mit den gehashten Dateinamen in index.html
  * ein: die Sofort-Schriften fuer alle, und - nur auf dem Desktop - die 3D-
- * Buehne samt three.js. Die wuerde sonst erst angefordert, wenn das
- * Hauptpaket geladen und ausgefuehrt ist.
+ * Buehne samt Gebaeude und three.js. Die wuerden sonst erst nacheinander
+ * angefordert, wenn das Hauptpaket bzw. die Buehne ausgefuehrt ist; der
+ * Ladevorhang (src/lib/ladeSchranke.js) wartet aber auf alles.
  */
 function fruehesLaden() {
   return {
@@ -48,6 +49,9 @@ function fruehesLaden() {
             chunk.imports.forEach(sammle)
           }
           sammle(buehne.fileName)
+          // Das Gebaeude (ArchitectureGL) ist ein dynamischer Import der
+          // Buehne - gleich mit vorladen, samt three.js.
+          buehne.dynamicImports.forEach(sammle)
           const liste = JSON.stringify([...dateien].map((n) => `/${n}`))
           tags.push({
             tag: 'script',

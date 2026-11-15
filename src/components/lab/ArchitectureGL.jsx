@@ -1,4 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { erledigt } from '@/lib/ladeSchranke';
 import * as THREE from 'three';
 
 /**
@@ -1190,6 +1191,7 @@ export const ArchitectureBackGL = React.memo(forwardRef(function ArchitectureBac
 
     renderer.render(scene, camera);
     stateRef.current = { renderer, scene, camera, spin };
+    erledigt('architektur-hinten');
 
     return () => {
       disposeScene(scene, renderer, container);
@@ -1298,6 +1300,9 @@ const ArchitectureFrontGL = forwardRef(function ArchitectureFrontGL(
         unFlagPivot.rotation.y = Math.sin(t * 1.6 + 4.2) * 0.18 + Math.sin(t * 4.1 + 7.1) * 0.06;
       }
       renderer.render(scene, camera);
+      // Erst jetzt stehen die Saeulen an ihren Plaetzen - vorher zeigte der
+      // Layer sie noch in der Ausgangslage.
+      erledigt('architektur-vorne');
     },
   }));
 

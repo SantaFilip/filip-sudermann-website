@@ -1,6 +1,10 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import * as THREE from 'three';
-import mondKarte from '@/assets/moon-map.jpg';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { erledigt } from '@/lib/ladeSchranke';
+// Einmal mit three.js gerendert (NASA-Mondtextur, Licht von rechts oben,
+// kurz vor Vollmond) und als Bild gespeichert: der Mond sieht von der Erde
+// aus immer gleich aus, ihn bei jedem Seitenaufruf neu in 3D zu rendern
+// kostete nur Ladezeit. 144 px = 72 px Anzeige bei doppelter Pixeldichte.
+import mondBild from '@/assets/mond.webp';
 
 /**
  * Nachthimmel hinter dem Gebaeude.
@@ -74,62 +78,6 @@ function erzeugeSterne(anzahl) {
 const STERNE = erzeugeSterne(230);
 const STAUB = erzeugeStaub(420);
 
-/**
- * Rendert den Mond einmalig als beleuchtete Kugel mit echter Mondtextur und
- * gibt das Ergebnis als Bild zurueck. Der WebGL-Kontext wird danach sofort
- * freigegeben - der Mond dreht sich von der Erde aus nie, ein stehendes Bild
- * reicht und belegt keinen dauerhaften Kontext neben Gebaeude und Globus.
- */
-function rendereMond(pixel) {
-  return new Promise((resolve, reject) => {
-    new THREE.TextureLoader().load(
-      mondKarte,
-      (karte) => {
-        if ('colorSpace' in karte) karte.colorSpace = THREE.SRGBColorSpace;
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-        renderer.setPixelRatio(1);
-        renderer.setSize(pixel, pixel, false);
-
-        const szene = new THREE.Scene();
-        // Enges Sichtfeld wie bei einem Teleobjektiv: kaum perspektivische
-        // Verzerrung, die Kugel fuellt das Bild knapp.
-        const kamera = new THREE.PerspectiveCamera(12, 1, 0.1, 100);
-        kamera.position.z = 9.8;
-
-        const geo = new THREE.SphereGeometry(1, 96, 64);
-        const mat = new THREE.MeshStandardMaterial({ map: karte, roughness: 1, metalness: 0 });
-        const kugel = new THREE.Mesh(geo, mat);
-        // Mitte der Karte (Laenge 0) zur Kamera drehen: die vertraute
-        // Vorderseite mit den Mondmeeren.
-        kugel.rotation.y = -Math.PI / 2;
-        szene.add(kugel);
-
-        // Sonnenlicht von rechts oben, fast aus Blickrichtung: kurz vor
-        // Vollmond, nur eine schmale Schattensichel links unten.
-        // Die Mondtextur ist dunkel (Albedo wie Asphalt) - erst mit viel
-        // Licht erscheint der Mond so hell, wie er am Nachthimmel wirkt.
-        const sonne = new THREE.DirectionalLight(0xfffaf0, 7.5);
-        sonne.position.set(1.1, 0.55, 2.4);
-        szene.add(sonne);
-        // Erdschein: die Nachtseite ist nie ganz schwarz.
-        szene.add(new THREE.AmbientLight(0x8fa3c8, 0.05));
-
-        renderer.render(szene, kamera);
-        const bild = renderer.domElement.toDataURL('image/png');
-
-        geo.dispose();
-        mat.dispose();
-        karte.dispose();
-        renderer.dispose();
-        renderer.forceContextLoss();
-        resolve(bild);
-      },
-      undefined,
-      reject,
-    );
-  });
-}
-
 // Bringt eine Verschiebung auf den kuerzesten Weg innerhalb eines Umlaufs.
 const umbrechen = (wert, umlauf) => {
   const x = ((wert % umlauf) + umlauf) % umlauf;
@@ -170,7 +118,6 @@ const RotatingBackdrop = forwardRef(function RotatingBackdrop({ perspektive = 26
   const milchstrasseRef = useRef(null);
   const breiteRef = useRef(0);
   const drehRef = useRef(0);
-  const [mondBild, setMondBild] = useState(null);
 
   const anwenden = () => {
     const breite = breiteRef.current;
@@ -214,15 +161,6 @@ const RotatingBackdrop = forwardRef(function RotatingBackdrop({ perspektive = 26
     beobachter.observe(wurzel);
     return () => beobachter.disconnect();
   }, [perspektive]);
-
-  useEffect(() => {
-    let aktiv = true;
-    const pixel = Math.round(72 * Math.min(window.devicePixelRatio || 1, 2));
-    rendereMond(pixel)
-      .then((bild) => { if (aktiv) setMondBild(bild); })
-      .catch(() => {});
-    return () => { aktiv = false; };
-  }, []);
 
   return (
     // KEINE Startwerte fuer --tint hier setzen: die Buehne schreibt sie auf
@@ -338,24 +276,24 @@ const RotatingBackdrop = forwardRef(function RotatingBackdrop({ perspektive = 26
               transparent 70%)`,
           }}
         />
-        {mondBild && (
-          <img
-            src={mondBild}
-            alt=""
-            className="absolute"
-            style={{
-              left: `${MOND_X * 100}%`,
-              top: `${MOND_Y * 100}%`,
-              width: 'clamp(40px, 4.2vw, 72px)',
-              height: 'clamp(40px, 4.2vw, 72px)',
-              transform: 'translate(-50%, -50%)',
-              borderRadius: '50%',
-              // Leuchtsaum nur auf der beleuchteten Seite, wie Streulicht in
-              // duenner Luft - keine gleichmaessige Neon-Korona.
-              filter: 'drop-shadow(2px -1px 6px hsl(45 50% 92% / 0.45))',
-            }}
-          />
-        )}
+        <img
+          src={mondBild}
+          onLoad={() => erledigt('mond')}
+          onError={() => erledigt('mond')}
+          alt=""
+          className="absolute"
+          style={{
+            left: `${MOND_X * 100}%`,
+            top: `${MOND_Y * 100}%`,
+            width: 'clamp(40px, 4.2vw, 72px)',
+            height: 'clamp(40px, 4.2vw, 72px)',
+            transform: 'translate(-50%, -50%)',
+            borderRadius: '50%',
+            // Leuchtsaum nur auf der beleuchteten Seite, wie Streulicht in
+            // duenner Luft - keine gleichmaessige Neon-Korona.
+            filter: 'drop-shadow(2px -1px 6px hsl(45 50% 92% / 0.45))',
+          }}
+        />
       </div>
 
       {/* Grundton der Seite, ueber den Scroll-Fortschritt eingeblendet. */}

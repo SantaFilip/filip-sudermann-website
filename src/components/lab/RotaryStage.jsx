@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -6,7 +6,16 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import RotatingBackdrop from '@/components/lab/RotatingBackdrop';
 import FaceOrnament from '@/components/lab/FaceOrnament';
 import FadeIn from '@/components/FadeIn';
-import ArchitectureGL, { ArchitectureBackGL } from '@/components/lab/ArchitectureGL';
+import { erledigt } from '@/lib/ladeSchranke';
+
+// Gebaeude, Saeulen und Sockel (three.js) kommen als eigenes Paket nach: die
+// Flaechen mit Text und Bild sind reines HTML und sollen nicht auf die
+// 3D-Engine warten - sie sind das Erste, was man sieht. apply() fuettert die
+// 3D-Ebenen pro Frame ueber die Refs; sobald sie da sind, greifen sie also
+// ohne Weiteres ins Geschehen ein.
+const ladeArchitektur = () => import('@/components/lab/ArchitectureGL');
+const ArchitectureGL = lazy(ladeArchitektur);
+const ArchitectureBackGL = lazy(() => ladeArchitektur().then((m) => ({ default: m.ArchitectureBackGL })));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -750,6 +759,8 @@ export default function RotaryStage({
     gsap.ticker.add(tick);
 
     apply(0);
+    // Flaechen stehen an ihren Plaetzen - fuer den Ladevorhang (main.jsx).
+    requestAnimationFrame(() => erledigt('buehne'));
 
     // Nachkalibrieren, wenn sich die Flaechengroesse aendert - Bild laedt
     // nach, Font-Swap bricht Text anders um, das Fenster wird verschoben.
@@ -1063,6 +1074,7 @@ export default function RotaryStage({
             Trommel) duerfen vor dem Inhalt liegen - sie markieren die
             Nahtstelle zwischen zwei Facetten. */}
         {cube.h > 0 && ringRadius > 0 && (
+          <Suspense fallback={null}>
           <ArchitectureBackGL
             ref={backRef}
             stageW={cube.stageW}
@@ -1074,6 +1086,7 @@ export default function RotaryStage({
             sides={sides}
             colCapWidth={colCapW}
           />
+          </Suspense>
         )}
 
         <div
@@ -1166,6 +1179,7 @@ export default function RotaryStage({
           // auslösen (elementFromPoint traf immer diesen Wrapper statt
           // [data-rotary-overlay]).
           <div ref={glWrapRef} className="pointer-events-none absolute inset-0">
+            <Suspense fallback={null}>
             <ArchitectureGL
               ref={architectureRef}
               stageW={cube.stageW}
@@ -1179,6 +1193,7 @@ export default function RotaryStage({
               colCapWidth={colCapW}
               colCapHeight={colCapH}
             />
+            </Suspense>
           </div>
         )}
 
