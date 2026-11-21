@@ -13,7 +13,9 @@ import nedaRezawi from './neda-rezawi';
 import jessicaLenz from './jessica-lenz';
 import annaSchepperle from './anna-schepperle';
 import nicoleFrizler from './nicole-frizler';
+import hannahMedic from './hannah-medic';
+import paruaEsmahil from './parua-esmahil';
 
-const CREATORS = [nedaRezawi, jessicaLenz, annaSchepperle, nicoleFrizler];
+const CREATORS = [nedaRezawi, jessicaLenz, annaSchepperle, nicoleFrizler, hannahMedic, paruaEsmahil];
 
 export const findeCreator = (slug) => CREATORS.find((c) => c.slug === slug);
