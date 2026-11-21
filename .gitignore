@@ -36,3 +36,6 @@ Thumbs.db
 
 # Build-Output der Trommel-Vorschau
 dist-lab
+
+# Exportierte Pitch-Bausteine (scripts/pitch-export.cjs)
+export/

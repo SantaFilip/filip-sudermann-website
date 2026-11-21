@@ -30,7 +30,7 @@ function Beleg({ src, alt }) {
 // sie als Ganzes verkleinert statt umzubrechen, damit sie 1:1 aussieht.
 const DESKTOP = 1024;
 const RAND = 32;
-function Passform({ breite, className = '', children }) {
+function Passform({ breite, className = '', children, ...rest }) {
   const [vw, setVw] = useState(() => window.innerWidth);
   useEffect(() => {
     const neu = () => setVw(window.innerWidth);
@@ -39,7 +39,7 @@ function Passform({ breite, className = '', children }) {
   }, []);
   const zoom = vw < DESKTOP ? Math.min(1, (vw - RAND) / breite) : 1;
   return (
-    <section className={`shrink-0 self-center lg:self-start ${className}`} style={{ width: breite, zoom }}>
+    <section {...rest} className={`shrink-0 self-center lg:self-start ${className}`} style={{ width: breite, zoom }}>
       {children}
     </section>
   );
@@ -77,7 +77,7 @@ const Etikett = ({ children, className = '' }) => (
 
 function Portfolio({ c }) {
   return (
-    <Passform breite={440} className="border border-[#f0b183] bg-[#fdf0d8] p-6">
+    <Passform breite={440} data-export="1-instagram-portfolio" className="border border-[#f0b183] bg-[#fdf0d8] p-6">
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">
         {c.possessive} <span className="text-[#f2621d]">Creator Portfolio</span>
       </h2>
@@ -135,7 +135,7 @@ function WerIstFilip({ c }) {
 
       <div className="mt-6">
         <p className="mb-2 text-center text-[13px] font-bold">Bis zu {stellen}-stellige Umsätze möglich</p>
-        <div className="overflow-hidden rounded border border-[#1d2a5a]/30 bg-white text-[9.5px]">
+        <div data-export="2-potenzial-rechner" className="overflow-hidden rounded border border-[#1d2a5a]/30 bg-white text-[9.5px]">
           <Kopf>Reichweite</Kopf>
           {c.reach.map((r) => <Zeile key={r.platform} label={r.platform} wert={kurz(r.followers)} />)}
           <Zeile label="Follower gesamt" wert={kurz(p.follower)} fett />
@@ -166,7 +166,7 @@ function WerIstFilip({ c }) {
 
 function BestesSystem({ c }) {
   return (
-    <Passform breite={460} className="p-2 lg:pt-10">
+    <Passform breite={460} data-export="3-marketing-system" className="p-2 lg:pt-10">
       <h2 className="font-body text-[30px] font-bold tracking-tight">Das <span className="text-[#f2621d]">Beste</span> System für dich</h2>
       <div className="mt-6"><SystemDiagramm c={c} /></div>
       <h3 className="mt-8 font-body text-[15px] font-bold">Wieso es besonders effektiv ist:</h3>
@@ -180,7 +180,7 @@ function Funnel({ c }) {
   return (
     <Passform breite={560} className="lg:pt-10">
       <div className="text-center"><Etikett className="text-[17px]">Funnel (Skool)</Etikett></div>
-      <div className="mt-5"><SkoolMockup c={c} /></div>
+      <div className="mt-5" data-export="4-skool-template"><SkoolMockup c={c} /></div>
       <div className="mt-10 bg-[#111] py-2.5 text-center text-[17px] font-bold text-white">Fulfillment (The 3C’s)</div>
       <div className="mt-4 grid grid-cols-3 gap-2">
         {bausteine.map(([titel, Baustein]) => (

@@ -235,6 +235,11 @@ Verlauf, und der Bericht nennt es als offen.
    Labels, Diagramm-Kästen, Banner-Titel) durch kürzere Texte in der
    Datendatei beheben, nie im Template. Danach Schritt 3 wiederholen.
 
+Zum Schluss die vier Bausteine als PNG (2x) exportieren:
+`PLAYWRIGHT_PATH=$(npm root -g)/playwright node scripts/pitch-export.cjs <slug> export/<slug>`.
+Das sind Instagram-Portfolio, Potenzial-Rechner, Marketing-System und
+Skool-Template, alle aus den echten Daten gerendert.
+
 ## 7. Abliefern
 
 Auf den aktuellen Branch committen: Datendatei, `index.js`, Bilder.
@@ -252,4 +257,4 @@ Bericht an Filip, kurz und direkt:
   - MRR
 - Kernthemen und stärkstes Stück Content.
 - Was offen ist: Bilder, nicht gefundene Kanäle, Highlights.
-- Den Desktop-Screenshot mitschicken.
+- Den Desktop-Screenshot und die vier PNGs aus `export/<slug>/` mitschicken.
