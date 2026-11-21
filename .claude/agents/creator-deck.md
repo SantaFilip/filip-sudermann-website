@@ -26,41 +26,53 @@ Vorlage für Aufbau und Tonfall: `src/pitch/creators/neda-rezawi.js`.
 - Sprache auf der Seite: Deutsch, Du-Form, Filips Stimme, konkret mit Zahlen.
 - Pronomen: Name verwenden, kein Geschlecht annehmen.
 
-## 0. Credits prüfen (vor jeder Abfrage)
+## 0. Credits prüfen (vor jeder VidIQ-Abfrage)
 
-`vidiq_balance` aufrufen. Ein Deck braucht etwa:
-- 7 Datenabfragen à 5 Credits = 35
+Öffentliche Daten holt das Skript in Schritt 1 kostenlos. VidIQ brauchst du nur
+noch für Instagram, dessen öffentliche Seite keine Reel-Zahlen und kein
+Profilbild liefert. `vidiq_balance` aufrufen. Ein Deck braucht:
+- `vidiq_ig_profile` + `vidiq_ig_profile_reels` = 10 Credits
+- `vidiq_tiktok_profile_videos` = 5 Credits, nur wenn TikTok mehr Follower
+  als Instagram hat
 - 2 Bilder à 22 Credits = 44
-- **Summe ≈ 80 Credits**
+- **Summe ≈ 55–60 Credits**
 
-Reicht es nicht für die Datenabfragen (35), **sofort abbrechen** und Filip
-den Kontostand melden. Reicht es für die Daten, aber nicht für die Bilder,
-weitermachen und die Bilder im Bericht als offen führen.
+Reichen die Credits nicht für die Instagram-Abfragen (10), **abbrechen** und
+Filip den Kontostand melden. Reicht es nur nicht für die Bilder, weitermachen
+und die Bilder im Bericht als offen führen.
 
 ## 1. Datenpaket ziehen (Pflicht, alles)
 
-1. **Instagram-Profil:** `vidiq_ig_profile`. Notieren: Follower, Gefolgt,
-   Beiträge, Bio-Zeilen, Link in der Bio, Profilbild (Bilddatei aus dem
+1. **Kostenlos, öffentlich zuerst:**
+   ```bash
+   node scripts/creator-daten.mjs --instagram <handle> --tiktok <handle> --youtube @<handle>
+   ```
+   Für TikTok und YouTube erst den Instagram-Handle probieren. Das Ergebnis
+   enthält:
+   - TikTok: Follower, Likes gesamt, Videos, Bio und Bio-Link
+   - YouTube: Abos und die letzten 15 Videos mit Views und Likes
+   - Instagram: Follower und Posts, gerundet
+   Was nicht gefunden wurde, steht unter `fehler`.
+2. **Instagram-Profil:** `vidiq_ig_profile` für exakte Follower, Gefolgt,
+   Beiträge, Bio, Link in der Bio und das Profilbild (Bilddatei im
    Tool-Ergebnis).
-2. **Link in der Bio komplett lesen.** Linktree per Bash:
-   `curl -sS -A "Mozilla/5.0" https://linktr.ee/<name>`, dann das JSON in
-   `<script id="__NEXT_DATA__">` parsen: `props.pageProps.account.links`
-   (title, url) und `socialLinks`. `linktr.ee` ist im Netzwerk freigegeben.
-   Andere Link-Seiten (beacons, stan.store, eigene Website) genauso mit curl
-   versuchen. Ist der Host blockiert, im Bericht nennen.
-   Daraus festhalten: alle Plattformen, Podcast-Name, Telegram-/WhatsApp-
-   Gruppe, bestehende Angebote mit Preis (Kurs, Coaching, Skool, Shop).
-3. **TikTok:** `vidiq_tiktok_profile` und `vidiq_tiktok_profile_videos`. Den
-   Handle aus dem Linktree nehmen; gibt es keinen Link, den Instagram-Handle
-   probieren und über Bio und Profilbild abgleichen.
-4. **YouTube:** `vidiq_youtube_search` mit `channelId: "@<handle>"`,
-   `type: ["video"]`, `limit: 10`. Der Handle kommt aus dem Linktree bzw. aus
-   der YouTube-URL. **Nie über den Namen in `vidiq_channel_search` suchen:**
-   kleine Kanäle fehlen dort und heißen oft anders (Nedas Kanal heißt nur
-   „Neda“). Abos stehen in `subscriberCount`.
-5. **Instagram-Reels:** `vidiq_ig_profile_reels` (12 Reels).
-6. Gibt es weitere Plattformen mit Followerzahl (z. B. ein zweiter
-   Instagram-Account), auch diese abfragen.
+3. **Link in der Bio komplett lesen:** Skript erneut mit
+   `--linktree <url>` aufrufen. Die URL kommt aus Instagram oder dem
+   TikTok-`bioLink`. Daraus festhalten:
+   - alle Plattformen
+   - Podcast-Name
+   - Telegram- bzw. WhatsApp-Gruppe
+   - bestehende Angebote mit Preis
+   Weichen YouTube- oder TikTok-Handle im Linktree vom Instagram-Handle ab,
+   das Skript mit den richtigen Handles wiederholen.
+   Andere Link-Seiten (beacons, stan.store, eigene Website) per curl
+   versuchen; ist der Host blockiert, im Bericht nennen.
+4. **Instagram-Reels:** `vidiq_ig_profile_reels`, nur für die Ø-Werte. Keine
+   Einzelanalyse der Reels.
+5. **TikTok-Videos:** `vidiq_tiktok_profile_videos`, nur wenn TikTok mehr
+   Follower als Instagram hat. Sonst gilt TikTok nicht als Hauptplattform.
+6. **YouTube nie über den Namen suchen,** immer über den Handle (Skript). Kleine
+   Kanäle heißen oft anders (Nedas Kanal heißt nur „Neda“).
 
 Danach diese Checkliste ausfüllen. Jede Zeile hat einen Wert oder „nicht
 vorhanden (geprüft über …)“:
@@ -70,9 +82,9 @@ vorhanden (geprüft über …)“:
 | Instagram Follower / Gefolgt / Beiträge | ig_profile |
 | Bio, Link in der Bio | ig_profile |
 | Profilbild gespeichert | ig_profile |
-| Alle Links aus dem Linktree | curl |
-| TikTok Follower + letzte Videos | tiktok_profile, tiktok_profile_videos |
-| YouTube Abos + letzte Videos | youtube_search mit Handle |
+| Alle Links aus dem Linktree | Skript `--linktree` |
+| TikTok Follower, Likes, Videos | Skript `--tiktok` |
+| YouTube Abos + letzte 15 Videos | Skript `--youtube` |
 | Podcast, Telegram/WhatsApp, Website | Linktree, Video-Beschreibungen |
 | Bestehende Angebote und Preise | Linktree, Bio |
 | Reels mit Likes/Kommentaren/Views | ig_profile_reels |
@@ -84,8 +96,11 @@ Der Rechner ist `src/pitch/potenzial.js`, eine 1:1-Kopie von Filips Excel
 
 - **Pro Plattform** den Ø aus Likes, Kommentaren und Views der neuesten bis
   zu 12 Posts bilden. **Angepinnte Posts weglassen**, das sind
-  ausgesuchte Ausreißer. Fehlende Kommentarzahl = 0.
-- **Hauptplattform** = die Plattform mit den höchsten Ø Views. Ihre drei
+  ausgesuchte Ausreißer. Fehlende Kommentarzahl = 0. YouTube-Werte kommen
+  aus `youtube.schnitt` des Skripts; die Kommentare dort sind unbekannt, also 0.
+- **Hauptplattform** = die Plattform mit den höchsten Ø Views unter denen,
+  für die Post-Zahlen vorliegen (Instagram, YouTube, TikTok nur nach
+  Schritt 1.5). Ihre drei
   Ø-Werte (eine Nachkommastelle) gehen in `kennzahlen`, dazu
   `hauptplattform`, `posts` (Anzahl im Ø) und `stand` (heutiges Datum, TT.MM.JJJJ).
 - **`reach`** = jede Plattform mit Follower- bzw. Abozahl (Instagram, TikTok,
@@ -122,7 +137,8 @@ node -e "import('./src/pitch/potenzial.js').then(async m=>{const c=(await import
 
 ## 3. Inhalt und Schwerpunkt auswerten
 
-Aus Captions, Hashtags, Video-Titeln und Beschreibungen ableiten:
+Nur aus dem, was schon da ist (Reel-Captions und Hashtags, YouTube-Titel,
+Bios, Linktree), keine zusätzlichen Abfragen. Ableiten:
 - **3–5 Kernthemen.**
 - **Das stärkste Stück Content:** meiste Views, auch angepinnte Posts, und
   das Verhältnis Views zu Followern bzw. Abos.
