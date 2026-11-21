@@ -1,0 +1,222 @@
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Check, X } from 'lucide-react';
+import PageNotFound from '@/lib/PageNotFound';
+import { IMAGES } from '@/lib/links';
+import { findeCreator } from '@/pitch/creators';
+import { berechnePotenzial, euro, kurz } from '@/pitch/potenzial';
+import SystemDiagramm from '@/pitch/SystemDiagramm';
+import { ProfilMockup, SkoolMockup, SkoolMini, RetreatKarte, CommunityFeed, Classroom, Kalender } from '@/pitch/Mockups';
+
+// Belege fuer "Wer ist Filip?". Screenshots nach public/pitch/filip/ legen;
+// fehlt eine Datei, bleibt der Platz live leer und zeigt lokal einen Hinweis.
+const BELEGE = [
+  { src: '/pitch/filip/skool-games-1.webp', alt: 'Skool Games mit Phil' },
+  { src: '/pitch/filip/skool-games-2.webp', alt: 'Skool Games mit Jonas' },
+  { src: '/pitch/filip/skool-games-video.webp', alt: 'Skool Games Aufzeichnung' },
+  { src: '/pitch/filip/leaderboard.webp', alt: 'Skool Games Leaderboard' },
+];
+
+function Beleg({ src, alt }) {
+  const [fehlt, setFehlt] = useState(false);
+  if (fehlt) {
+    if (!import.meta.env.DEV) return null;
+    return <div className="flex aspect-[4/3] items-center justify-center rounded border border-dashed border-black/30 p-2 text-center text-[10px] text-black/50">{src}</div>;
+  }
+  return <img src={src} alt={alt} onError={() => setFehlt(true)} className="w-full rounded border border-black/10 bg-white object-cover shadow-sm" />;
+}
+
+// Jede Sektion hat feste Board-Masse wie in Figma. Unter Desktop-Breite wird
+// sie als Ganzes verkleinert statt umzubrechen, damit sie 1:1 aussieht.
+const DESKTOP = 1024;
+const RAND = 32;
+function Passform({ breite, className = '', children }) {
+  const [vw, setVw] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const neu = () => setVw(window.innerWidth);
+    window.addEventListener('resize', neu);
+    return () => window.removeEventListener('resize', neu);
+  }, []);
+  const zoom = vw < DESKTOP ? Math.min(1, (vw - RAND) / breite) : 1;
+  return (
+    <section className={`shrink-0 self-center lg:self-start ${className}`} style={{ width: breite, zoom }}>
+      {children}
+    </section>
+  );
+}
+
+// Kein Pitch landet bei Google: Seiten sind nur per Link gedacht
+function useNurPerLink(titel) {
+  useEffect(() => {
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, nofollow';
+    document.head.appendChild(meta);
+    const vorher = document.title;
+    document.title = titel;
+    return () => { meta.remove(); document.title = vorher; };
+  }, [titel]);
+}
+
+const Punkt = ({ gut, children }) => (
+  <li className="flex items-start gap-3">
+    <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border ${gut ? 'border-[#5dbb63] bg-[#d6f1d6]' : 'border-[#d9453a] bg-[#e8574a]'}`}>
+      {gut ? <Check size={11} strokeWidth={3} className="text-[#3a8f40]" /> : <X size={11} strokeWidth={3} className="text-white" />}
+    </span>
+    <span>{children}</span>
+  </li>
+);
+
+const Kanal = ({ children }) => (
+  <span className="flex min-h-[44px] items-center justify-center bg-white px-2 text-center text-[11px] font-semibold leading-tight shadow-sm">{children}</span>
+);
+
+const Etikett = ({ children, className = '' }) => (
+  <span className={`inline-block rounded-md bg-[#111] px-4 py-2 font-bold text-white ${className}`}>{children}</span>
+);
+
+function Portfolio({ c }) {
+  return (
+    <Passform breite={440} className="border border-[#f0b183] bg-[#fdf0d8] p-6">
+      <h2 className="text-center font-body text-[26px] font-bold tracking-tight">
+        {c.possessive} <span className="text-[#f2621d]">Creator Portfolio</span>
+      </h2>
+      <div className="mt-6 grid grid-cols-[64px_minmax(0,1fr)_64px] items-start gap-2">
+        <div className="space-y-1.5">{c.channelsLeft.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
+        <ProfilMockup c={c} />
+        <div className="space-y-1.5">{c.channelsRight.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
+      </div>
+
+      <h3 className="mt-8 font-body text-[13px] font-bold">Deine bisherigen Stärken</h3>
+      <ul className="mt-3 space-y-3 pl-2 text-[12px]">{c.strengths.map((s) => <Punkt key={s} gut>{s}</Punkt>)}</ul>
+      <h3 className="mt-6 font-body text-[13px] font-bold">Opportunitätskosten im Marketing</h3>
+      <ul className="mt-3 space-y-3 pl-2 text-[12px]">{c.opportunities.map((s) => <Punkt key={s}>{s}</Punkt>)}</ul>
+
+      <h3 className="mt-8 font-body text-[20px] font-bold tracking-tight">Konkrete Verbesserungen</h3>
+      <div className="mt-3 grid grid-cols-[1.4fr_1fr] gap-4">
+        <div className="flex flex-col">
+          <div className="overflow-hidden"><SkoolMini c={c} /></div>
+          <p className="mt-auto pt-4 text-center text-[11px] font-bold leading-snug">{c.improvements.community}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[11px] font-bold leading-snug">{c.improvements.retreat}</p>
+          <div className="mt-2"><RetreatKarte c={c} /></div>
+        </div>
+      </div>
+    </Passform>
+  );
+}
+
+function WerIstFilip({ c }) {
+  const { reichweite, szenarien } = berechnePotenzial(c);
+  const zeilen = [
+    ['Skool-Mitglieder', (s) => `${s.mitglieder}`],
+    [`Community à ${c.community.price} €`, (s) => euro(s.community)],
+    [`Coaching à ${euro(c.coaching.price)}`, (s) => euro(s.coaching)],
+    ['Retreats pro Monat', (s) => euro(s.retreat)],
+  ];
+  return (
+    <Passform breite={400} className="border border-[#9ed8a4] bg-[#ddf5df] p-6">
+      <h2 className="text-center font-body text-[26px] font-bold tracking-tight">Wer ist Filip?</h2>
+      <p className="mt-2 text-center text-[13px] font-bold leading-snug">Ich kooperiere mit Creatorn &amp; helfe ihnen Angebote effektiv zu skalieren &amp; monetarisieren</p>
+      <div className="mt-6 grid grid-cols-2 gap-5 px-3">
+        <img src={IMAGES.heroPortrait} alt="Filip Sudermann" className="aspect-[4/5] w-full object-cover shadow-md" />
+        <img src={IMAGES.aboutPortrait} alt="Filip bei der Arbeit" className="aspect-[4/5] w-full object-cover shadow-md" />
+      </div>
+      <div className="mt-6 grid grid-cols-2 gap-2">{BELEGE.slice(0, 2).map((b) => <Beleg key={b.src} {...b} />)}</div>
+      <p className="mt-2 text-[12px] font-bold">Skool Games gewonnen, mit Phil &amp; Jonas</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">{BELEGE.slice(2).map((b) => <Beleg key={b.src} {...b} />)}</div>
+
+      <div className="mt-6">
+        <p className="mb-2 text-center text-[13px] font-bold">Bis zu 5-stellige Umsätze möglich</p>
+        <div className="overflow-hidden rounded border border-[#1d2a5a]/30 bg-white text-[9.5px]">
+          <p className="bg-[#1d2a5a] px-2 py-1 font-bold uppercase tracking-wide text-white">Reichweite</p>
+          {c.reach.map((r) => (
+            <div key={r.platform} className="flex justify-between border-b border-black/5 px-2 py-0.5"><span>{r.platform}</span><span>{kurz(r.followers)}</span></div>
+          ))}
+          <div className="flex justify-between bg-[#e9edf7] px-2 py-0.5 font-bold"><span>Gesamt</span><span>{kurz(reichweite)}</span></div>
+          <div className="mt-1 grid grid-cols-[1.6fr_1fr_1fr] gap-2 bg-[#1d2a5a] px-2 py-1 font-bold uppercase text-white">
+            <span>Potenzial</span>{szenarien.map((s) => <span key={s.label} className="text-right">{s.label}</span>)}
+          </div>
+          {zeilen.map(([label, wert]) => (
+            <div key={label} className="grid grid-cols-[1.6fr_1fr_1fr] gap-2 border-b border-black/5 px-2 py-0.5">
+              <span>{label}</span>{szenarien.map((s) => <span key={s.label} className="text-right">{wert(s)}</span>)}
+            </div>
+          ))}
+          <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-2 bg-[#d6f1d6] px-2 py-1 font-bold">
+            <span>Monatlich</span>{szenarien.map((s) => <span key={s.label} className="text-right">{euro(s.gesamt)}</span>)}
+          </div>
+          <p className="px-2 py-1 text-[8px] text-black/50">Schätzung: {szenarien.map((s) => `${(s.quote * 100).toLocaleString('de-DE')} %`).join(' / ')} der Follower werden Mitglied.</p>
+        </div>
+      </div>
+    </Passform>
+  );
+}
+
+function BestesSystem({ c }) {
+  const gruende = ['Skool Community (Abo-Einkommen)', 'Stufenweise & nutzerdifferenzierte Struktur', 'Multi-Platform Presence Effekt'];
+  return (
+    <Passform breite={460} className="p-2 lg:pt-10">
+      <h2 className="font-body text-[30px] font-bold tracking-tight">Das <span className="text-[#f2621d]">Beste</span> System für dich</h2>
+      <div className="mt-6"><SystemDiagramm c={c} /></div>
+      <h3 className="mt-8 font-body text-[15px] font-bold">Wieso es besonders effektiv ist:</h3>
+      <ul className="mt-5 space-y-6 pl-2 text-[15px] font-semibold">{gruende.map((g) => <Punkt key={g} gut>{g}</Punkt>)}</ul>
+    </Passform>
+  );
+}
+
+function Funnel({ c }) {
+  const bausteine = [['Community', CommunityFeed], ['Classroom', Classroom], ['Calendar', Kalender]];
+  return (
+    <Passform breite={560} className="lg:pt-10">
+      <div className="text-center"><Etikett className="text-[17px]">Funnel (Skool)</Etikett></div>
+      <div className="mt-5"><SkoolMockup c={c} /></div>
+      <div className="mt-10 bg-[#111] py-2.5 text-center text-[17px] font-bold text-white">Fulfillment (The 3C’s)</div>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {bausteine.map(([titel, Baustein]) => (
+          <div key={titel}>
+            <p className="mb-1 text-[11px] font-bold">{titel}</p>
+            <div className="overflow-hidden rounded border border-black/10 shadow-sm"><Baustein c={c} /></div>
+          </div>
+        ))}
+      </div>
+    </Passform>
+  );
+}
+
+function RoadMap({ c }) {
+  return (
+    <Passform breite={230} className="lg:pt-56">
+      <div className="border border-[#b9a6e6] bg-white">
+        <h2 className="border-b border-[#b9a6e6] bg-[#ebe4fa] px-4 py-2 text-center font-body text-[24px] font-bold tracking-tight">Road-Map</h2>
+        <ul className="list-disc space-y-4 py-5 pl-9 pr-3 text-[14px] font-semibold">{c.roadmap.map((r) => <li key={r}>{r}</li>)}</ul>
+      </div>
+    </Passform>
+  );
+}
+
+export default function Pitch() {
+  const { slug } = useParams();
+  const c = findeCreator(slug);
+  useNurPerLink(c ? `${c.name} × Filip Sudermann` : 'Seite nicht gefunden');
+  if (!c) return <PageNotFound />;
+
+  return (
+    <div
+      className="min-h-screen text-[#111]"
+      style={{
+        background: c.background || 'radial-gradient(circle at 15% 20%, #f6e8f3 0%, transparent 45%), radial-gradient(circle at 85% 30%, #e6e9fb 0%, transparent 50%), radial-gradient(circle at 50% 90%, #f3e6f7 0%, transparent 55%), #eee9f6',
+      }}
+    >
+      <div className="min-h-screen bg-[radial-gradient(rgba(0,0,0,0.12)_1px,transparent_1px)] [background-size:22px_22px]">
+        <main className="flex flex-col gap-12 px-4 py-10 lg:flex-row lg:items-start lg:gap-10 lg:overflow-x-auto lg:px-10 lg:py-14">
+          <Portfolio c={c} />
+          <WerIstFilip c={c} />
+          <BestesSystem c={c} />
+          <Funnel c={c} />
+          <RoadMap c={c} />
+        </main>
+      </div>
+    </div>
+  );
+}

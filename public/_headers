@@ -2,3 +2,7 @@
 # Ohne diese Regel fragt der Browser bei jedem Besuch jede Datei neu nach.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Creator-Pitches sind nur per Link gedacht, nicht fuer Suchmaschinen.
+/pitch/*
+  X-Robots-Tag: noindex, nofollow
