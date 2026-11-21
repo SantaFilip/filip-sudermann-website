@@ -257,8 +257,8 @@ export default function Pitch() {
           <WerIstFilip c={c} />
           <BestesSystem c={c} />
           <Funnel c={c} />
-          {/* Website-Entwurf oben, Road-Map unten buendig mit den anderen Karten */}
-          <div className="flex flex-col gap-12 lg:justify-between lg:gap-10">
+          {/* Website-Entwurf und direkt darunter die Road-Map */}
+          <div className="flex flex-col gap-12 lg:gap-8">
             {!c.website && <Webseite c={c} />}
             <RoadMap />
           </div>
