@@ -23,6 +23,12 @@ Vorlage für Aufbau und Tonfall: `src/pitch/creators/neda-rezawi.js`.
 - **Keine KI-Bilder vom Creator selbst.** Das einzige Bild der Person ist ihr
   echtes Instagram-Profilbild. Generierte Bilder zeigen Orte und Stimmungen,
   nie Menschen.
+- **Fest, nicht pro Creator:**
+  - Die Road-Map ist Filips Standardangebot (4 Phasen + Gewinnbeteiligung)
+    und kommt aus den Website-Texten.
+  - Die Premium-Belege sind echte Angebote anderer Creator aus
+    `src/pitch/referenzen.js`.
+  Für beides keine Bilder generieren und keine Texte erfinden.
 - Sprache auf der Seite: Deutsch, Du-Form, Filips Stimme, konkret mit Zahlen.
 - Pronomen: Name verwenden, kein Geschlecht annehmen.
 
@@ -34,8 +40,8 @@ Profilbild liefert. `vidiq_balance` aufrufen. Ein Deck braucht:
 - `vidiq_ig_profile` + `vidiq_ig_profile_reels` = 10 Credits
 - `vidiq_tiktok_profile_videos` = 5 Credits, nur wenn TikTok mehr Follower
   als Instagram hat
-- 2 Bilder à 22 Credits = 44
-- **Summe ≈ 55–60 Credits**
+- 1 Banner-Bild = 22 Credits
+- **Summe ≈ 32–37 Credits**
 
 Reichen die Credits nicht für die Instagram-Abfragen (10), **abbrechen** und
 Filip den Kontostand melden. Reicht es nur nicht für die Bilder, weitermachen
@@ -166,8 +172,20 @@ Bindestrich, sonst der Handle. Felder wie in der Vorlage. Für jedes Feld gilt:
   mit Faktor.
 - **`opportunities`:** genau 2 Sätze, konkrete Lücken aus Schritt 3. Der
   zweite benennt das fehlende High-Ticket-Angebot.
-- **`improvements`:** Community-Satz, Retreat- bzw. Premium-Satz,
-  `retreatTitle` (2 Wörter), `retreatSubtitle`.
+- **`improvements.community`:** ein Satz zur eigenen Community-Plattform.
+- **`referenz`:** der Schlüssel aus `src/pitch/referenzen.js`, dessen `passt`
+  am besten zur Nische passt. Er erscheint als Beleg unter „Konkrete
+  Verbesserungen“.
+- **`website`:** URL der eigenen Website, wenn eine existiert, sonst `null`.
+  Linktree, Beacons und Ähnliches zählen nicht als Website.
+- **`webseite`:** nur nötig bei `website: null`. Das Deck zeigt dann einen
+  Website-Entwurf. Felder:
+  - `nav`: 5 Menüpunkte, der letzte „Über <Vorname>“
+  - `claim`: Linktree-Beschreibung oder Bio-Slogan
+  - `headline`: 3 kurze Zeilen; die zweite wird kursiv gesetzt
+  - `sub`: 1 Satz
+  - `cta`
+  - `angebotTitel` und `angebotText` für `premium[1]`
 - **`systemPlatforms`:** 2–4 Plattformen mit Reichweite.
 - **`community`:**
   - `name` aus Bio-Slogan oder Kernversprechen, höchstens 30 Zeichen.
@@ -194,34 +212,37 @@ Bindestrich, sonst der Handle. Felder wie in der Vorlage. Für jedes Feld gilt:
   - **Advanced:** wie Skool zum Preis X die Gratis-Gruppe bzw. die
     Zuschauer in Abo-Einkommen verwandelt.
   - **Premium:** für wen die zwei Premium-Angebote sind.
-- **`roadmap`:** `['Marktforschung', 'Marketingkampagne', 'Automatisierung', 'Produktlaunch']`.
 - **`bilder`:** Pfade aus Schritt 5, sonst Feld weglassen.
+
+Instagram-Kopfbereich: Instagram zeigt nicht eingeloggten Besuchern eine
+Login-Wand, deshalb kann der Agent ihn nicht selbst abfotografieren. Ohne
+Clip zeigt das Deck einen Nachbau mit den echten Daten. Schickt Filip einen
+Screenshot (Desktop-Ansicht), ihn als `public/pitch/<slug>/instagram.png`
+speichern und `bilder.instagram` setzen.
 
 Profilbild: die Bilddatei aus dem `vidiq_ig_profile`-Ergebnis mit Python/PIL
 als `public/pitch/<slug>/avatar.webp` speichern (Qualität 85). Dann
 `src/pitch/creators/index.js` importieren und in `CREATORS` eintragen.
 
-## 5. KI-Bilder für das Skool-Deck
+## 5. KI-Bild für das Skool-Banner
 
-Ein Aufruf `vidiq_image_generate` mit `aspectRatio: "16:9"` und zwei Prompts.
-Englisch, jeweils mit „No people, no text, no logos.“:
+Nur dieses eine Bild wird generiert. Retreat bzw. Mastermind kommen aus den
+Referenzen, Instagram aus dem echten Profil.
 
-1. **Banner:** eine Szene, die das Kernversprechen der Community in der
-   Bildsprache der Nische zeigt (Farben, Licht, Objekte). „Left third of the
-   image dark and calm with empty space for text.“
-2. **Retreat:** der Ort des zweiten Premium-Angebots, passend zur Nische.
-   „Lower third darker for text overlay.“
+`vidiq_image_generate` mit `aspectRatio: "16:9"` und diesem Prompt (Englisch):
+- eine Szene, die das Kernversprechen der Community in der Bildsprache der
+  Nische zeigt (Farben, Licht, Objekte)
+- „Left third of the image dark and calm with empty space for text.“
+- „No people, no text, no logos.“
 
-`vidiq_job_poll` mit jeder `mcpJobId` abfragen, bis „completed“. Danach:
-1. `imageUrl` mit curl in einen eigenen leeren Ordner im Scratchpad laden.
-2. Mit PIL konvertieren:
-   - Banner auf 1600 px Breite → `public/pitch/<slug>/banner.webp`
-   - Retreat mittig auf 3:4 zuschneiden, 900 px hoch → `retreat.webp`
-3. In der Datendatei `bilder: { banner: '/pitch/<slug>/banner.webp', retreat: '/pitch/<slug>/retreat.webp' }`
-   setzen.
+Dann:
+1. `vidiq_job_poll` aufrufen, bis „completed“.
+2. `imageUrl` mit curl in einen eigenen leeren Ordner im Scratchpad laden.
+3. Mit PIL auf 1600 px Breite → `public/pitch/<slug>/banner.webp`.
+4. `bilder: { banner: '/pitch/<slug>/banner.webp' }` setzen.
 
-Ohne Credits: `bilder` weglassen. Das Template zeigt dann Profilbild und
-Verlauf, und der Bericht nennt es als offen.
+Ohne Credits `bilder.banner` weglassen. Das Template zeigt dann das
+Profilbild, und der Bericht nennt das Banner als offen.
 
 ## 6. Prüfen
 
@@ -237,8 +258,9 @@ Verlauf, und der Bericht nennt es als offen.
 
 Zum Schluss die vier Bausteine als PNG (2x) exportieren:
 `PLAYWRIGHT_PATH=$(npm root -g)/playwright node scripts/pitch-export.cjs <slug> export/<slug>`.
-Das sind Instagram-Portfolio, Potenzial-Rechner, Marketing-System und
-Skool-Template, alle aus den echten Daten gerendert.
+Das sind Instagram-Portfolio, Potenzial-Rechner, Marketing-System,
+Skool-Template, Road-Map und bei Bedarf der Website-Entwurf, alle aus den
+echten Daten gerendert.
 
 ## 7. Abliefern
 
@@ -256,5 +278,5 @@ Bericht an Filip, kurz und direkt:
   - Launch netto
   - MRR
 - Kernthemen und stärkstes Stück Content.
-- Was offen ist: Bilder, nicht gefundene Kanäle, Highlights.
-- Den Desktop-Screenshot und die vier PNGs aus `export/<slug>/` mitschicken.
+- Was offen ist: Banner, Instagram-Clip, nicht gefundene Kanäle.
+- Den Desktop-Screenshot und die PNGs aus `export/<slug>/` mitschicken.

@@ -139,14 +139,41 @@ export function SkoolMini({ c }) {
   );
 }
 
-export function RetreatKarte({ c }) {
+// Startseite einer Personal-Brand-Website fuer Creator ohne eigene Seite
+export function WebsiteMockup({ c }) {
+  const w = c.webseite;
+  const angebot = c.premium[1];
+  const bild = c.bilder?.banner || c.avatar;
   return (
-    <div className="relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-sm bg-gradient-to-b from-[#3b4a2c] via-[#6b6a3a] to-[#2a2416] p-3 text-center text-[#f4e9cf] shadow-md">
-      {c.bilder?.retreat
-        ? <><img src={c.bilder.retreat} alt="" className="absolute inset-0 h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" /></>
-        : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,226,160,0.55),transparent_55%)]" />}
-      <p className="relative font-display text-[20px] leading-tight">{c.improvements.retreatTitle}</p>
-      <p className="relative mt-1 text-[8px] uppercase tracking-[0.2em]">{c.improvements.retreatSubtitle}</p>
+    <div className="relative aspect-[16/9] overflow-hidden rounded-sm bg-[#2b261f] text-[#efe8dc] shadow-lg">
+      <img src={bild} alt="" className="absolute inset-y-0 right-0 h-full w-[55%] object-cover object-top" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#2b261f] via-[#2b261f]/85 to-transparent" />
+      <div className="relative flex items-center gap-4 px-5 py-3 text-[7px] uppercase tracking-[0.18em] text-[#efe8dc]/80">
+        <span className="mr-auto flex items-center gap-1.5 text-[10px] normal-case tracking-normal text-[#efe8dc]">
+          <span className="text-[#b8a06a]">▲</span><span className="font-display">{c.fullName}</span>
+        </span>
+        {w.nav.map((n) => <span key={n}>{n}</span>)}
+        <span>DE · EN</span>
+      </div>
+      <div className="relative w-[58%] px-5 pt-3">
+        <p className="text-[7px] uppercase tracking-[0.2em] text-[#b8a06a]">{c.fullName}</p>
+        <p className="mt-1 text-[7.5px] text-[#efe8dc]/70">{w.claim}</p>
+        <div className="mt-4 font-display text-[25px] leading-[1.08]">
+          {w.headline.map((zeile, i) => <p key={zeile} className={i === 1 ? 'italic' : ''}>{zeile}</p>)}
+        </div>
+        <p className="mt-3 text-[8px] leading-relaxed text-[#efe8dc]/75">{w.sub}</p>
+        <div className="mt-4 flex gap-2 text-[7.5px]">
+          <span className="rounded-sm bg-[#56604f] px-3 py-1.5">{w.cta}</span>
+          <span className="rounded-sm border border-[#efe8dc]/40 px-3 py-1.5">Zur Community</span>
+        </div>
+      </div>
+      <div className="absolute bottom-4 right-14 w-[34%] rounded-md bg-[#1b1814]/95 p-3 shadow-xl">
+        <p className="text-[6.5px] uppercase tracking-[0.18em] text-[#b8a06a]">{angebot.title}</p>
+        <p className="mt-1 font-display text-[12px] leading-tight">{w.angebotTitel}</p>
+        <p className="mt-1 text-[7px] italic text-[#efe8dc]/70">{w.angebotText}</p>
+        <span className="mt-2 block rounded-sm bg-[#b8a06a] py-1.5 text-center text-[7px] font-semibold uppercase tracking-wide text-[#1b1814]">Meinen Platz sichern</span>
+      </div>
+      <img src={c.avatar} alt="" className="absolute bottom-3 right-3 h-9 w-9 rounded-full border-2 border-[#efe8dc] object-cover" />
     </div>
   );
 }

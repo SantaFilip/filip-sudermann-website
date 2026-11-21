@@ -40,9 +40,19 @@ export default {
   ],
   improvements: {
     community: 'Eine eigene Community-Plattform mit verschiedenen Lernpaketen, um das wahre Potenzial zu leben',
-    retreat: 'Group Retreats in besonderen Locations, zur Transformation der Identität',
-    retreatTitle: 'Strahlen-Retreat',
-    retreatSubtitle: '3 Tage · Mindset & Identität',
+  },
+  // Beleg fuer das zweite Premium-Angebot, siehe src/pitch/referenzen.js
+  referenz: 'jake-whan',
+  // Eigene Website? URL eintragen, sonst zeigt das Deck einen Entwurf
+  website: null,
+  webseite: {
+    nav: ['Community', 'Kurse', 'Podcast', 'Retreats', 'Über Neda'],
+    claim: 'Weil du es verdienst, ein erfülltes Leben zu führen.',
+    headline: ['Selbstliebe leben.', 'Disziplin aufbauen.', 'Strahlen.'],
+    sub: 'Mindset, Journaling und Routinen, die dich wirklich verändern, mit Neda und einer Community, die dich trägt.',
+    cta: 'Finde deinen Einstieg',
+    angebotTitel: 'Drei Tage. Zurück zu dir.',
+    angebotText: 'Mindset & Identität, live mit Neda',
   },
 
   // Plattform-Kaesten oben im System-Diagramm
@@ -71,6 +81,4 @@ export default {
     'Advanced: Die Skool-Community für 30 €/Monat macht aus dem kostenlosen Telegram ein Abo-Einkommen',
     'Premium: VIP-Programm und Retreats für alle, die tiefer an ihrer Identität arbeiten wollen',
   ],
-
-  roadmap: ['Marktforschung', 'Marketingkampagne', 'Automatisierung', 'Produktlaunch'],
 };

@@ -6,7 +6,9 @@ import { IMAGES } from '@/lib/links';
 import { findeCreator } from '@/pitch/creators';
 import { berechnePotenzial, euro, kurz } from '@/pitch/potenzial';
 import SystemDiagramm from '@/pitch/SystemDiagramm';
-import { ProfilMockup, SkoolMockup, SkoolMini, RetreatKarte, CommunityFeed, Classroom, Kalender } from '@/pitch/Mockups';
+import { ProfilMockup, SkoolMockup, SkoolMini, WebsiteMockup, CommunityFeed, Classroom, Kalender } from '@/pitch/Mockups';
+import { REFERENZEN } from '@/pitch/referenzen';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 // Belege fuer "Wer ist Filip?". Screenshots nach public/pitch/filip/ legen;
 // fehlt eine Datei, bleibt der Platz live leer und zeigt lokal einen Hinweis.
@@ -83,7 +85,9 @@ function Portfolio({ c }) {
       </h2>
       <div className="mt-6 grid grid-cols-[64px_minmax(0,1fr)_64px] items-start gap-2">
         <div className="space-y-1.5">{c.channelsLeft.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
-        <ProfilMockup c={c} />
+        {c.bilder?.instagram
+          ? <img src={c.bilder.instagram} alt={`Instagram-Profil von ${c.handle}`} className="w-full rounded-md shadow-lg" />
+          : <ProfilMockup c={c} />}
         <div className="space-y-1.5">{c.channelsRight.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
       </div>
 
@@ -99,8 +103,9 @@ function Portfolio({ c }) {
           <p className="mt-auto pt-4 text-center text-[11px] font-bold leading-snug">{c.improvements.community}</p>
         </div>
         <div className="text-center">
-          <p className="text-[11px] font-bold leading-snug">{c.improvements.retreat}</p>
-          <div className="mt-2"><RetreatKarte c={c} /></div>
+          <p className="text-[11px] font-bold leading-snug">{REFERENZEN[c.referenz].titel}</p>
+          <img src={REFERENZEN[c.referenz].bild} alt="" className="mt-2 w-full rounded-sm shadow-md" />
+          <p className="mt-2 text-[13px]">{REFERENZEN[c.referenz].handle}</p>
         </div>
       </div>
     </Passform>
@@ -194,13 +199,40 @@ function Funnel({ c }) {
   );
 }
 
-function RoadMap({ c }) {
+// Filips Standardangebot, gleich fuer alle Creator (Texte von der Startseite)
+function RoadMap() {
+  const { t } = useLanguage();
+  const anteil = t.profitShare;
   return (
-    <Passform breite={230} className="lg:pt-56">
-      <div className="border border-[#b9a6e6] bg-white">
+    <Passform breite={300} className="lg:pt-40">
+      <div data-export="5-road-map" className="border border-[#b9a6e6] bg-white">
         <h2 className="border-b border-[#b9a6e6] bg-[#ebe4fa] px-4 py-2 text-center font-body text-[24px] font-bold tracking-tight">Road-Map</h2>
-        <ul className="list-disc space-y-4 py-5 pl-9 pr-3 text-[14px] font-semibold">{c.roadmap.map((r) => <li key={r}>{r}</li>)}</ul>
+        <ol className="space-y-4 px-5 py-5">
+          {t.process.steps.map((schritt) => (
+            <li key={schritt.num} className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ebe4fa] text-[12px] font-bold">{schritt.num}</span>
+              <div>
+                <p className="text-[14px] font-bold leading-tight">{schritt.title}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-black/60">{schritt.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="border-t border-[#b9a6e6] bg-[#f7f4fd] px-5 py-4 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Auf {anteil.titleAccent}</p>
+          <p className="mt-1 text-[13px] font-bold leading-snug">{anteil.workload.me} % der Arbeit bei mir, {anteil.share.you} % vom Gewinn bei dir</p>
+        </div>
       </div>
+    </Passform>
+  );
+}
+
+// Nur fuer Creator ohne eigene Website
+function Webseite({ c }) {
+  return (
+    <Passform breite={560} data-export="6-personal-brand-website" className="bg-[#e3f7f7] p-5 lg:mt-10">
+      <h2 className="font-body text-[18px] font-bold tracking-tight">Personal Brand Website</h2>
+      <div className="mt-4"><WebsiteMockup c={c} /></div>
     </Passform>
   );
 }
@@ -224,7 +256,8 @@ export default function Pitch() {
           <WerIstFilip c={c} />
           <BestesSystem c={c} />
           <Funnel c={c} />
-          <RoadMap c={c} />
+          {!c.website && <Webseite c={c} />}
+          <RoadMap />
         </main>
       </div>
     </div>
