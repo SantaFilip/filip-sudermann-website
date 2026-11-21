@@ -10,7 +10,10 @@
 //    (Nedas Kanal heisst nur "Neda").
 // 4. Letzte Videos/Reels: Themen und Ausreisser fuer Staerken und Community.
 import nedaRezawi from './neda-rezawi';
+import jessicaLenz from './jessica-lenz';
+import annaSchepperle from './anna-schepperle';
+import nicoleFrizler from './nicole-frizler';
 
-const CREATORS = [nedaRezawi];
+const CREATORS = [nedaRezawi, jessicaLenz, annaSchepperle, nicoleFrizler];
 
 export const findeCreator = (slug) => CREATORS.find((c) => c.slug === slug);
