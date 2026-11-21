@@ -13,11 +13,10 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 // Belege fuer "Wer ist Filip?". Screenshots nach public/pitch/filip/ legen;
 // fehlt eine Datei, bleibt der Platz live leer und zeigt lokal einen Hinweis.
 const BELEGE = [
-  { src: '/pitch/filip/skool-games-1.webp', alt: 'Skool Games mit Phil' },
-  { src: '/pitch/filip/skool-games-2.webp', alt: 'Skool Games mit Jonas' },
-  { src: '/pitch/filip/skool-games-video.webp', alt: 'Skool Games Aufzeichnung' },
-  { src: '/pitch/filip/leaderboard.webp', alt: 'Skool Games Leaderboard' },
-  { src: '/pitch/filip/umsaetze-marcin-teodoru.webp', alt: 'Umsätze von Marcin Teodoru' },
+  { src: '/pitch/filip/skool-games-1.webp', alt: 'Instagram-Profil von Phil Dörrenhaus' },
+  { src: '/pitch/filip/skool-games-2.webp', alt: 'Instagram-Profil von Jonas Eidenschink' },
+  { src: '/pitch/filip/skool-games-video.webp', alt: 'Skool-Community Manifestation Masterclass' },
+  { src: '/pitch/filip/leaderboard.webp', alt: 'Skool-Games-Leaderboard Q3 2025 mit Marcin Teodoru auf Platz 3' },
 ];
 
 function Beleg({ src, alt }) {
@@ -137,8 +136,7 @@ function WerIstFilip({ c }) {
       </div>
       <div className="mt-6 grid grid-cols-2 gap-2">{BELEGE.slice(0, 2).map((b) => <Beleg key={b.src} {...b} />)}</div>
       <p className="mt-2 text-[12px] font-bold">Skool Games gewonnen, mit Phil &amp; Jonas</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">{BELEGE.slice(2, 4).map((b) => <Beleg key={b.src} {...b} />)}</div>
-      <div className="mt-2"><Beleg {...BELEGE[4]} /></div>
+      <div className="mt-2 grid grid-cols-[1.35fr_1fr] items-start gap-2">{BELEGE.slice(2).map((b) => <Beleg key={b.src} {...b} />)}</div>
 
       <div className="mt-6">
         <p className="mb-2 text-center text-[13px] font-bold">Bis zu {stellen}-stellige Umsätze möglich</p>
