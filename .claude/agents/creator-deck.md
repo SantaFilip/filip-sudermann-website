@@ -214,11 +214,23 @@ Bindestrich, sonst der Handle. Felder wie in der Vorlage. Für jedes Feld gilt:
   - **Premium:** für wen die zwei Premium-Angebote sind.
 - **`bilder`:** Pfade aus Schritt 5, sonst Feld weglassen.
 
-Instagram-Kopfbereich: Instagram zeigt nicht eingeloggten Besuchern eine
-Login-Wand, deshalb kann der Agent ihn nicht selbst abfotografieren. Ohne
-Clip zeigt das Deck einen Nachbau mit den echten Daten. Schickt Filip einen
-Screenshot (Desktop-Ansicht), ihn als `public/pitch/<slug>/instagram.png`
-speichern und `bilder.instagram` setzen.
+Instagram-Kopfbereich: Für nicht eingeloggte Besucher zeigt Instagram eine
+Login-Wand. Den Kopfbereich gibt es deshalb nur über Filips eingeloggten
+Chrome. Die Login-Wand nie anders umgehen.
+- **Claude in Chrome verfügbar** (Werkzeuge `mcp__claude-in-chrome__*`):
+  1. Den Skill zu Claude in Chrome lesen.
+  2. Einen neuen Tab öffnen, `https://www.instagram.com/<handle>/` laden und
+     warten, bis Profilbild und Highlights sichtbar sind.
+  3. Den Kopfbereich als Bild sichern, also Profilbild, Name, Zahlen, Bio
+     und Highlights, ohne Beitragsraster.
+  4. Mit PIL zuschneiden und als `public/pitch/<slug>/instagram.png`
+     speichern. Dann `bilder.instagram` setzen und den Tab schließen.
+  5. Nur dieses eine Profil aufrufen, keine weiteren Seiten. Das schützt
+     Filips Account vor Bot-Erkennung.
+  6. Bei einer Login- oder Sicherheitsabfrage abbrechen und Filip Bescheid
+     geben.
+- **Ohne Chrome:** Das Deck zeigt einen Nachbau mit den echten Daten.
+  Schickt Filip einen Screenshot, gilt Punkt 4.
 
 Profilbild: die Bilddatei aus dem `vidiq_ig_profile`-Ergebnis mit Python/PIL
 als `public/pitch/<slug>/avatar.webp` speichern (Qualität 85). Dann
