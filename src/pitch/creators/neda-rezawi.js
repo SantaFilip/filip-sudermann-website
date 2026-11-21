@@ -1,9 +1,16 @@
-// Oeffentliche Daten, Stand 21.11.2026. Linktree: Telegram "Dein Safe Space",
-// YouTube @neda.rezawi, Podcast "Higher Self" (Spotify), Instagram, TikTok.
-// VidIQ: Instagram 21,8K / 199 Beitraege, TikTok 30,2K / 996 Videos,
-// YouTube 4,4K Abos. Staerkstes Video: "Wie du lernst, diszipliniert zu
-// sein" mit 65,6K Views. Themen: Disziplin, Journaling, Selbstliebe,
-// Zukunftsaengste, Mobbing, Selbstbild.
+// Stand 20.11.2026, alle Zahlen aus diesem Lauf.
+// Instagram (vidiq_ig_profile + eingeloggter Chrome): 21.763 Follower,
+// 108 Gefolgt, 199 Beitraege, Bio und Link wie unten, Highlights aus Chrome.
+// Linktree linktr.ee/NedaRezawi: Telegram "Dein Safe Space" (t.me, oeffentlich
+// 125 Abonnenten), YouTube @neda.rezawi, Podcast "Higher Self" (Spotify),
+// Instagram, TikTok. Keine Website, kein Newsletter, kein bezahltes Angebot
+// (auch nicht in den YouTube-Beschreibungen).
+// TikTok (Profilseite): 30.200 Follower, 601.700 Likes, 996 Videos.
+// YouTube (Kanalseite + RSS): 4.400 Abos, letzte 15 Videos Ø 1.272 Views.
+// Staerkstes Stueck: angepinntes TikTok "Koran lernen" mit 322,9K Views
+// (10,7x Follower); "Innerer Frieden" 108,2K, "Aura/Selbstbewusstsein" 89,4K.
+// Themen: Selbstliebe, Selbstbewusstsein, Komfortzone/Angst, Journaling,
+// innerer Frieden.
 export default {
   slug: 'neda-rezawi',
   name: 'Neda',
@@ -14,29 +21,31 @@ export default {
   category: 'Digital Creator',
   bio: ['My Soul: 👩🏻‍🏫📖☕️🎙️✨', 'Ich will dich strahlen sehen 💗'],
   link: 'linktr.ee/NedaRezawi',
-  highlights: ['Outfits', 'Queen mindset', 'YouTube', 'Deep Talk Q&A', 'Health', 'Podcast', 'Inner child'],
+  highlights: ['YouTube', 'Outfits', 'Queen mindset', 'Deep Talk Q&A', 'health 💗', 'Podcast', 'inner child', 'books', 'trip'],
 
   // Instagram steht im Profil-Mockup; alle Plattformen mit Followern zaehlen
   // in die Reichweite der Potenzial-Rechnung.
-  instagram: { followers: 21800, following: 108, posts: 199 },
+  instagram: { followers: 21763, following: 108, posts: 199 },
   reach: [
-    { platform: 'Instagram', followers: 21800 },
+    { platform: 'Instagram', followers: 21763 },
     { platform: 'TikTok', followers: 30200 },
     { platform: 'YouTube', followers: 4400 },
+    { platform: 'Telegram', followers: 125 },
   ],
   // Fuer den Rechner: Hauptplattform = hoechste Ø Views. Instagram, 12 Reels
-  // vom 16.-20.11.2026 (TikTok ohne angepinnte: Ø 2,1K Views).
-  kennzahlen: { hauptplattform: 'Instagram', likes: 160.5, kommentare: 4.2, views: 8275, posts: 12, stand: '21.11.2026' },
+  // vom 16.-20.11.2026, keins angepinnt (TikTok ohne angepinnte: 7 Videos,
+  // Ø 2.058 Views; YouTube: 15 Videos, Ø 1.272 Views).
+  kennzahlen: { hauptplattform: 'Instagram', likes: 160.5, kommentare: 4.2, views: 7775, posts: 12, stand: '20.11.2026' },
   channelsLeft: ['Instagram', 'YouTube', 'TikTok'],
   channelsRight: ['Podcast „Higher Self“', 'Telegram „Safe Space“'],
 
   strengths: [
     'Du hast über 56.000 Follower auf drei Plattformen, die mit dir interagieren',
-    'Dein Disziplin-Video hat 65.000 Views, 15× deine Abozahl: die Nachfrage nach deinen Mindset-Themen ist da',
+    'Dein TikTok über inneren Frieden hat 108.000 Views, 3,6× deine Follower: die Nachfrage nach deinen Mindset-Themen ist da',
   ],
   opportunities: [
-    'Dein Telegram „Safe Space“ ist kostenlos: es fehlt eine interaktive Community-Plattform',
-    'Ein VIP-Programm wäre phänomenal effektiv',
+    'Dein Telegram „Safe Space“ ist kostenlos und hat 125 Mitglieder: es fehlt eine interaktive Community-Plattform',
+    'Es gibt noch kein High-Ticket-Angebot: ein VIP-Programm wäre phänomenal effektiv',
   ],
   improvements: {
     community: 'Eine eigene Community-Plattform mit verschiedenen Lernpaketen, um das wahre Potenzial zu leben',
@@ -48,8 +57,8 @@ export default {
   webseite: {
     nav: ['Community', 'Kurse', 'Podcast', 'Retreats', 'Über Neda'],
     claim: 'Weil du es verdienst, ein erfülltes Leben zu führen.',
-    headline: ['Selbstliebe leben.', 'Disziplin aufbauen.', 'Strahlen.'],
-    sub: 'Mindset, Journaling und Routinen, die dich wirklich verändern, mit Neda und einer Community, die dich trägt.',
+    headline: ['Selbstliebe leben.', 'Mutig wachsen.', 'Strahlen.'],
+    sub: 'Selbstliebe, Journaling und der Schritt aus der Komfortzone, mit Neda und einer Community, die dich trägt.',
     cta: 'Finde deinen Einstieg',
     angebotTitel: 'Drei Tage. Zurück zu dir.',
     angebotText: 'Mindset & Identität, live mit Neda',
@@ -61,13 +70,13 @@ export default {
     name: 'Ich will dich strahlen sehen',
     url: 'skool.com/ich-will-dich-strahlen-sehen',
     description: 'Die Community für mehr Selbstbewusstsein, ein starkes Mindset und persönliches Wachstum – mit Neda.',
-    features: ['Disziplin & Routinen', 'Journaling-Impulse', 'Dein Safe Space mit Gleichgesinnten', 'Live-Sessions, Q&As und Challenges'],
+    features: ['Selbstliebe & Selbstbewusstsein', 'Raus aus der Komfortzone', 'Journaling-Impulse & Selfcare', 'Innerer Frieden im Hier und Jetzt'],
     eyebrow: 'Neda Rezawi',
     tagline: 'Mindset · Selbstbewusstsein · Wachstum',
     price: 30,
-    kurse: ['Start hier', 'Selbstliebe', 'Disziplin', 'Journaling', 'Komfortzone', 'VIP-Bereich'],
-    members: 305,
-    online: 8,
+    kurse: ['Start hier', 'Selbstliebe', 'Komfortzone', 'Journaling', 'Innerer Frieden', 'VIP-Bereich'],
+    members: 565,
+    online: 17,
   },
   emailLabel: 'E-Mail Newsletter / Podcast Higher Self',
   // Erstes Angebot = High-Ticket im Rechner
@@ -81,4 +90,5 @@ export default {
     'Advanced: Die Skool-Community für 30 €/Monat macht aus dem kostenlosen Telegram ein Abo-Einkommen',
     'Premium: VIP-Programm und Retreats für alle, die tiefer an ihrer Identität arbeiten wollen',
   ],
+  bilder: { instagram: '/pitch/neda-rezawi/instagram.png' },
 };
