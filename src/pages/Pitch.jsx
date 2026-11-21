@@ -204,10 +204,10 @@ function RoadMap() {
   const { t } = useLanguage();
   const anteil = t.profitShare;
   return (
-    <Passform breite={300} className="lg:pt-40">
+    <Passform breite={560}>
       <div data-export="5-road-map" className="border border-[#b9a6e6] bg-white">
         <h2 className="border-b border-[#b9a6e6] bg-[#ebe4fa] px-4 py-2 text-center font-body text-[24px] font-bold tracking-tight">Road-Map</h2>
-        <ol className="space-y-4 px-5 py-5">
+        <ol className="grid grid-cols-2 gap-x-6 gap-y-5 px-6 py-6">
           {t.process.steps.map((schritt) => (
             <li key={schritt.num} className="flex gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ebe4fa] text-[12px] font-bold">{schritt.num}</span>
@@ -256,8 +256,11 @@ export default function Pitch() {
           <WerIstFilip c={c} />
           <BestesSystem c={c} />
           <Funnel c={c} />
-          {!c.website && <Webseite c={c} />}
-          <RoadMap />
+          {/* Website-Entwurf und Road-Map untereinander in einer Spalte */}
+          <div className="flex flex-col gap-12 lg:gap-10">
+            {!c.website && <Webseite c={c} />}
+            <RoadMap />
+          </div>
         </main>
       </div>
     </div>
