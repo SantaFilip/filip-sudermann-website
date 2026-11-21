@@ -5,7 +5,9 @@
 // Subliminals und Minikurs "Power of Manifestation" (Thrivecart), Newsletter,
 // Programm "Baddies in Business", Marke Spiritual Baddies (zweites Instagram
 // @spiritualbaddies.de, Zahl nicht abrufbar), Podcast auf Spotify.
-// Keine eigene Website, nur eine Google-Sites-Seite.
+// Keine eigene Website, nur eine Google-Sites-Seite. Laut Trustpilot-
+// Bewertungen hat "Baddies in Business" (nur per Bewerbung) eine Community,
+// davor gab es eine "Dreamlife Academy".
 // TikTok @phantasiert (Profilseite): 86.800 Follower, 5,5 Mio. Likes; letzte
 // 10 Videos Ø 24,6K Views.
 // YouTube @nicolespov (Kanalseite + RSS): 28.000 Abos, letzte 15 Ø 5.422 Views.
@@ -36,11 +38,11 @@ export default {
   channelsRight: ['Podcast', 'Spiritual Baddies'],
 
   strengths: [
-    'Du erreichst über 150.000 Follower auf drei Plattformen, auf Instagram Ø 47.000 Views pro Reel',
+    'Deine 35.300 Instagram-Follower bringen Ø 47.000 Views pro Reel, dazu 86.800 Follower auf TikTok',
     'Dein Quantensprung-Reel hat 199.000 Views, 5,6× deine Instagram-Follower: Manifestation zieht bei deiner Audience extrem',
   ],
   opportunities: [
-    'Subliminals und Minikurs sind Einzelkäufe: eine Community mit Abo macht daraus wiederkehrendes Einkommen',
+    'Subliminals und Minikurs sind Einzelkäufe, deine Community gibt es nur per Bewerbung: ein offener Club mit Abo fängt alle Käuferinnen auf',
     'Deine Angebote verteilen sich auf Linktree, Thrivecart und eine Google-Seite: eine eigene Website bündelt alles',
   ],
   improvements: {
@@ -68,8 +70,8 @@ export default {
     tagline: 'Bewusstsein · Manifestation · Fülle',
     price: 39,
     kurse: ['Start hier', 'Quantensprung', 'Geldmagnet', 'Law of Assumption', 'Soulmate', 'VIP-Bereich'],
-    members: 1501,
-    online: 45,
+    members: 353,
+    online: 11,
   },
   emailLabel: 'E-Mail Newsletter / Podcast',
   premium: [

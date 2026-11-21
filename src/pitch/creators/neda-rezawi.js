@@ -40,7 +40,7 @@ export default {
   channelsRight: ['Podcast „Higher Self“', 'Telegram „Safe Space“'],
 
   strengths: [
-    'Du hast über 56.000 Follower auf drei Plattformen, die mit dir interagieren',
+    'Du erreichst 21.700 Follower auf Instagram und 30.200 auf TikTok, die mit dir interagieren',
     'Dein TikTok über inneren Frieden hat 108.000 Views, 3,6× deine Follower: die Nachfrage nach deinen Mindset-Themen ist da',
   ],
   opportunities: [
@@ -75,8 +75,8 @@ export default {
     tagline: 'Mindset · Selbstbewusstsein · Wachstum',
     price: 30,
     kurse: ['Start hier', 'Selbstliebe', 'Komfortzone', 'Journaling', 'Innerer Frieden', 'VIP-Bereich'],
-    members: 565,
-    online: 17,
+    members: 218,
+    online: 7,
   },
   emailLabel: 'E-Mail Newsletter / Podcast Higher Self',
   // Erstes Angebot = High-Ticket im Rechner

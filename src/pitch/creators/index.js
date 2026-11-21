@@ -11,11 +11,8 @@
 // 4. Letzte Videos/Reels: Themen und Ausreisser fuer Staerken und Community.
 import nedaRezawi from './neda-rezawi';
 import jessicaLenz from './jessica-lenz';
-import annaSchepperle from './anna-schepperle';
 import nicoleFrizler from './nicole-frizler';
-import hannahMedic from './hannah-medic';
-import paruaEsmahil from './parua-esmahil';
 
-const CREATORS = [nedaRezawi, jessicaLenz, annaSchepperle, nicoleFrizler, hannahMedic, paruaEsmahil];
+const CREATORS = [nedaRezawi, jessicaLenz, nicoleFrizler];
 
 export const findeCreator = (slug) => CREATORS.find((c) => c.slug === slug);

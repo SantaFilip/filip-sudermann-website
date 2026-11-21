@@ -1,7 +1,9 @@
 // Stand 21.11.2026, alle Zahlen aus diesem Lauf.
 // Instagram (vidiq_ig_profile): 58.600 Follower, 182 Gefolgt, 909 Beitraege,
 // Link seeleundmagie.com/seele-und-magie-universum (Website, aus der Cloud
-// nicht abrufbar; Angebote dort ungeprueft).
+// nicht abrufbar). Laut Websuche: Ablefy-Shop mit Ausbildungen (z. B.
+// Schumann Resonanz Reader, 390 EUR), woechentliche Sessions, Rauhnacht-
+// Programme, Home Study, Buch. Kein Abo-Community-Angebot gefunden.
 // TikTok und YouTube unter @seeleundmagie: nicht gefunden.
 // Reels (12, keins angepinnt): Likes sind ausgeblendet (VidIQ meldet ueberall
 // 3), daher im Rechner 0. Ø 17,6 Kommentare, Ø 28.092 Views.
@@ -28,7 +30,7 @@ export default {
   // Likes ausgeblendet, deshalb 0 (konservativ)
   kennzahlen: { hauptplattform: 'Instagram', likes: 0, kommentare: 17.6, views: 28091.7, posts: 12, stand: '21.11.2026' },
   channelsLeft: ['Instagram'],
-  channelsRight: ['Website „Seele & Magie“'],
+  channelsRight: ['Website'],
 
   strengths: [
     'Deine Reels erreichen im Schnitt 28.000 Views, fast die Hälfte deiner 58.600 Follower',

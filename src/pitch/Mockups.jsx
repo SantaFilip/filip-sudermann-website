@@ -16,37 +16,43 @@ export function Avatar({ c, className = '' }) {
   return <img src={c.avatar} alt={c.fullName} onError={() => setKaputt(true)} className={`rounded-full object-cover ${className}`} />;
 }
 
-// Instagram-Profil im Dark Mode, wie der Screenshot im Template
+// Instagram-Profilkopf wie in der Desktop-Ansicht (hell): grosses Profilbild,
+// kleine Schrift, Zahlen ausgeschrieben wie auf instagram.com
+const ganz = (n) => n.toLocaleString('de-DE');
+
 export function ProfilMockup({ c }) {
   const ig = c.instagram;
   return (
-    <div className="overflow-hidden rounded-md bg-[#0c0c0c] p-3 text-[10px] leading-snug text-white shadow-lg">
+    <div className="overflow-hidden rounded-md bg-white px-3 pb-3 pt-3.5 text-[8.5px] leading-[1.35] text-[#0c1014] shadow-lg">
       <div className="flex items-center gap-3">
-        <div className="rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600 p-[2px]">
-          <Avatar c={c} className="h-14 w-14 border-2 border-[#0c0c0c]" />
+        <div className="shrink-0 rounded-full bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#962fbf] p-[2.5px]">
+          <Avatar c={c} className="h-16 w-16 border-[2.5px] border-white text-[20px]" />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[11px] font-semibold">{c.handle} <ChevronDown size={10} className="inline" /></p>
-          <p className="mt-0.5 text-white/90">{c.name}</p>
-          <div className="mt-1 flex gap-2.5 text-white/90">
-            <span><b>{ig.posts}</b> Beiträge</span>
-            <span><b>{kurz(ig.followers)}</b> Follower</span>
-            <span><b>{ig.following}</b> Gefolgt</span>
+          <p className="flex items-center gap-1.5 truncate text-[11.5px] font-semibold">{c.handle} <span className="text-[10px] font-normal tracking-widest">···</span></p>
+          <p className="text-[8px] text-[#0c1014]/80">{c.name}</p>
+          <div className="mt-1.5 flex gap-2 whitespace-nowrap text-[7.5px]">
+            <span><b>{ganz(ig.posts)}</b> Beiträge</span>
+            <span><b>{ganz(ig.followers)}</b> Follower</span>
+            <span><b>{ganz(ig.following)}</b> Gefolgt</span>
           </div>
         </div>
       </div>
-      <p className="mt-2 text-white/50">{c.category}</p>
-      {c.bio.map((zeile) => <p key={zeile}>{zeile}</p>)}
-      <p className="text-[#e0f1ff]">🔗 {c.link}</p>
-      <div className="mt-2 grid grid-cols-2 gap-1.5">
-        <span className="rounded-md bg-[#4a5df9] py-1 text-center font-semibold">Folgen</span>
-        <span className="rounded-md bg-[#262626] py-1 text-center font-semibold">Nachricht senden</span>
+      <div className="mt-2.5">
+        <p className="text-[#737373]">{c.category}</p>
+        {c.bio.map((zeile) => <p key={zeile}>{zeile}</p>)}
+        <p className="font-semibold text-[#00376b]">🔗 {c.link}</p>
       </div>
-      {c.highlights.length > 0 && <div className="mt-2.5 flex justify-between gap-1">
+      <div className="mt-2.5 grid grid-cols-[1fr_1fr_auto] gap-1.5 text-[8.5px] font-semibold">
+        <span className="rounded-md bg-[#0095f6] py-1.5 text-center text-white">Folgen</span>
+        <span className="rounded-md bg-[#efefef] py-1.5 text-center">Nachricht senden</span>
+        <span className="rounded-md bg-[#efefef] px-2 py-1.5 text-center">+</span>
+      </div>
+      {c.highlights.length > 0 && <div className="mt-3 flex gap-2.5 overflow-hidden">
         {c.highlights.slice(0, 6).map((h) => (
-          <div key={h} className="flex w-9 flex-col items-center gap-0.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-white/10 text-[11px]">{h[0]}</span>
-            <span className="w-full truncate text-center text-[7px] text-white/80">{h}</span>
+          <div key={h} className="flex w-10 shrink-0 flex-col items-center gap-1">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#dbdbdb] bg-[#fafafa] p-[2px] text-[10px] text-[#737373]">{h[0].toUpperCase()}</span>
+            <span className="w-full truncate text-center text-[7px] font-semibold">{h}</span>
           </div>
         ))}
       </div>}

@@ -56,11 +56,13 @@ export function rechne({ follower, likes, kommentare, views, preisLow, preisHigh
   };
 }
 
-// Rechnet aus einer Creator-Datei: Reichweite summiert, Engagement der
-// Hauptplattform, Low-Ticket = Skool-Preis, High-Ticket = erstes Premium-Angebot.
+// Rechnet aus einer Creator-Datei mit Followern und Engagement derselben
+// Hauptplattform. Plattformen nicht addieren: das Publikum ueberschneidet sich,
+// und die Ø-Werte gehoeren nur zu dieser einen Plattform.
+// Low-Ticket = Skool-Preis, High-Ticket = erstes Premium-Angebot.
 export function berechnePotenzial(c) {
-  const follower = c.reach.reduce((summe, r) => summe + r.followers, 0);
   const k = c.kennzahlen;
+  const follower = c.reach.find((r) => r.platform === k.hauptplattform).followers;
   return {
     follower,
     ...rechne({

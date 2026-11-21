@@ -41,7 +41,7 @@ function Passform({ breite, className = '', children, ...rest }) {
   }, []);
   const zoom = vw < DESKTOP ? Math.min(1, (vw - RAND) / breite) : 1;
   return (
-    <section {...rest} className={`shrink-0 self-center lg:self-start ${className}`} style={{ width: breite, zoom }}>
+    <section {...rest} className={`shrink-0 self-center lg:self-stretch ${className}`} style={{ width: breite, zoom }}>
       {children}
     </section>
   );
@@ -83,7 +83,7 @@ function Portfolio({ c }) {
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">
         {c.possessive} <span className="text-[#f2621d]">Creator Portfolio</span>
       </h2>
-      <div className="mt-6 grid grid-cols-[64px_minmax(0,1fr)_64px] items-start gap-2">
+      <div className="mt-6 grid grid-cols-[56px_minmax(0,1fr)_56px] items-start gap-2">
         <div className="space-y-1.5">{c.channelsLeft.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
         {c.bilder?.instagram
           ? <img src={c.bilder.instagram} alt={`Instagram-Profil von ${c.handle}`} className="w-full rounded-md shadow-lg" />
@@ -143,7 +143,7 @@ function WerIstFilip({ c }) {
         <div data-export="2-potenzial-rechner" className="overflow-hidden rounded border border-[#1d2a5a]/30 bg-white text-[9.5px]">
           <Kopf>Reichweite</Kopf>
           {c.reach.map((r) => <Zeile key={r.platform} label={r.platform} wert={kurz(r.followers)} />)}
-          <Zeile label="Follower gesamt" wert={kurz(p.follower)} fett />
+          <Zeile label={`Follower ${k.hauptplattform} (Rechner)`} wert={kurz(p.follower)} fett />
           <Kopf>Engagement Score · {k.hauptplattform}</Kopf>
           <Zeile label="Ø Likes pro Post" wert={kurz(k.likes)} />
           <Zeile label="Ø Kommentare pro Post" wert={k.kommentare.toLocaleString('de-DE', { maximumFractionDigits: 1 })} />
@@ -171,7 +171,7 @@ function WerIstFilip({ c }) {
 
 function BestesSystem({ c }) {
   return (
-    <Passform breite={460} data-export="3-marketing-system" className="p-2 lg:pt-10">
+    <Passform breite={460} data-export="3-marketing-system" className="p-2">
       <h2 className="font-body text-[30px] font-bold tracking-tight">Das <span className="text-[#f2621d]">Beste</span> System für dich</h2>
       <div className="mt-6"><SystemDiagramm c={c} /></div>
       <h3 className="mt-8 font-body text-[15px] font-bold">Wieso es besonders effektiv ist:</h3>
@@ -183,7 +183,7 @@ function BestesSystem({ c }) {
 function Funnel({ c }) {
   const bausteine = [['Community', CommunityFeed], ['Classroom', Classroom], ['Calendar', Kalender]];
   return (
-    <Passform breite={560} className="lg:pt-10">
+    <Passform breite={560}>
       <div className="text-center"><Etikett className="text-[17px]">Funnel (Skool)</Etikett></div>
       <div className="mt-5" data-export="4-skool-template"><SkoolMockup c={c} /></div>
       <div className="mt-10 bg-[#111] py-2.5 text-center text-[17px] font-bold text-white">Fulfillment (The 3C’s)</div>
@@ -230,7 +230,7 @@ function RoadMap() {
 // Nur fuer Creator ohne eigene Website
 function Webseite({ c }) {
   return (
-    <Passform breite={560} data-export="6-personal-brand-website" className="bg-[#e3f7f7] p-5 lg:mt-10">
+    <Passform breite={560} data-export="6-personal-brand-website" className="bg-[#e3f7f7] p-5">
       <h2 className="font-body text-[18px] font-bold tracking-tight">Personal Brand Website</h2>
       <div className="mt-4"><WebsiteMockup c={c} /></div>
     </Passform>
@@ -251,7 +251,7 @@ export default function Pitch() {
       }}
     >
       <div className="min-h-screen bg-[radial-gradient(rgba(0,0,0,0.12)_1px,transparent_1px)] [background-size:22px_22px]">
-        <main className="flex flex-col gap-12 px-4 py-10 lg:flex-row lg:items-start lg:gap-10 lg:overflow-x-auto lg:px-10 lg:py-14">
+        <main className="flex flex-col gap-12 px-4 py-10 lg:flex-row lg:items-stretch lg:gap-10 lg:overflow-x-auto lg:px-10 lg:py-14">
           <Portfolio c={c} />
           <WerIstFilip c={c} />
           <BestesSystem c={c} />

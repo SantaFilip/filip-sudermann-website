@@ -32,7 +32,30 @@ Vorlage für Aufbau und Tonfall: `src/pitch/creators/neda-rezawi.js`.
 - Sprache auf der Seite: Deutsch, Du-Form, Filips Stimme, konkret mit Zahlen.
 - Pronomen: Name verwenden, kein Geschlecht annehmen.
 
-## 0. Credits prüfen (vor jeder VidIQ-Abfrage)
+## 0. Passt der Creator? (vor jeder VidIQ-Abfrage)
+
+Nur kostenlos prüfen: `scripts/creator-daten.mjs` (Instagram, TikTok,
+YouTube, Linktree), dazu bei Bedarf eine Websuche nach Name + Angeboten.
+
+**Ausschluss, sofort abbrechen und Filip melden:**
+- Instagram unter 10.000 oder über 100.000 Follower. Es zählt Instagram allein,
+  nichts addieren.
+- Es gibt schon eine eigene Academy, Mitgliedschaft oder bezahlte Community
+  mit Team dahinter, z. B. Sisterhood Academy oder ein Programm mit Community
+  nur per Bewerbung und mehreren Stufen.
+
+**Fit, mindestens 2 davon müssen zutreffen:**
+- keine bezahlte Abo-Community
+- keine eigene Website, nur Linktree oder Ähnliches
+- kein High-Ticket-Angebot
+- Angebote sind verstreut oder bestehen nur aus Einzelkäufen (E-Book,
+  Subliminals, Kurs ohne Community)
+
+Treffen weniger als 2 zu, kein Deck bauen. Stattdessen den nächsten Creator
+nehmen und den Grund im Bericht nennen. Das Ergebnis der Prüfung kommt in den
+Kopfkommentar der Datendatei.
+
+## 0b. Credits prüfen (vor jeder VidIQ-Abfrage)
 
 Öffentliche Daten holt das Skript in Schritt 1 kostenlos. VidIQ brauchst du nur
 noch für Instagram, dessen öffentliche Seite keine Reel-Zahlen und kein
@@ -111,7 +134,10 @@ Der Rechner ist `src/pitch/potenzial.js`, eine 1:1-Kopie von Filips Excel
   `hauptplattform`, `posts` (Anzahl im Ø) und `stand` (heutiges Datum, TT.MM.JJJJ).
 - **`reach`** = jede Plattform mit Follower- bzw. Abozahl (Instagram, TikTok,
   YouTube …). Podcast- und Telegram-Gruppen nur, wenn eine echte Zahl
-  öffentlich ist.
+  öffentlich ist. Die Zahlen werden **nie addiert**: Das Publikum überschneidet
+  sich. Der Rechner nimmt nur die Follower der Hauptplattform, passend zu
+  deren Ø-Werten. Auch in Texten keine Summen wie „über 150.000 Follower auf
+  drei Plattformen“, sondern jede Plattform einzeln nennen.
 - **Preise:**
   - Low-Ticket = `community.price` (Skool pro Monat).
   - High-Ticket = `premium[0].price`.
@@ -197,7 +223,7 @@ Bindestrich, sonst der Handle. Felder wie in der Vorlage. Für jedes Feld gilt:
   - `eyebrow` = voller Name.
   - `tagline` = 3 Themen mit „ · “ getrennt.
   - `price` laut Schritt 2.
-  - `members` = 1 % der Gesamtreichweite, gerundet.
+  - `members` = 1 % der Follower der Hauptplattform, gerundet.
   - `online` ≈ 3 % von members.
 - **`emailLabel`:** „E-Mail Newsletter“, mit „/ Podcast <Name>“, wenn ein
   Podcast existiert.
