@@ -37,7 +37,7 @@ export default {
   // Ø 2.058 Views; YouTube: 15 Videos, Ø 1.272 Views).
   kennzahlen: { hauptplattform: 'Instagram', likes: 160.5, kommentare: 4.2, views: 7775, posts: 12, stand: '20.11.2026' },
   channelsLeft: ['Instagram', 'YouTube', 'TikTok'],
-  channelsRight: ['Podcast „Higher Self“', 'Telegram „Safe Space“'],
+  channelsRight: ['Podcast', 'Telegram'],
 
   strengths: [
     'Du erreichst 21.700 Follower auf Instagram und 30.200 auf TikTok, die mit dir interagieren',

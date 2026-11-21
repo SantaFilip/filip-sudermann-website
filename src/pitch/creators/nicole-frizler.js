@@ -35,7 +35,7 @@ export default {
   ],
   kennzahlen: { hauptplattform: 'Instagram', likes: 1948.5, kommentare: 150.1, views: 46791.7, posts: 12, stand: '21.11.2026' },
   channelsLeft: ['Instagram', 'TikTok', 'YouTube'],
-  channelsRight: ['Podcast', 'Spiritual Baddies'],
+  channelsRight: ['Podcast', 'Newsletter'],
 
   strengths: [
     'Deine 35.300 Instagram-Follower bringen Ø 47.000 Views pro Reel, dazu 86.800 Follower auf TikTok',

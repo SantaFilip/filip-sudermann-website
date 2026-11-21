@@ -190,9 +190,8 @@ Bindestrich, sonst der Handle. Felder wie in der Vorlage. Für jedes Feld gilt:
 - **`highlights`:** `[]`. Instagram-Highlights sind nicht abrufbar; nur
   füllen, wenn Filip sie liefert.
 - **`channelsLeft`:** die Video-Plattformen.
-- **`channelsRight`:** Podcast, Gruppe, Website mit Eigennamen, z. B.
-  `Podcast „Higher Self“`. Höchstens 3 Einträge pro Seite, je höchstens 25
-  Zeichen.
+- **`channelsRight`:** nur die Art des Kanals, ohne Eigennamen: `Website`,
+  `Podcast`, `Telegram`, `Newsletter`, `Shop`. Höchstens 3 Einträge.
 - **`strengths`:** genau 2 Sätze. Jeder enthält eine echte Zahl aus dem
   Datenpaket, z. B. Reichweite über alle Plattformen oder ein Ausreißer-Video
   mit Faktor.

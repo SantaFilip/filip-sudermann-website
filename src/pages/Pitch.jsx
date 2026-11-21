@@ -17,6 +17,7 @@ const BELEGE = [
   { src: '/pitch/filip/skool-games-2.webp', alt: 'Skool Games mit Jonas' },
   { src: '/pitch/filip/skool-games-video.webp', alt: 'Skool Games Aufzeichnung' },
   { src: '/pitch/filip/leaderboard.webp', alt: 'Skool Games Leaderboard' },
+  { src: '/pitch/filip/umsaetze-marcin-teodoru.webp', alt: 'Umsätze von Marcin Teodoru' },
 ];
 
 function Beleg({ src, alt }) {
@@ -70,7 +71,7 @@ const Punkt = ({ gut, children }) => (
 );
 
 const Kanal = ({ children }) => (
-  <span className="flex min-h-[44px] items-center justify-center bg-white px-2 text-center text-[11px] font-semibold leading-tight shadow-sm">{children}</span>
+  <span className="flex min-h-[44px] items-center justify-center whitespace-nowrap bg-white px-2.5 text-center text-[11px] font-semibold shadow-sm">{children}</span>
 );
 
 const Etikett = ({ children, className = '' }) => (
@@ -83,7 +84,7 @@ function Portfolio({ c }) {
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">
         {c.possessive} <span className="text-[#f2621d]">Creator Portfolio</span>
       </h2>
-      <div className="mt-6 grid grid-cols-[56px_minmax(0,1fr)_56px] items-start gap-2">
+      <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2">
         <div className="space-y-1.5">{c.channelsLeft.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
         {c.bilder?.instagram
           ? <img src={c.bilder.instagram} alt={`Instagram-Profil von ${c.handle}`} className="w-full rounded-md shadow-lg" />
@@ -136,7 +137,8 @@ function WerIstFilip({ c }) {
       </div>
       <div className="mt-6 grid grid-cols-2 gap-2">{BELEGE.slice(0, 2).map((b) => <Beleg key={b.src} {...b} />)}</div>
       <p className="mt-2 text-[12px] font-bold">Skool Games gewonnen, mit Phil &amp; Jonas</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">{BELEGE.slice(2).map((b) => <Beleg key={b.src} {...b} />)}</div>
+      <div className="mt-2 grid grid-cols-2 gap-2">{BELEGE.slice(2, 4).map((b) => <Beleg key={b.src} {...b} />)}</div>
+      <div className="mt-2"><Beleg {...BELEGE[4]} /></div>
 
       <div className="mt-6">
         <p className="mb-2 text-center text-[13px] font-bold">Bis zu {stellen}-stellige Umsätze möglich</p>
@@ -187,7 +189,8 @@ function Funnel({ c }) {
       <div className="text-center"><Etikett className="text-[17px]">Funnel (Skool)</Etikett></div>
       <div className="mt-5" data-export="4-skool-template"><SkoolMockup c={c} /></div>
       <div className="mt-10 bg-[#111] py-2.5 text-center text-[17px] font-bold text-white">Fulfillment (The 3C’s)</div>
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      {/* 3 gleich grosse Kacheln: (560 - 2 x 8 px Abstand) / 3 = 181 px von 520 px */}
+      <div className="mt-4 grid grid-cols-3 gap-2" style={{ '--kachel-zoom': 181 / 520 }}>
         {bausteine.map(([titel, Baustein]) => (
           <div key={titel}>
             <p className="mb-1 text-[11px] font-bold">{titel}</p>
@@ -256,8 +259,8 @@ export default function Pitch() {
           <WerIstFilip c={c} />
           <BestesSystem c={c} />
           <Funnel c={c} />
-          {/* Website-Entwurf und Road-Map untereinander in einer Spalte */}
-          <div className="flex flex-col gap-12 lg:gap-10">
+          {/* Website-Entwurf oben, Road-Map unten buendig mit den anderen Karten */}
+          <div className="flex flex-col gap-12 lg:justify-between lg:gap-10">
             {!c.website && <Webseite c={c} />}
             <RoadMap />
           </div>

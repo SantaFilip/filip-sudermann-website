@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, MessageCircle, ChevronDown, Crown, Sparkles, Wrench, Users, CalendarDays, Lock, Heart, MessageSquare } from 'lucide-react';
+import { Search, Bell, MessageCircle, ChevronDown, Crown, Sparkles, Wrench, Users, CalendarDays } from 'lucide-react';
 import SkoolLogo from '@/components/SkoolLogo';
 import { kurz } from './potenzial';
 
@@ -184,51 +184,116 @@ export function WebsiteMockup({ c }) {
   );
 }
 
-// Die drei Fulfillment-Bausteine: Community, Classroom, Kalender
-export function CommunityFeed({ c }) {
+// Die drei Fulfillment-Bausteine wie die echten Skool-Seiten: in Original-
+// groesse (520 x 700 px) gebaut und als Kachel verkleinert, alle gleich gross.
+const SKOOL_RAND = 'border border-[#e4e4e4]';
+
+function SkoolKachel({ children }) {
   return (
-    <div className="space-y-1.5 bg-white p-2">
-      {['Willkommen! Stell dich kurz vor 👋', 'Live-Q&A am Donnerstag', 'Deine Challenge diese Woche'].map((titel, i) => (
-        <div key={titel} className="rounded border border-black/5 p-1.5">
-          <div className="flex items-center gap-1"><Avatar c={c} className="h-3.5 w-3.5 text-[6px]" /><span className="text-[7px] font-semibold">{c.name}</span><span className="text-[6px] text-[#909090]">· {i + 1} T</span></div>
-          <p className="mt-0.5 text-[7.5px] font-semibold">{titel}</p>
-          <div className="mt-1 h-1 w-4/5 rounded bg-black/5" />
-          <div className="mt-1 flex gap-2 text-[6px] text-[#909090]"><span className="flex items-center gap-0.5"><Heart size={6} /> {24 - i * 7}</span><span className="flex items-center gap-0.5"><MessageSquare size={6} /> {12 - i * 3}</span></div>
-        </div>
-      ))}
+    <div className="aspect-[52/70] overflow-hidden bg-[#f8f7f5]">
+      <div className="pointer-events-none h-[700px] w-[520px] origin-top-left p-4 text-[13px] text-[#202124]" style={{ zoom: 'var(--kachel-zoom)' }} aria-hidden="true">
+        {children}
+      </div>
     </div>
+  );
+}
+
+export function CommunityFeed({ c }) {
+  const k = c.community;
+  const beitraege = [
+    { titel: `Willkommen im ${k.name}! 👋`, text: 'Stell dich kurz vor: Wer bist du, was hat dich hergebracht und was willst du in den nächsten 90 Tagen verändern?', kat: 'Allgemein', zeit: '2 T.', likes: 48, kommentare: 112, fix: true },
+    { titel: 'Live-Q&A am Donnerstag um 19 Uhr', text: `Schreib deine Fragen hier in die Kommentare, ${c.name} beantwortet sie live im Call.`, kat: 'Ankündigungen', zeit: '5 Std.', likes: 23, kommentare: 31 },
+    { titel: 'Mein Durchbruch diese Woche 🏆', text: 'Ich habe die Übung aus Modul 2 jeden Morgen gemacht und kann es selbst kaum glauben …', kat: 'Erfolge', zeit: '1 Std.', likes: 17, kommentare: 9 },
+  ];
+  return (
+    <SkoolKachel>
+      <div className={`flex items-center gap-3 rounded-lg bg-white px-4 py-3 ${SKOOL_RAND}`}>
+        <span className="h-8 w-8 rounded-full bg-[#d9d9d9]" />
+        <span className="text-[#909090]">Schreib etwas …</span>
+      </div>
+      <div className="mt-3 flex gap-2 text-[12px]">
+        {['Alle', 'Allgemein', 'Ankündigungen', 'Erfolge'].map((f, i) => (
+          <span key={f} className={`rounded-full px-3 py-1.5 ${i === 0 ? 'bg-[#909090] text-white' : 'bg-[#e4e4e4] text-[#555]'}`}>{f}</span>
+        ))}
+      </div>
+      <div className="mt-3 space-y-3">
+        {beitraege.map((b) => (
+          <div key={b.titel} className={`rounded-lg bg-white p-4 ${SKOOL_RAND}`}>
+            <div className="flex items-center gap-2.5">
+              <div className="relative"><Avatar c={c} className="h-9 w-9 text-[12px]" /><span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#4f7df9] text-[9px] font-bold text-white">7</span></div>
+              <div className="leading-tight">
+                <p className="font-semibold">{c.fullName}</p>
+                <p className="text-[11px] text-[#909090]">{b.zeit} · {b.kat}</p>
+              </div>
+              {b.fix && <span className="ml-auto text-[11px] font-semibold text-[#909090]">📌 Angepinnt</span>}
+            </div>
+            <p className="mt-3 text-[15px] font-bold">{b.titel}</p>
+            <p className="mt-1 line-clamp-2 text-[#555]">{b.text}</p>
+            <div className="mt-3 flex items-center gap-4 text-[12px] text-[#555]">
+              <span>👍 {b.likes}</span><span>💬 {b.kommentare}</span>
+              <span className="ml-auto text-[#4f7df9]">Neuer Kommentar vor {b.zeit}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </SkoolKachel>
   );
 }
 
 export function Classroom({ c }) {
-  const kurse = c.community.kurse;
+  const bild = c.bilder?.banner || c.avatar;
   return (
-    <div className="grid grid-cols-3 gap-1.5 bg-white p-2">
-      {kurse.map((k, i) => (
-        <div key={k} className="overflow-hidden rounded border border-black/5">
-          <div className="flex h-8 items-center justify-center bg-gradient-to-br from-[#5b3fd1] to-[#9a6bff] px-1 text-center text-[6.5px] font-bold text-white">
-            {i === kurse.length - 1 && <Lock size={7} className="mr-0.5" />}{k}
-          </div>
-          <div className="p-1"><div className="h-1 rounded bg-black/10"><div className="h-1 rounded bg-[#5b3fd1]" style={{ width: `${90 - i * 15}%` }} /></div></div>
-        </div>
-      ))}
-    </div>
+    <SkoolKachel>
+      <div className="grid grid-cols-2 gap-3">
+        {c.community.kurse.map((kurs, i) => {
+          const gesperrt = i === c.community.kurse.length - 1;
+          const fortschritt = [100, 64, 30, 12, 0, 0][i] ?? 0;
+          return (
+            <div key={kurs} className={`overflow-hidden rounded-lg bg-white ${SKOOL_RAND}`}>
+              <div className="relative h-[92px] bg-[#17130f]">
+                <img src={bild} alt="" className="h-full w-full object-cover opacity-60" />
+                <span className="absolute inset-0 flex items-center justify-center px-2 text-center font-display text-[17px] text-white">{kurs}</span>
+                {gesperrt && <span className="absolute right-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">🔒 VIP</span>}
+              </div>
+              <div className="p-3">
+                <p className="font-bold">{kurs}</p>
+                <p className="mt-0.5 line-clamp-1 text-[11px] text-[#909090]">{gesperrt ? 'Nur für VIP-Mitglieder' : `Modul ${i + 1} mit ${c.name}`}</p>
+                <div className="mt-2 h-2 rounded-full bg-[#e4e4e4]"><div className="h-2 rounded-full bg-[#2ea043]" style={{ width: `${fortschritt}%` }} /></div>
+                <p className="mt-1 text-[11px] text-[#909090]">{fortschritt} %</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SkoolKachel>
   );
 }
 
 export function Kalender() {
-  const termine = { 3: 'Q&A', 10: 'Live', 17: 'Q&A', 24: 'Challenge' };
+  const termine = { 4: 'Live-Q&A 19:00', 11: 'Workshop 18:30', 18: 'Live-Q&A 19:00', 25: 'Challenge-Start' };
+  // November 2026 beginnt an einem Sonntag
+  const leer = 6;
   return (
-    <div className="bg-white p-2">
-      <div className="grid grid-cols-7 gap-px bg-black/5 text-[6px]">
-        {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((t) => <div key={t} className="bg-white py-0.5 text-center font-semibold">{t}</div>)}
-        {Array.from({ length: 28 }, (_, i) => (
-          <div key={i} className="h-5 bg-white p-0.5">
-            <span className="text-[#909090]">{i + 1}</span>
-            {termine[i] && <span className="block truncate rounded-sm bg-[#3b3f8a] px-0.5 text-[5.5px] text-white">{termine[i]}</span>}
-          </div>
-        ))}
+    <SkoolKachel>
+      <div className={`rounded-lg bg-white p-4 ${SKOOL_RAND}`}>
+        <div className="flex items-center justify-between">
+          <span className="rounded-md border border-[#e4e4e4] px-3 py-1 text-[12px]">Heute</span>
+          <p className="text-[16px] font-bold">‹ November 2026 ›</p>
+          <span className="text-[12px] text-[#909090]">Monat</span>
+        </div>
+        <div className="mt-3 grid grid-cols-7 border-l border-t border-[#e4e4e4] text-[11px]">
+          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((t) => <div key={t} className="border-b border-r border-[#e4e4e4] py-1.5 text-center font-semibold text-[#909090]">{t}</div>)}
+          {Array.from({ length: 35 }, (_, i) => {
+            const tag = i - leer + 1;
+            return (
+              <div key={i} className="h-[106px] border-b border-r border-[#e4e4e4] p-1">
+                {tag >= 1 && tag <= 30 && <span className="text-[#555]">{tag}</span>}
+                {termine[tag] && <span className="mt-1 block rounded bg-[#e8f0fe] px-1 py-0.5 text-[10px] font-semibold leading-tight text-[#1a56db]">{termine[tag]}</span>}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </SkoolKachel>
   );
 }
