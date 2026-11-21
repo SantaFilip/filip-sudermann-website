@@ -1,7 +1,7 @@
 import React from 'react';
 
 // "Das Beste System fuer dich": Plattformen (Basic) fuehren in Skool, Webseite
-// und Newsletter (Advanced), diese in Coaching und Retreats (Premium).
+// und Newsletter (Advanced), diese in die zwei Premium-Angebote.
 const FARBEN = {
   schwarz: { fill: '#111', text: '#fff' },
   gruen: { fill: '#86d88a', text: '#11351a' },
@@ -74,8 +74,10 @@ export default function SystemDiagramm({ c }) {
       <Kasten {...skool} farbe="gruen" zeilen={[...umbrechen(`Skool: ${c.community.name}`, 15), `(${c.community.price}€/ Monat)`]} />
       <Kasten {...web} farbe="rot" zeilen={[c.possessive, 'Webseite']} />
       <Kasten {...mail} farbe="blau" zeilen={umbrechen(c.emailLabel, 11)} />
-      <Kasten {...coach} farbe="gelb" zeilen={['Coaching', `(${c.coaching.price}€/`, `${c.coaching.unit})`]} />
-      <Kasten {...retreat} farbe="gelb" zeilen={['Group', 'Retreats', `(${c.retreat.price}€/`, `${c.retreat.unit})`]} />
+      {[coach, retreat].map((box, i) => {
+        const angebot = c.premium[i];
+        return <Kasten key={angebot.title} {...box} farbe="gelb" zeilen={[...umbrechen(angebot.title, 10), `(${angebot.price}€/`, `${angebot.unit})`]} />;
+      })}
       <g fontSize="9" fontWeight="700" fill="#111">
         <text x="330" y="34">Basic</text>
         <text x="318" y="140">Advanced</text>

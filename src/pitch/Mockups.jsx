@@ -42,14 +42,14 @@ export function ProfilMockup({ c }) {
         <span className="rounded-md bg-[#4a5df9] py-1 text-center font-semibold">Folgen</span>
         <span className="rounded-md bg-[#262626] py-1 text-center font-semibold">Nachricht senden</span>
       </div>
-      <div className="mt-2.5 flex justify-between gap-1">
+      {c.highlights.length > 0 && <div className="mt-2.5 flex justify-between gap-1">
         {c.highlights.slice(0, 6).map((h) => (
           <div key={h} className="flex w-9 flex-col items-center gap-0.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-white/10 text-[11px]">{h[0]}</span>
             <span className="w-full truncate text-center text-[7px] text-white/80">{h}</span>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -58,7 +58,9 @@ function Banner({ c, gross }) {
   const k = c.community;
   return (
     <div className="relative overflow-hidden rounded-md bg-[#17130f]">
-      <img src={c.avatar} alt="" className="absolute inset-y-0 right-0 h-full w-1/2 object-cover object-top" />
+      {c.bilder?.banner
+        ? <img src={c.bilder.banner} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        : <img src={c.avatar} alt="" className="absolute inset-y-0 right-0 h-full w-1/2 object-cover object-top" />}
       <div className="absolute inset-0 bg-gradient-to-r from-[#17130f] via-[#17130f]/90 to-transparent" />
       <div className={`relative flex flex-col justify-between ${gross ? 'min-h-[190px] p-5' : 'min-h-[150px] p-4'}`}>
         <p className="w-[62%] text-center text-[9px] uppercase tracking-[0.35em] text-[#d9c9a8]">✦<br />{k.eyebrow}</p>
@@ -140,7 +142,9 @@ export function SkoolMini({ c }) {
 export function RetreatKarte({ c }) {
   return (
     <div className="relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-sm bg-gradient-to-b from-[#3b4a2c] via-[#6b6a3a] to-[#2a2416] p-3 text-center text-[#f4e9cf] shadow-md">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,226,160,0.55),transparent_55%)]" />
+      {c.bilder?.retreat
+        ? <><img src={c.bilder.retreat} alt="" className="absolute inset-0 h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" /></>
+        : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,226,160,0.55),transparent_55%)]" />}
       <p className="relative font-display text-[20px] leading-tight">{c.improvements.retreatTitle}</p>
       <p className="relative mt-1 text-[8px] uppercase tracking-[0.2em]">{c.improvements.retreatSubtitle}</p>
     </div>
@@ -163,8 +167,8 @@ export function CommunityFeed({ c }) {
   );
 }
 
-export function Classroom() {
-  const kurse = ['Start hier', 'Mindset-Basics', 'Selbstwert', 'Routinen', 'Beziehungen', 'VIP-Bereich'];
+export function Classroom({ c }) {
+  const kurse = c.community.kurse;
   return (
     <div className="grid grid-cols-3 gap-1.5 bg-white p-2">
       {kurse.map((k, i) => (

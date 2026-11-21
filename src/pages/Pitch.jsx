@@ -108,13 +108,19 @@ function Portfolio({ c }) {
 }
 
 function WerIstFilip({ c }) {
-  const { reichweite, szenarien } = berechnePotenzial(c);
+  const p = berechnePotenzial(c);
+  const k = c.kennzahlen;
+  const stellen = String(Math.round(p.netto.gesamt)).length;
   const zeilen = [
-    ['Skool-Mitglieder', (s) => `${s.mitglieder}`],
-    [`Community à ${c.community.price} €`, (s) => euro(s.community)],
-    [`Coaching à ${euro(c.coaching.price)}`, (s) => euro(s.coaching)],
-    ['Retreats pro Monat', (s) => euro(s.retreat)],
+    ['Käufer (realistisch)', p.kaeufer, (n) => String(n)],
+    ['Launch-Umsatz brutto', p.brutto, euro],
+    ['– Gebühren & Kosten (10 %)', p.gebuehren, euro],
+    ['Launch-Umsatz netto', p.netto, euro],
   ];
+  const Zeile = ({ label, wert, fett }) => (
+    <div className={`flex justify-between gap-2 border-b border-black/5 px-2 py-0.5 ${fett ? 'font-bold' : ''}`}><span>{label}</span><span>{wert}</span></div>
+  );
+  const Kopf = ({ children }) => <p className="bg-[#1d2a5a] px-2 py-1 font-bold uppercase tracking-wide text-white">{children}</p>;
   return (
     <Passform breite={400} className="border border-[#9ed8a4] bg-[#ddf5df] p-6">
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">Wer ist Filip?</h2>
@@ -128,25 +134,30 @@ function WerIstFilip({ c }) {
       <div className="mt-2 grid grid-cols-2 gap-2">{BELEGE.slice(2).map((b) => <Beleg key={b.src} {...b} />)}</div>
 
       <div className="mt-6">
-        <p className="mb-2 text-center text-[13px] font-bold">Bis zu 5-stellige Umsätze möglich</p>
+        <p className="mb-2 text-center text-[13px] font-bold">Bis zu {stellen}-stellige Umsätze möglich</p>
         <div className="overflow-hidden rounded border border-[#1d2a5a]/30 bg-white text-[9.5px]">
-          <p className="bg-[#1d2a5a] px-2 py-1 font-bold uppercase tracking-wide text-white">Reichweite</p>
-          {c.reach.map((r) => (
-            <div key={r.platform} className="flex justify-between border-b border-black/5 px-2 py-0.5"><span>{r.platform}</span><span>{kurz(r.followers)}</span></div>
-          ))}
-          <div className="flex justify-between bg-[#e9edf7] px-2 py-0.5 font-bold"><span>Gesamt</span><span>{kurz(reichweite)}</span></div>
-          <div className="mt-1 grid grid-cols-[1.6fr_1fr_1fr] gap-2 bg-[#1d2a5a] px-2 py-1 font-bold uppercase text-white">
-            <span>Potenzial</span>{szenarien.map((s) => <span key={s.label} className="text-right">{s.label}</span>)}
+          <Kopf>Reichweite</Kopf>
+          {c.reach.map((r) => <Zeile key={r.platform} label={r.platform} wert={kurz(r.followers)} />)}
+          <Zeile label="Follower gesamt" wert={kurz(p.follower)} fett />
+          <Kopf>Engagement Score · {k.hauptplattform}</Kopf>
+          <Zeile label="Ø Likes pro Post" wert={kurz(k.likes)} />
+          <Zeile label="Ø Kommentare pro Post" wert={k.kommentare.toLocaleString('de-DE', { maximumFractionDigits: 1 })} />
+          <Zeile label="Ø Views pro Post" wert={kurz(k.views)} />
+          <Zeile label="Engagement Rate" wert={`${(p.engagementRate * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 })} %`} />
+          <div className="flex justify-between gap-2 bg-[#e9edf7] px-2 py-1 font-bold"><span>⚡ Score {p.score} / 100</span><span>{p.label}</span></div>
+          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr] gap-1 bg-[#1d2a5a] px-2 py-1 font-bold uppercase text-white">
+            <span>Potenzial</span><span className="text-right">Low ({c.community.price} €)</span><span className="text-right">High ({c.premium[0].price} €)</span><span className="text-right">Gesamt</span>
           </div>
-          {zeilen.map(([label, wert]) => (
-            <div key={label} className="grid grid-cols-[1.6fr_1fr_1fr] gap-2 border-b border-black/5 px-2 py-0.5">
-              <span>{label}</span>{szenarien.map((s) => <span key={s.label} className="text-right">{wert(s)}</span>)}
+          {zeilen.map(([label, werte, format]) => (
+            <div key={label} className="grid grid-cols-[1.5fr_1fr_1fr_1fr] gap-1 border-b border-black/5 px-2 py-0.5">
+              <span>{label}</span><span className="text-right">{format(werte.low)}</span><span className="text-right">{format(werte.high)}</span><span className="text-right font-semibold">{format(werte.gesamt)}</span>
             </div>
           ))}
-          <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-2 bg-[#d6f1d6] px-2 py-1 font-bold">
-            <span>Monatlich</span>{szenarien.map((s) => <span key={s.label} className="text-right">{euro(s.gesamt)}</span>)}
+          <div className="grid grid-cols-2 bg-[#d6f1d6] text-center font-bold">
+            <div className="border-r border-black/10 py-1.5"><p className="text-[8px] font-semibold uppercase">🚀 Launch netto</p><p className="text-[13px]">{euro(p.netto.gesamt)}</p></div>
+            <div className="py-1.5"><p className="text-[8px] font-semibold uppercase">📈 MRR nach Churn</p><p className="text-[13px]">{euro(p.mrr)}</p></div>
           </div>
-          <p className="px-2 py-1 text-[8px] text-black/50">Schätzung: {szenarien.map((s) => `${(s.quote * 100).toLocaleString('de-DE')} %`).join(' / ')} der Follower werden Mitglied.</p>
+          <p className="px-2 py-1 text-[8px] text-black/50">Schätzung nach öffentlichen Daten (Stand {k.stand}), Ø der letzten {k.posts} Posts ohne angepinnte.</p>
         </div>
       </div>
     </Passform>
@@ -154,13 +165,12 @@ function WerIstFilip({ c }) {
 }
 
 function BestesSystem({ c }) {
-  const gruende = ['Skool Community (Abo-Einkommen)', 'Stufenweise & nutzerdifferenzierte Struktur', 'Multi-Platform Presence Effekt'];
   return (
     <Passform breite={460} className="p-2 lg:pt-10">
       <h2 className="font-body text-[30px] font-bold tracking-tight">Das <span className="text-[#f2621d]">Beste</span> System für dich</h2>
       <div className="mt-6"><SystemDiagramm c={c} /></div>
       <h3 className="mt-8 font-body text-[15px] font-bold">Wieso es besonders effektiv ist:</h3>
-      <ul className="mt-5 space-y-6 pl-2 text-[15px] font-semibold">{gruende.map((g) => <Punkt key={g} gut>{g}</Punkt>)}</ul>
+      <ul className="mt-5 space-y-6 pl-2 text-[15px] font-semibold">{c.gruende.map((g) => <Punkt key={g} gut>{g}</Punkt>)}</ul>
     </Passform>
   );
 }

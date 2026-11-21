@@ -24,6 +24,9 @@ export default {
     { platform: 'TikTok', followers: 30200 },
     { platform: 'YouTube', followers: 4400 },
   ],
+  // Fuer den Rechner: Hauptplattform = hoechste Ø Views. Instagram, 12 Reels
+  // vom 16.-20.11.2026 (TikTok ohne angepinnte: Ø 2,1K Views).
+  kennzahlen: { hauptplattform: 'Instagram', likes: 160.5, kommentare: 4.2, views: 8275, posts: 12, stand: '21.11.2026' },
   channelsLeft: ['Instagram', 'YouTube', 'TikTok'],
   channelsRight: ['Podcast „Higher Self“', 'Telegram „Safe Space“'],
 
@@ -52,12 +55,22 @@ export default {
     eyebrow: 'Neda Rezawi',
     tagline: 'Mindset · Selbstbewusstsein · Wachstum',
     price: 30,
+    kurse: ['Start hier', 'Selbstliebe', 'Disziplin', 'Journaling', 'Komfortzone', 'VIP-Bereich'],
     members: 305,
     online: 8,
   },
   emailLabel: 'E-Mail Newsletter / Podcast Higher Self',
-  coaching: { price: 1000, unit: 'Person' },
-  retreat: { price: 1000, unit: 'Weekend' },
+  // Erstes Angebot = High-Ticket im Rechner
+  premium: [
+    { title: 'VIP-Programm', price: 299, unit: '3 Monate' },
+    { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
+  ],
+  // Stufenbasierte Strategie, passend zum Diagramm
+  gruende: [
+    'Basic: Reels & TikToks zu Selbstliebe und Komfortzone holen täglich neue Menschen in deinen Safe Space',
+    'Advanced: Die Skool-Community für 30 €/Monat macht aus dem kostenlosen Telegram ein Abo-Einkommen',
+    'Premium: VIP-Programm und Retreats für alle, die tiefer an ihrer Identität arbeiten wollen',
+  ],
 
   roadmap: ['Marktforschung', 'Marketingkampagne', 'Automatisierung', 'Produktlaunch'],
 };
