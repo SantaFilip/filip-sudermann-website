@@ -29,7 +29,11 @@ Vorlage für Aufbau und Tonfall: `src/pitch/creators/neda-rezawi.js`.
   - Die Premium-Belege sind echte Angebote anderer Creator aus
     `src/pitch/referenzen.js`.
   Für beides keine Bilder generieren und keine Texte erfinden.
-- Sprache auf der Seite: Deutsch, Du-Form, Filips Stimme, konkret mit Zahlen.
+- Sprache auf der Seite: Deutsch, Du-Form, konkret mit Zahlen. **Tonfall und
+  Wortwahl des Creators übernehmen:** Begriffe, Schlagworte, Anrede (z. B. großes
+  „Du/Dein“, wenn der Creator so schreibt), Emojis und Anglizismen aus Bio,
+  Captions und Linktree. Community-Beschreibung, Stärken, Lücken und Strategie
+  sollen klingen, als hätte der Creator sie selbst geschrieben.
 - Pronomen: Name verwenden, kein Geschlecht annehmen.
 
 ## 0. Passt der Creator? (vor jeder VidIQ-Abfrage)

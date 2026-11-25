@@ -33,15 +33,15 @@ export default {
   channelsRight: ['Website'],
 
   strengths: [
-    'Deine Reels erreichen im Schnitt 28.000 Views, fast die Hälfte deiner 58.600 Follower',
-    'Dein Reel zu den rückläufigen Planeten hatte 104.700 Views, 1,8× deine Follower: deine Zeitqualitäten treffen einen Nerv',
+    'Deine Tagesenergie erreicht im Schnitt 28.000 Views, fast die Hälfte Deiner 58.600 Follower schwingt mit Dir',
+    'Als fünf Planeten rückläufig wurden, sahen 104.700 Menschen Dein Reel: Deine Zeitqualitäten treffen einen Nerv',
   ],
   opportunities: [
-    'Deine Tagesenergie ist kostenlos auf Instagram: eine Community mit Abo macht daraus einen Ort, an dem deine Frauen jeden Tag einchecken',
-    'Ein VIP-Programm entlang der großen Zeitqualitäten wäre ein klares High-Ticket-Angebot',
+    'Deine Tagesenergie verschenkst Du täglich auf Instagram: ein eigener Raum mit Abo macht daraus gelebtes Erwachen in Gemeinschaft',
+    'Ein VIP-Programm entlang der großen Portale wäre Dein klares High-Ticket-Angebot',
   ],
   improvements: {
-    community: 'Eine Community-Plattform, auf der deine Frauen jeden Tag die Tagesenergie mit dir leben',
+    community: 'Ein eigenes Universum, in dem Deine Frauen jeden Tag die Tagesenergie mit Dir leben',
   },
   referenz: 'jake-whan',
   website: 'https://seeleundmagie.com',
@@ -50,7 +50,7 @@ export default {
   community: {
     name: 'Seele & Magie Universum',
     url: 'skool.com/seele-und-magie-universum',
-    description: 'Die Community, in der du die Zeitqualitäten für deine Transformation nutzt – jeden Tag mit Jessica.',
+    description: 'Von der Erde zu den Sternen und zurück zu Dir: Zeitqualitäten, Portaltage und gelebtes Erwachen mit Jessica.',
     features: ['Tagesenergie & Zeitqualitäten', 'Portaltage & Manifestation', 'Fülle statt Mangel', 'Live-Rituale & Q&As'],
     eyebrow: 'Jessica Lenz',
     tagline: 'Zeitqualität · Manifestation · Erwachen',
@@ -65,8 +65,8 @@ export default {
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   gruende: [
-    'Basic: Deine Tagesenergie-Reels mit Ø 28.000 Views holen jeden Tag neue Frauen zu dir',
-    'Advanced: Das Universum auf Skool für 39 €/Monat macht aus täglichen Zuschauerinnen Abonnentinnen',
-    'Premium: VIP-Programm und Retreats für alle, die mit dir durch die großen Zeitqualitäten gehen',
+    'Basic: Deine Tagesenergie- und Portaltag-Reels holen jeden Tag neue Frauen in Deine Schwingung',
+    'Advanced: Das Universum auf Skool für 39 €/Monat macht aus Zuschauerinnen eine tägliche Gemeinschaft',
+    'Premium: VIP-Programm und Retreats für alle, die mit Dir durch die großen Zeitqualitäten gehen',
   ],
 };

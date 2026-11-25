@@ -22,37 +22,36 @@ const ganz = (n) => n.toLocaleString('de-DE');
 
 export function ProfilMockup({ c }) {
   const ig = c.instagram;
+  // Wie auf instagram.com am Desktop: Bio rechts neben dem Profilbild, dadurch
+  // flacher als die Handy-Ansicht
   return (
-    <div className="overflow-hidden rounded-md bg-white px-3 pb-3 pt-3.5 text-[8.5px] leading-[1.35] text-[#0c1014] shadow-lg">
-      <div className="flex items-center gap-3">
-        <div className="shrink-0 rounded-full bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#962fbf] p-[2.5px]">
-          <Avatar c={c} className="h-16 w-16 border-[2.5px] border-white text-[20px]" />
+    <div className="overflow-hidden rounded-md bg-white p-3 text-[7.5px] leading-[1.35] text-[#0c1014] shadow-lg">
+      <div className="flex items-start gap-2.5">
+        <div className="mt-0.5 shrink-0 rounded-full bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#962fbf] p-[2px]">
+          <Avatar c={c} className="h-14 w-14 border-2 border-white text-[18px]" />
         </div>
-        <div className="min-w-0">
-          <p className="flex items-center gap-1.5 truncate text-[11.5px] font-semibold">{c.handle} <span className="text-[10px] font-normal tracking-widest">···</span></p>
-          <p className="text-[8px] text-[#0c1014]/80">{c.name}</p>
-          <div className="mt-1.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[7.5px]">
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1.5 truncate text-[10.5px] font-semibold">{c.handle} <span className="text-[9px] font-normal tracking-widest">···</span></p>
+          <div className="mt-0.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[7px]">
             <span><b>{ganz(ig.posts)}</b> Beiträge</span>
             <span><b>{ganz(ig.followers)}</b> Follower</span>
             <span><b>{ganz(ig.following)}</b> Gefolgt</span>
           </div>
+          <p className="mt-1 font-semibold">{c.name} <span className="font-normal text-[#737373]">{c.category}</span></p>
+          <div className="line-clamp-3">{c.bio.map((zeile) => <p key={zeile}>{zeile}</p>)}</div>
+          <p className="truncate font-semibold text-[#00376b]">🔗 {c.link}</p>
         </div>
       </div>
-      <div className="mt-2.5">
-        <p className="text-[#737373]">{c.category}</p>
-        {c.bio.map((zeile) => <p key={zeile}>{zeile}</p>)}
-        <p className="font-semibold text-[#00376b]">🔗 {c.link}</p>
+      <div className="mt-2 grid grid-cols-[1fr_1fr_auto] gap-1 text-[7.5px] font-semibold">
+        <span className="rounded-md bg-[#0095f6] py-1 text-center text-white">Folgen</span>
+        <span className="rounded-md bg-[#efefef] py-1 text-center">Nachricht senden</span>
+        <span className="rounded-md bg-[#efefef] px-1.5 py-1 text-center">+</span>
       </div>
-      <div className="mt-2.5 grid grid-cols-[1fr_1fr_auto] gap-1.5 text-[8.5px] font-semibold">
-        <span className="rounded-md bg-[#0095f6] py-1.5 text-center text-white">Folgen</span>
-        <span className="rounded-md bg-[#efefef] py-1.5 text-center">Nachricht senden</span>
-        <span className="rounded-md bg-[#efefef] px-2 py-1.5 text-center">+</span>
-      </div>
-      {c.highlights.length > 0 && <div className="mt-3 flex gap-2.5 overflow-hidden">
+      {c.highlights.length > 0 && <div className="mt-2 flex gap-2 overflow-hidden">
         {c.highlights.slice(0, 6).map((h) => (
-          <div key={h} className="flex w-10 shrink-0 flex-col items-center gap-1">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#dbdbdb] bg-[#fafafa] p-[2px] text-[10px] text-[#737373]">{h[0].toUpperCase()}</span>
-            <span className="w-full truncate text-center text-[7px] font-semibold">{h}</span>
+          <div key={h} className="flex w-9 shrink-0 flex-col items-center gap-0.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#dbdbdb] bg-[#fafafa] text-[9px] text-[#737373]">{h[0].toUpperCase()}</span>
+            <span className="w-full truncate text-center text-[6.5px] font-semibold">{h}</span>
           </div>
         ))}
       </div>}
@@ -139,7 +138,7 @@ export function SkoolMockup({ c }) {
 // Kleine Fassung fuer "Konkrete Verbesserungen"
 export function SkoolMini({ c }) {
   return (
-    <div className="pointer-events-none origin-top-left" style={{ zoom: 0.42 }} aria-hidden="true">
+    <div className="pointer-events-none origin-top-left" style={{ zoom: 0.34 }} aria-hidden="true">
       <SkoolMockup c={c} />
     </div>
   );

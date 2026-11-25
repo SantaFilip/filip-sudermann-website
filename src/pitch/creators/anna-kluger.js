@@ -36,15 +36,15 @@ export default {
   channelsRight: ['Website', 'Podcast'],
 
   strengths: [
-    'Du bist breit aufgestellt: 10.700 Abos auf YouTube, 10.200 Follower auf Instagram und ein eigener Podcast',
-    'Mit Büchern, Online-Kurs und Dankbarkeitstagebuch hast du schon Produkte, die Menschen kaufen',
+    'Du begleitest Menschen auf vielen Wegen: 10.700 Abos auf YouTube, 10.200 Follower auf Instagram und dein Podcast',
+    'Mit Büchern, „Endlich glücklich!“ und dem Dankbarkeitstagebuch hast du schon Begleiter, die Menschen kaufen',
   ],
   opportunities: [
-    'Deine Reels erreichen Ø 500 Views, rund 5 % deiner Follower: eine Community hält die Menschen, die dich kennen, aktiv bei dir',
-    'Es gibt noch kein High-Ticket-Angebot: ein VIP-Programm zu „Endlich glücklich!“ wäre der nächste Schritt',
+    'Deine Reels erreichen Ø 500 Views, rund 5 % deiner Follower: ein fester Raum hält die Menschen, die dich kennen, in Bewusstheit verbunden',
+    'Nach „Endlich glücklich!“ fehlt der nächste Schritt: ein VIP-Programm für alle, die tiefer in ihre wahre Natur wollen',
   ],
   improvements: {
-    community: 'Eine Community-Plattform, die deine Kursteilnehmerinnen nach „Endlich glücklich!“ weiter begleitet',
+    community: 'Ein Raum, der deine Teilnehmerinnen nach „Endlich glücklich!“ in ihrem Glücklichsein weiter begleitet',
   },
   referenz: 'tami-bal',
   website: 'https://www.annakluger.com',
@@ -53,7 +53,7 @@ export default {
   community: {
     name: 'Endlich glücklich Circle',
     url: 'skool.com/endlich-gluecklich-circle',
-    description: 'Die Community für Selbstwert, emotionale Freiheit und echtes Glücklichsein – mit Anna.',
+    description: 'Glücklichsein, Selbsterkenntnis und emotionale Freiheit: der Raum, um deine wahre Natur zu leben, mit Anna.',
     features: ['Selbstwert & Selbstliebe', 'Kränkungen loslassen', 'Ruhe & Nervensystem', 'Live-Q&As mit Anna'],
     eyebrow: 'Dr. Anna N. Kluger',
     tagline: 'Glücklichsein · Selbsterkenntnis · Freiheit',
@@ -68,8 +68,8 @@ export default {
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   gruende: [
-    'Basic: Deine YouTube-Videos und Reels zu Selbstwert und Kränkung holen Menschen ab, die Halt suchen',
-    'Advanced: Der Endlich glücklich Circle für 29 €/Monat begleitet sie nach dem Kurs dauerhaft weiter',
-    'Premium: VIP-Programm und Retreats für alle, die mit dir tiefer in emotionale Freiheit gehen',
+    'Basic: Deine Videos zu Selbstwert und Kränkung erreichen Menschen, die sich nach emotionaler Freiheit sehnen',
+    'Advanced: Der Endlich glücklich Circle für 29 €/Monat begleitet sie nach dem Kurs in Bewusstheit weiter',
+    'Premium: VIP-Programm und Retreats für alle, die ihre wahre Natur mit dir tiefer leben wollen',
   ],
 };

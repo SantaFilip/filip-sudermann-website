@@ -30,15 +30,15 @@ export default {
   channelsRight: ['Website', 'Shop'],
 
   strengths: [
-    'Mit Onlineshop und eigenem Laden in Itzehoe hast du schon Kundinnen, die bei dir kaufen',
-    'Deine Impulse zum Jahreskreis lösen echte Gespräche aus: bis zu 17 Kommentare pro Reel',
+    'Mit Onlineshop und Laden in Itzehoe bringst du Heilsteine, Räucherwerk & Co. schon zu deinen Kundinnen 💎',
+    'Deine Impulse zu Samhain und Loslassen lösen echte Gespräche aus: bis zu 17 Kommentare pro Reel ✨',
   ],
   opportunities: [
-    'Deine Kundinnen kaufen Steine und Karten einzeln: eine Community mit Abo macht daraus eine dauerhafte Beziehung',
-    'Deine Live Crystal Talks und Healing-Sessions verdienen einen festen Rahmen: ein VIP-Programm bündelt sie zum Premium-Angebot',
+    'Steine und Kartensets werden einzeln gekauft: ein Kreis mit Abo macht daraus eine Gemeinschaft, die von Herzen verbunden bleibt',
+    'Deine Crystal Talks und Healing- & Clearing-Sessions verdienen einen festen Rahmen: ein VIP-Programm bündelt sie',
   ],
   improvements: {
-    community: 'Eine Community-Plattform, in der deine Kundinnen Heilsteine, Rituale und den Jahreskreis mit dir leben',
+    community: 'Ein Wohlfühl-Kreis, in dem deine Kundinnen Heilsteine, Rituale und den Jahreskreis mit dir leben',
   },
   referenz: 'jake-whan',
   website: 'https://www.dein-wohlfuehlladen.de',
@@ -47,7 +47,7 @@ export default {
   community: {
     name: 'Wohlfühl-Kreis',
     url: 'skool.com/wohlfuehl-kreis',
-    description: 'Die Community für Heilsteine, Rituale und den Jahreskreis – mit Denise und ihren Live Crystal Talks.',
+    description: 'Heilsteine, Räucherwerk und Rituale im Jahreskreis, mit Denise und ihren Live Crystal Talks 💎',
     features: ['Heilsteine & Kristallwissen', 'Kartenlegen & Orakel', 'Rauhnächte & Jahreskreis', 'Live Crystal Talks'],
     eyebrow: 'Denise Lembrecht',
     tagline: 'Heilsteine · Rituale · Jahreskreis',
@@ -62,8 +62,8 @@ export default {
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   gruende: [
-    'Basic: Deine Crystal Talks und Jahreskreis-Impulse holen neue Kundinnen zu dir und in deinen Shop',
-    'Advanced: Der Wohlfühl-Kreis für 29 €/Monat macht aus Einzelkäufen eine feste Gemeinschaft',
-    'Premium: VIP-Programm und Retreats für alle, die mit dir tiefer in Heilung und Rituale gehen',
+    'Basic: Deine Crystal Talks und Jahreskreis-Impulse holen neue Kundinnen zu dir und in deinen Shop 💎',
+    'Advanced: Der Wohlfühl-Kreis für 29 €/Monat macht aus Einzelkäufen eine Gemeinschaft von Herzen',
+    'Premium: VIP-Programm und Retreats für alle, die mit dir tiefer in Heilung, Loslassen und Neuausrichtung gehen',
   ],
 };

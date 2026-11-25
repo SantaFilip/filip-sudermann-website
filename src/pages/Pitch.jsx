@@ -78,7 +78,7 @@ const Punkt = ({ gut, children }) => (
 );
 
 const Kanal = ({ children }) => (
-  <span className="flex min-h-[44px] items-center justify-center whitespace-nowrap bg-white px-2.5 text-center text-[11px] font-semibold shadow-sm">{children}</span>
+  <span className="flex min-h-[34px] items-center justify-center whitespace-nowrap bg-white px-2.5 text-center text-[11px] font-semibold shadow-sm">{children}</span>
 );
 
 const Etikett = ({ children, className = '' }) => (
@@ -87,11 +87,11 @@ const Etikett = ({ children, className = '' }) => (
 
 function Portfolio({ c }) {
   return (
-    <Passform breite={440} data-export="1-instagram-portfolio" className="border border-[#f0b183] bg-[#fdf0d8] p-6">
+    <Passform breite={440} data-export="1-instagram-portfolio" className="flex flex-col border border-[#f0b183] bg-[#fdf0d8] px-5 py-4 lg:!self-stretch">
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">
         {c.possessive} <span className="text-[#f2621d]">Creator Portfolio</span>
       </h2>
-      <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2">
+      <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2">
         <div className="space-y-1.5">{c.channelsLeft.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
         {c.bilder?.instagram
           ? <img src={c.bilder.instagram} alt={`Instagram-Profil von ${c.handle}`} className="w-full rounded-md shadow-lg" />
@@ -99,21 +99,21 @@ function Portfolio({ c }) {
         <div className="space-y-1.5">{c.channelsRight.map((k) => <Kanal key={k}>{k}</Kanal>)}</div>
       </div>
 
-      <h3 className="mt-8 font-body text-[13px] font-bold">Deine bisherigen Stärken</h3>
-      <ul className="mt-3 space-y-3 pl-2 text-[12px]">{c.strengths.map((s) => <Punkt key={s} gut>{s}</Punkt>)}</ul>
-      <h3 className="mt-6 font-body text-[13px] font-bold">Opportunitätskosten im Marketing</h3>
-      <ul className="mt-3 space-y-3 pl-2 text-[12px]">{c.opportunities.map((s) => <Punkt key={s}>{s}</Punkt>)}</ul>
+      <h3 className="mt-5 font-body text-[13px] font-bold">Deine bisherigen Stärken</h3>
+      <ul className="mt-2 space-y-2 pl-2 text-[11.5px] leading-snug">{c.strengths.map((s) => <Punkt key={s} gut>{s}</Punkt>)}</ul>
+      <h3 className="mt-4 font-body text-[13px] font-bold">Opportunitätskosten im Marketing</h3>
+      <ul className="mt-2 space-y-2 pl-2 text-[11.5px] leading-snug">{c.opportunities.map((s) => <Punkt key={s}>{s}</Punkt>)}</ul>
 
-      <h3 className="mt-8 font-body text-[20px] font-bold tracking-tight">Konkrete Verbesserungen</h3>
-      <div className="mt-3 grid grid-cols-[1.4fr_1fr] gap-4">
+      <h3 className="mt-5 font-body text-[18px] font-bold tracking-tight">Konkrete Verbesserungen</h3>
+      <div className="mt-2 grid grid-cols-[1.4fr_1fr] gap-4">
         <div className="flex flex-col">
           <div className="overflow-hidden"><SkoolMini c={c} /></div>
-          <p className="mt-auto pt-4 text-center text-[11px] font-bold leading-snug">{c.improvements.community}</p>
+          <p className="mt-auto pt-2 text-center text-[10.5px] font-bold leading-snug">{c.improvements.community}</p>
         </div>
         <div className="text-center">
-          <p className="text-[11px] font-bold leading-snug">{REFERENZEN[c.referenz].titel}</p>
-          <img src={REFERENZEN[c.referenz].bild} alt="" className="mt-2 w-full rounded-sm shadow-md" />
-          <p className="mt-2 text-[13px]">{REFERENZEN[c.referenz].handle}</p>
+          <p className="text-[10.5px] font-bold leading-snug">{REFERENZEN[c.referenz].titel}</p>
+          <img src={REFERENZEN[c.referenz].bild} alt="" className="mt-1.5 max-h-[118px] w-full rounded-sm object-cover shadow-md" />
+          <p className="mt-1 text-[12px]">{REFERENZEN[c.referenz].handle}</p>
         </div>
       </div>
     </Passform>
@@ -136,7 +136,7 @@ function WerIstFilip({ c }) {
   const Kopf = ({ children }) => <p className="bg-[#1d2a5a] px-1.5 py-0.5 font-bold uppercase text-white">{children}</p>;
   // Kompakt wie im Figma-Original: Fotos, Belege, unten Text links und Rechner rechts
   return (
-    <Passform breite={400} className="border border-[#9ed8a4] bg-[#ddf5df] p-5">
+    <Passform breite={400} className="border border-[#9ed8a4] bg-[#ddf5df] p-5 lg:!self-stretch">
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">Wer ist Filip?</h2>
       <p className="mt-1.5 text-center text-[12.5px] font-bold leading-snug">Ich kooperiere mit Creatorn &amp; helfe ihnen Angebote effektiv zu skalieren &amp; monetarisieren</p>
       <div className="mt-4 grid grid-cols-2 gap-6 px-8">
@@ -292,8 +292,11 @@ export default function Pitch() {
     >
       <div className="min-h-screen bg-[radial-gradient(rgba(0,0,0,0.12)_1px,transparent_1px)] [background-size:22px_22px]">
         <main className="flex flex-col gap-12 px-4 py-10 lg:w-max lg:flex-row lg:items-start lg:gap-10 lg:px-10 lg:py-14" style={{ zoom: boardZoom }}>
-          <Portfolio c={c} />
-          <WerIstFilip c={c} />
+          {/* Gelbe und gruene Box gleich hoch */}
+          <div className="flex flex-col gap-12 lg:flex-row lg:items-stretch lg:gap-10">
+            <Portfolio c={c} />
+            <WerIstFilip c={c} />
+          </div>
           <BestesSystem c={c} />
           <Funnel c={c} />
           {/* Website-Entwurf und direkt darunter die Road-Map */}

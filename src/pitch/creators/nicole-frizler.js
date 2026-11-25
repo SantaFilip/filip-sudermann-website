@@ -38,15 +38,15 @@ export default {
   channelsRight: ['Podcast', 'Newsletter'],
 
   strengths: [
-    'Deine 35.300 Instagram-Follower bringen Ø 47.000 Views pro Reel, dazu 86.800 Follower auf TikTok',
-    'Dein Quantensprung-Reel hat 199.000 Views, 5,6× deine Instagram-Follower: Manifestation zieht bei deiner Audience extrem',
+    'Deine Reels gehen crazy: Ø 47.000 Views bei 35.300 Followern, dazu 86.800 auf TikTok',
+    'Dein Quantensprung-Reel hat 199.000 Views geholt, 5,6× deine Follower: Manifestation zieht bei deinen Queens extrem',
   ],
   opportunities: [
-    'Subliminals und Minikurs sind Einzelkäufe, deine Community gibt es nur per Bewerbung: ein offener Club mit Abo fängt alle Käuferinnen auf',
-    'Deine Angebote verteilen sich auf Linktree, Thrivecart und eine Google-Seite: eine eigene Website bündelt alles',
+    'Subliminals und Minikurs sind Einzelkäufe, Baddies in Business gibt es nur per Bewerbung: ein offener Club mit Abo fängt alle Queens dazwischen auf',
+    'Deine Angebote liegen verstreut auf Linktree, Thrivecart und Google Sites: eine eigene Website bündelt alles, thank me later 😎',
   ],
   improvements: {
-    community: 'Eine Community-Plattform, in der deine Baddies gemeinsam manifestieren und dranbleiben',
+    community: 'Ein Club, in dem deine Baddies gemeinsam manifestieren, dranbleiben und ihren Quantensprung feiern',
   },
   referenz: 'tami-bal',
   website: null,
@@ -54,17 +54,17 @@ export default {
     nav: ['Community', 'Subliminals', 'Kurse', 'Coaching', 'Über Nicole'],
     claim: 'turn your dreams into reality',
     headline: ['Manifestiere.', 'Spring in deine Realität.', 'Lebe sie.'],
-    sub: 'Quantensprung, Geldmagnet und Subliminals, mit Nicole und einer Community, die mit dir manifestiert.',
+    sub: 'Quantensprung, Geldmagnet und Subliminals, mit Nicole und Baddies, die mit dir manifestieren.',
     cta: 'Starte deinen Quantensprung',
     angebotTitel: 'Ein Wochenende. Neue Realität.',
-    angebotText: 'Manifestation live mit Nicole',
+    angebotText: 'Live mit Nicole und den Baddies',
   },
 
   systemPlatforms: ['YouTube', 'TikTok', 'Instagram'],
   community: {
     name: 'Spiritual Baddies Club',
     url: 'skool.com/spiritual-baddies-club',
-    description: 'Die Community für deinen Quantensprung: manifestieren, dranbleiben und Fülle leben – mit Nicole.',
+    description: 'here to raise human consciousness: Quantensprung, Geldmagnet und Subliminals mit Nicole und den Baddies.',
     features: ['Quantensprung & Manifestation', 'Geldmagnet & Fülle', 'Subliminals & Affirmationen', 'Live-Calls & Challenges'],
     eyebrow: 'Nicole Frizler',
     tagline: 'Bewusstsein · Manifestation · Fülle',
@@ -79,8 +79,8 @@ export default {
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   gruende: [
-    'Basic: Deine Manifestations-Reels und TikToks mit bis zu 199.000 Views holen täglich neue Leute zu dir',
-    'Advanced: Der Spiritual Baddies Club für 39 €/Monat macht aus Einzelkäufen ein Abo-Einkommen',
-    'Premium: VIP-Programm und Retreats für alle, die ihren Quantensprung mit dir gehen wollen',
+    'Basic: Deine Quantensprung-Reels und TikToks mit bis zu 199.000 Views holen täglich neue Baddies zu dir',
+    'Advanced: Der Spiritual Baddies Club für 39 €/Monat macht aus Einzelkäufen ein Abo, das dranbleibt',
+    'Premium: VIP-Programm und Retreats für alle Queens, die ihren Quantensprung live mit dir gehen',
   ],
 };
