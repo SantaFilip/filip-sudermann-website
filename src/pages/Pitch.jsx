@@ -209,30 +209,29 @@ function Funnel({ c }) {
 }
 
 // Filips Standardangebot, gleich fuer alle Creator (Texte von der Startseite)
-// Ohne Website-Entwurf steht die Road-Map etwa auf halber Hoehe des
-// Skool-Mockups, zwischen Oberkante und Fulfillment-Leiste (473 px)
+// Filips Co-op Roadmap, gleich fuer alle Creator: 4 Phasen, gross und knapp
+// wie im Figma-Original. Ohne Website-Entwurf steht sie etwa auf halber Hoehe
+// des Skool-Mockups.
+const ROADMAP = ['Marktforschung', 'Marketingkampagne', 'Automatisierung & Aufbau', 'Produktlaunch & Optimierung'];
+
 function RoadMap({ unten }) {
   const { t } = useLanguage();
   const anteil = t.profitShare;
   return (
-    <Passform breite={560} className={unten ? 'lg:mt-[240px]' : ''}>
-      <div data-export="5-road-map" className="border border-[#b9a6e6] bg-white">
-        <h2 className="border-b border-[#b9a6e6] bg-[#ebe4fa] px-4 py-2 text-center font-body text-[24px] font-bold tracking-tight">Road-Map</h2>
-        <ol className="grid grid-cols-2 gap-x-6 gap-y-5 px-6 py-6">
-          {t.process.steps.map((schritt) => (
-            <li key={schritt.num} className="flex gap-3">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ebe4fa] text-[12px] font-bold">{schritt.num}</span>
-              <div>
-                <p className="text-[14px] font-bold leading-tight">{schritt.title}</p>
-                <p className="mt-0.5 text-[11px] leading-snug text-black/60">{schritt.desc}</p>
-              </div>
+    <Passform breite={420} className={unten ? 'lg:mt-[240px]' : ''}>
+      <div data-export="5-road-map" className="overflow-hidden rounded-md border border-[#e8a0a0] bg-white">
+        <h2 className="border-b border-[#e8a0a0] bg-[#ebe4fa] px-5 py-3 font-body text-[34px] font-bold tracking-tight">Co-op Roadmap</h2>
+        <ol className="space-y-5 px-6 py-6">
+          {ROADMAP.map((schritt, i) => (
+            <li key={schritt} className="flex items-baseline gap-3 text-[22px] font-bold leading-tight">
+              <span className="w-6 shrink-0 text-[#f2621d]">{i + 1}.</span>
+              <span>{schritt}</span>
             </li>
           ))}
         </ol>
-        <div className="border-t border-[#b9a6e6] bg-[#f7f4fd] px-5 py-4 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Auf {anteil.titleAccent}</p>
-          <p className="mt-1 text-[13px] font-bold leading-snug">{anteil.workload.me} % der Arbeit bei mir, {anteil.share.you} % vom Gewinn bei dir</p>
-        </div>
+        <p className="border-t border-[#e8a0a0] bg-[#f7f4fd] px-5 py-3 text-center text-[13px] font-semibold">
+          Auf {anteil.titleAccent}: {anteil.workload.me} % der Arbeit bei mir, {anteil.share.you} % vom Gewinn bei dir
+        </p>
       </div>
     </Passform>
   );

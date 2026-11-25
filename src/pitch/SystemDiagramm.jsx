@@ -14,7 +14,7 @@ const FARBEN = {
 const SEITE = 70; // Kantenlaenge der Kaesten in Reihe 2 und 3
 const KLEIN = 46; // Kantenlaenge der Plattform-Kaesten oben
 
-function Kasten({ x, y, seite, farbe, zeilen, schrift = 7.5 }) {
+function Kasten({ x, y, seite, farbe, zeilen, schrift = 8.5 }) {
   const f = FARBEN[farbe];
   const zeile = schrift * 1.3;
   const start = y + seite / 2 - ((zeilen.length - 1) * zeile) / 2 + schrift * 0.35;
@@ -82,13 +82,13 @@ export default function SystemDiagramm({ c }) {
         <path d={`M${skool.x + halb},${reihe2 + SEITE} L${skool.x + halb},${reihe3 + halb} L${coach.x - 2},${reihe3 + halb}`} markerEnd="url(#pfeil)" />
         <path d={`M${mail.x + halb},${reihe2 + SEITE} L${mail.x + halb},${reihe3 + halb} L${retreat.x + SEITE + 2},${reihe3 + halb}`} markerEnd="url(#pfeil)" />
       </g>
-      {oben.map(({ p, x }) => <Kasten key={p} x={x} y={obenY} seite={KLEIN} farbe="schwarz" schrift={6.5} zeilen={umbrechen(p, 9)} />)}
-      <Kasten {...skool} seite={SEITE} farbe="gruen" zeilen={[...umbrechen(`Skool: ${c.community.name}`, 13), `${c.community.price} € / Monat`]} />
+      {oben.map(({ p, x }) => <Kasten key={p} x={x} y={obenY} seite={KLEIN} farbe="schwarz" schrift={7.5} zeilen={umbrechen(p, 9)} />)}
+      <Kasten {...skool} seite={SEITE} farbe="gruen" zeilen={[...umbrechen(`Skool: ${c.community.name}`, 12), `${c.community.price} € / Monat`]} />
       <Kasten {...web} seite={SEITE} farbe="rot" zeilen={[c.possessive, 'Webseite']} />
-      <Kasten {...mail} seite={SEITE} farbe="blau" zeilen={umbrechen(c.emailLabel, 12)} />
+      <Kasten {...mail} seite={SEITE} farbe="blau" zeilen={umbrechen(c.emailLabel, 10)} />
       {[coach, retreat].map((box, i) => {
         const angebot = c.premium[i];
-        return <Kasten key={angebot.title} {...box} seite={SEITE} farbe="gelb" zeilen={[...umbrechen(angebot.title, 11), `${angebot.price} €`, `/ ${angebot.unit}`]} />;
+        return <Kasten key={angebot.title} {...box} seite={SEITE} farbe="gelb" zeilen={[...umbrechen(angebot.title, 10), `${angebot.price} €`, `/ ${angebot.unit}`]} />;
       })}
       <g fontSize="9.5" fontWeight="700" fill="#111">
         <text x="380" y={obenY + KLEIN / 2 + 3}>Basic</text>
