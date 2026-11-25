@@ -91,4 +91,6 @@ export default {
     'Premium: VIP-Programm und Retreats für alle, die tiefer an ihrer Identität arbeiten wollen',
   ],
   bilder: { instagram: '/pitch/neda-rezawi/instagram.png' },
+  // Neda behaelt die schlichte Roadmap-Liste
+  roadmapStil: 'liste',
 };

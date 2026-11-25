@@ -209,26 +209,53 @@ function Funnel({ c }) {
 }
 
 // Filips Standardangebot, gleich fuer alle Creator (Texte von der Startseite)
-// Filips Co-op Roadmap, gleich fuer alle Creator: 4 Phasen, gross und knapp
-// wie im Figma-Original. Ohne Website-Entwurf steht sie etwa auf halber Hoehe
-// des Skool-Mockups.
+// Filips Co-op Roadmap, gleich fuer alle Creator. Standard: 2 x 2 Phasen mit
+// Pfeilen in Lesereihenfolge. stil 'liste' = schlichte nummerierte Liste.
+// Ohne Website-Entwurf steht sie etwa auf halber Hoehe des Skool-Mockups.
 const ROADMAP = ['Marktforschung', 'Marketingkampagne', 'Automatisierung & Aufbau', 'Produktlaunch & Optimierung'];
 
-function RoadMap({ unten }) {
+function Phase({ nr, titel }) {
+  return (
+    <div className="flex h-full items-center gap-2.5 rounded-lg border border-[#d9cdf5] bg-[#f7f4fd] px-3 py-3">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f2621d] text-[14px] font-bold text-white">{nr}</span>
+      <span className="text-[16px] font-bold leading-tight">{titel}</span>
+    </div>
+  );
+}
+
+const Pfeil = ({ children, className = '' }) => (
+  <span className={`flex items-center justify-center text-[22px] font-bold text-[#8b7bc4] ${className}`} aria-hidden="true">{children}</span>
+);
+
+function RoadMap({ unten, stil }) {
   const { t } = useLanguage();
   const anteil = t.profitShare;
   return (
-    <Passform breite={420} className={unten ? 'lg:mt-[240px]' : ''}>
+    <Passform breite={stil === 'liste' ? 420 : 520} className={unten ? 'lg:mt-[240px]' : ''}>
       <div data-export="5-road-map" className="overflow-hidden rounded-md border border-[#e8a0a0] bg-white">
         <h2 className="border-b border-[#e8a0a0] bg-[#ebe4fa] px-5 py-3 font-body text-[34px] font-bold tracking-tight">Co-op Roadmap</h2>
-        <ol className="space-y-5 px-6 py-6">
-          {ROADMAP.map((schritt, i) => (
-            <li key={schritt} className="flex items-baseline gap-3 text-[22px] font-bold leading-tight">
-              <span className="w-6 shrink-0 text-[#f2621d]">{i + 1}.</span>
-              <span>{schritt}</span>
-            </li>
-          ))}
-        </ol>
+        {stil === 'liste' ? (
+          <ol className="space-y-5 px-6 py-6">
+            {ROADMAP.map((schritt, i) => (
+              <li key={schritt} className="flex items-baseline gap-3 text-[22px] font-bold leading-tight">
+                <span className="w-6 shrink-0 text-[#f2621d]">{i + 1}.</span>
+                <span>{schritt}</span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="grid grid-cols-[1fr_28px_1fr] items-stretch gap-y-1 px-5 py-5">
+            <Phase nr={1} titel={ROADMAP[0]} />
+            <Pfeil>→</Pfeil>
+            <Phase nr={2} titel={ROADMAP[1]} />
+            <span />
+            <span />
+            <Pfeil className="justify-self-start pl-6">↙</Pfeil>
+            <Phase nr={3} titel={ROADMAP[2]} />
+            <Pfeil>→</Pfeil>
+            <Phase nr={4} titel={ROADMAP[3]} />
+          </div>
+        )}
         <p className="border-t border-[#e8a0a0] bg-[#f7f4fd] px-5 py-3 text-center text-[13px] font-semibold">
           Auf {anteil.titleAccent}: {anteil.workload.me} % der Arbeit bei mir, {anteil.share.you} % vom Gewinn bei dir
         </p>
@@ -272,7 +299,7 @@ export default function Pitch() {
           {/* Website-Entwurf und direkt darunter die Road-Map */}
           <div className="flex flex-col gap-12 lg:gap-8">
             {!c.website && <Webseite c={c} />}
-            <RoadMap unten={Boolean(c.website)} />
+            <RoadMap unten={Boolean(c.website)} stil={c.roadmapStil} />
           </div>
         </main>
       </div>
