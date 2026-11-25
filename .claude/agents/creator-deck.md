@@ -123,6 +123,28 @@ vorhanden (geprüft über …)“:
 | Bestehende Angebote und Preise | Linktree, Bio |
 | Reels mit Likes/Kommentaren/Views | ig_profile_reels |
 
+## 1b. Kommentare für den Aufhänger (kostenlos, ohne VidIQ)
+
+Erst nach bestandener 5.000-€-Prüfung. Ziel: 3–5 echte Sätze aus der
+Community, die Nachfrage zeigen („Hast du dazu einen Kurs?“, „Wie kann ich
+mit dir arbeiten?“, „Mehr davon!“) oder ein Problem benennen.
+
+- **YouTube** (wenn der Creator einen Kanal hat):
+  `node scripts/youtube-kommentare.mjs @<youtube-handle> 20`. Das Skript nimmt
+  das Video mit den meisten Views unter den letzten 15 und liefert die
+  relevantesten Kommentare. Der API-Schlüssel steckt als Network secret in der
+  Umgebung. Bei „Permission denied“ fehlt er, das im Bericht nennen.
+- **Instagram, nur in Filips lokaler Session mit Claude in Chrome:**
+  1. Das stärkste Reel aus Schritt 1 (meiste Views) in einem neuen Tab öffnen.
+  2. Die sichtbaren Kommentare lesen, nur lesen, nichts liken oder antworten.
+  3. Den Tab schließen. Ein Reel pro Creator, nicht mehr.
+  4. Bei Login- oder Sicherheitsabfrage abbrechen und Filip melden.
+- **In der Cloud ohne Chrome und ohne YouTube-Kanal:** keine Kommentare.
+  Der Aufhänger kommt dann aus dem Reel-Muster (Schritt 3).
+- Die VidIQ-Kommentarabfrage nicht nutzen; sie kostet 5 Credits pro Reel.
+
+Zitate nur wörtlich übernehmen, keine Nutzernamen in Mails oder Deck.
+
 ## 2. Kennzahlen für den Rechner
 
 Der Rechner ist `src/pitch/potenzial.js`, eine 1:1-Kopie von Filips Excel
@@ -303,6 +325,45 @@ Zum Schluss die vier Bausteine als PNG (2x) exportieren:
 Das sind Instagram-Portfolio, Potenzial-Rechner, Marketing-System,
 Skool-Template, Road-Map und bei Bedarf der Website-Entwurf, alle aus den
 echten Daten gerendert.
+
+## 6b. Outreach-Texte
+
+Als `export/outreach/<slug>.md` speichern. Der Ordner wird nicht gepusht,
+weil Kontaktdaten darin stehen. Zuerst die Kontaktadresse suchen: Linktree,
+Bio, Impressum der Website.
+
+**Mail, 120–180 Wörter, Tonfall des Creators, in dieser Reihenfolge:**
+1. **Aufhänger:** ein echtes Kommentar-Zitat aus Schritt 1b. Ohne Zitat das
+   Reel-Muster, z. B. „Deine stärksten Reels sind die mit Ablaufdatum“.
+   **Keine nackten Viewzahlen als Einstieg.** Die sieht der Creator selbst
+   jeden Tag; Views nur als Beleg im Nebensatz.
+2. **Marketinglücke:** warum genau diese Reels so gut laufen (Anleitung,
+   Dringlichkeit, persönliche Geschichte …) und dass dieser Wert gerade
+   verschenkt wird.
+3. **Verschenktes Potenzial:**
+   - **Zeitgewinn:** einmal aufnehmen, dauerhaft verkaufen statt täglich neu
+     zu liefern.
+   - **Finanzielle Freiheit:** Launch netto und MRR aus dem Rechner, gerundet.
+4. **Zwei Hebel:** Community mit Abo und Premium-Angebot, konkret mit Namen
+   und Preis aus dem Deck.
+5. **Ein Satz Beleg:** „Jake Whan verdient mit seiner spirituellen
+   Skool-Community rund 10.000 $ im Monat (rund 300 Mitglieder à 47 $).“
+6. **Links:** zuerst `[LOOM-LINK]` (setzt Filip ein), direkt dahinter der
+   Deck-Link `https://filip-sudermann.com/pitch/<slug>`.
+7. **Rahmen in einem Satz:** Gewinnbeteiligung, keine Kosten vorab,
+   Plattform, Domain und Liste gehören dem Creator.
+8. **Ja/Nein-Frage:** „Soll ich Dir zeigen, wie wir das in 30 Tagen live
+   bringen?“
+
+**Betreff:** Name des Creators plus Potenzial oder Aufhänger, unter 50 Zeichen.
+
+**Dazu:**
+- **Follow-up 1 nach 3 Tagen:** nur die Links und „ein kurzes Ja oder Nein
+  reicht“.
+- **Follow-up 2 nach weiteren 5 Tagen:** Gewinnbeteiligung, Kickoff-Call als
+  einziger Aufwand, ehrlicher Ausstieg.
+- **Instagram-DM:** unter 60 Wörter, Aufhänger, Loom- und Deck-Link, eine
+  Frage.
 
 ## 7. Abliefern
 
