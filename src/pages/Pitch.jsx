@@ -231,9 +231,9 @@ function RoadMap({ unten, stil }) {
   const { t } = useLanguage();
   const anteil = t.profitShare;
   return (
-    <Passform breite={stil === 'liste' ? 420 : 520} className={unten ? 'lg:mt-[240px]' : ''}>
+    <Passform breite={stil === 'liste' ? 420 : 520} className={`lg:!self-center ${unten ? 'lg:mt-[240px]' : ''}`}>
       <div data-export="5-road-map" className="overflow-hidden rounded-md border border-[#e8a0a0] bg-white">
-        <h2 className="border-b border-[#e8a0a0] bg-[#ebe4fa] px-5 py-3 font-body text-[34px] font-bold tracking-tight">Co-op Roadmap</h2>
+        <h2 className="border-b border-[#e8a0a0] bg-[#ebe4fa] px-5 py-3 text-center font-body text-[34px] font-bold tracking-tight">Co-op Roadmap</h2>
         {stil === 'liste' ? (
           <ol className="space-y-5 px-6 py-6">
             {ROADMAP.map((schritt, i) => (
