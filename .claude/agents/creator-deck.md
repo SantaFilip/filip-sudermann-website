@@ -44,20 +44,21 @@ YouTube, Linktree), dazu bei Bedarf eine Websuche nach Name + Angeboten.
 **Ausschluss, sofort abbrechen und Filip melden:**
 - Instagram unter 10.000 oder über 100.000 Follower. Es zählt Instagram allein,
   nichts addieren.
-- Es gibt schon eine eigene Academy, Mitgliedschaft oder bezahlte Community
-  mit Team dahinter, z. B. Sisterhood Academy oder ein Programm mit Community
-  nur per Bewerbung und mehreren Stufen.
+- Es gibt schon ein komplettes System: eigene bezahlte Community oder
+  Mitgliedschaft **und** eigene Website **und** High-Ticket-Angebot. Dann gibt
+  es für Filip nichts aufzubauen.
 
-**Fit, mindestens 2 davon müssen zutreffen:**
-- keine bezahlte Abo-Community
-- keine eigene Website, nur Linktree oder Ähnliches
-- kein High-Ticket-Angebot
-- Angebote sind verstreut oder bestehen nur aus Einzelkäufen (E-Book,
-  Subliminals, Kurs ohne Community)
+Creator **mit und ohne** bestehendes Angebot sind willkommen, solange das
+Deck rentabel ist. Ohne Angebot heißt: Filip baut alles neu auf. Mit Angebot
+heißt: Filip bündelt Verstreutes (Linktree, Einzelkäufe, mehrere Shops) in
+Community, Website und Funnel.
 
-Treffen weniger als 2 zu, kein Deck bauen. Stattdessen den nächsten Creator
-nehmen und den Grund im Bericht nennen. Das Ergebnis der Prüfung kommt in den
-Kopfkommentar der Datendatei.
+**Rentabilität (nach dem Reel-Abruf, vor dem Schreiben der Datendatei):**
+Der Rechner muss **mindestens 5.000 € Launch-Umsatz netto** ergeben
+(`berechnePotenzial(c).netto.gesamt`). Darunter kein Deck bauen, den Creator
+mit Zahl im Bericht als „unter 5.000 €“ führen und den nächsten nehmen.
+
+Das Ergebnis beider Prüfungen kommt in den Kopfkommentar der Datendatei.
 
 ## 0b. Credits prüfen (vor jeder VidIQ-Abfrage)
 
