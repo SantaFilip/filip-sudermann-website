@@ -280,7 +280,7 @@ export function Classroom({ c }) {
 }
 
 export function Kalender() {
-  const termine = { 4: 'Live-Q&A 19:00', 11: 'Workshop 18:30', 18: 'Live-Q&A 19:00', 25: 'Challenge-Start' };
+  const termine = { 4: ['Q&A', '19:00'], 11: ['Workshop', '18:30'], 18: ['Q&A', '19:00'], 25: ['Challenge', '10:00'] };
   // November 2026 beginnt an einem Sonntag
   const leer = 6;
   return (
@@ -298,7 +298,7 @@ export function Kalender() {
             return (
               <div key={i} className="h-[56px] border-b border-r border-[#e4e4e4] p-1">
                 {tag >= 1 && tag <= 30 && <span className="text-[#555]">{tag}</span>}
-                {termine[tag] && <span className="mt-1 block rounded bg-[#e8f0fe] px-1 py-0.5 text-[10px] font-semibold leading-tight text-[#1a56db]">{termine[tag]}</span>}
+                {termine[tag] && <span className="mt-0.5 block overflow-hidden whitespace-nowrap rounded bg-[#e8f0fe] px-1 py-0.5 text-[9px] font-semibold leading-[11px] text-[#1a56db]">{termine[tag][0]}<br />{termine[tag][1]}</span>}
               </div>
             );
           })}

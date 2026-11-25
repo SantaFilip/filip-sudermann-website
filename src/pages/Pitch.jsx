@@ -209,11 +209,13 @@ function Funnel({ c }) {
 }
 
 // Filips Standardangebot, gleich fuer alle Creator (Texte von der Startseite)
-function RoadMap() {
+// Ohne Website-Entwurf steht die Road-Map auf Hoehe der Fulfillment-Leiste
+// (gemessen: 473 px unter der Oberkante der Spalten)
+function RoadMap({ unten }) {
   const { t } = useLanguage();
   const anteil = t.profitShare;
   return (
-    <Passform breite={560}>
+    <Passform breite={560} className={unten ? 'lg:mt-[473px]' : ''}>
       <div data-export="5-road-map" className="border border-[#b9a6e6] bg-white">
         <h2 className="border-b border-[#b9a6e6] bg-[#ebe4fa] px-4 py-2 text-center font-body text-[24px] font-bold tracking-tight">Road-Map</h2>
         <ol className="grid grid-cols-2 gap-x-6 gap-y-5 px-6 py-6">
@@ -271,7 +273,7 @@ export default function Pitch() {
           {/* Website-Entwurf und direkt darunter die Road-Map */}
           <div className="flex flex-col gap-12 lg:gap-8">
             {!c.website && <Webseite c={c} />}
-            <RoadMap />
+            <RoadMap unten={Boolean(c.website)} />
           </div>
         </main>
       </div>
