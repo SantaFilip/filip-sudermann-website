@@ -32,16 +32,24 @@ function Beleg({ src, alt }) {
 // sie als Ganzes verkleinert statt umzubrechen, damit sie 1:1 aussieht.
 const DESKTOP = 1024;
 const RAND = 32;
-function Passform({ breite, className = '', children, ...rest }) {
+// Breite aller Spalten nebeneinander: Sektionen + 4 Abstaende + Rand links/rechts
+const BOARD_BREITE = 440 + 400 + 460 + 560 + 560 + 4 * 40 + 2 * 40;
+
+function useFensterBreite() {
   const [vw, setVw] = useState(() => window.innerWidth);
   useEffect(() => {
     const neu = () => setVw(window.innerWidth);
     window.addEventListener('resize', neu);
     return () => window.removeEventListener('resize', neu);
   }, []);
+  return vw;
+}
+
+function Passform({ breite, className = '', children, ...rest }) {
+  const vw = useFensterBreite();
   const zoom = vw < DESKTOP ? Math.min(1, (vw - RAND) / breite) : 1;
   return (
-    <section {...rest} className={`shrink-0 self-center lg:self-stretch ${className}`} style={{ width: breite, zoom }}>
+    <section {...rest} className={`shrink-0 self-center lg:self-start ${className}`} style={{ width: breite, zoom }}>
       {children}
     </section>
   );
@@ -131,8 +139,8 @@ function WerIstFilip({ c }) {
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">Wer ist Filip?</h2>
       <p className="mt-2 text-center text-[13px] font-bold leading-snug">Ich kooperiere mit Creatorn &amp; helfe ihnen Angebote effektiv zu skalieren &amp; monetarisieren</p>
       <div className="mt-6 grid grid-cols-2 gap-5 px-3">
-        <img src={IMAGES.heroPortrait} alt="Filip Sudermann" className="aspect-[4/5] w-full object-cover shadow-md" />
-        <img src={IMAGES.aboutPortrait} alt="Filip bei der Arbeit" className="aspect-[4/5] w-full object-cover shadow-md" />
+        <img src={IMAGES.heroPortrait} alt="Filip Sudermann" className="aspect-square w-full object-cover shadow-md" />
+        <img src={IMAGES.aboutPortrait} alt="Filip bei der Arbeit" className="aspect-square w-full object-cover shadow-md" />
       </div>
       <div className="mt-6 grid grid-cols-2 gap-2">{BELEGE.slice(0, 2).map((b) => <Beleg key={b.src} {...b} />)}</div>
       <p className="mt-2 text-[12px] font-bold">Skool Games gewonnen, mit Phil &amp; Jonas</p>
@@ -242,7 +250,10 @@ export default function Pitch() {
   const { slug } = useParams();
   const c = findeCreator(slug);
   useNurPerLink(c ? `${c.name} × Filip Sudermann` : 'Seite nicht gefunden');
+  const vw = useFensterBreite();
   if (!c) return <PageNotFound />;
+  // Desktop: das ganze Board passt auf den Bildschirm wie in Figma
+  const boardZoom = vw >= DESKTOP ? Math.min(1, vw / BOARD_BREITE) : 1;
 
   return (
     <div
@@ -252,7 +263,7 @@ export default function Pitch() {
       }}
     >
       <div className="min-h-screen bg-[radial-gradient(rgba(0,0,0,0.12)_1px,transparent_1px)] [background-size:22px_22px]">
-        <main className="flex flex-col gap-12 px-4 py-10 lg:flex-row lg:items-stretch lg:gap-10 lg:overflow-x-auto lg:px-10 lg:py-14">
+        <main className="flex flex-col gap-12 px-4 py-10 lg:w-max lg:flex-row lg:items-start lg:gap-10 lg:px-10 lg:py-14" style={{ zoom: boardZoom }}>
           <Portfolio c={c} />
           <WerIstFilip c={c} />
           <BestesSystem c={c} />

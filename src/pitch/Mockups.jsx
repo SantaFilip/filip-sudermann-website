@@ -31,7 +31,7 @@ export function ProfilMockup({ c }) {
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 truncate text-[11.5px] font-semibold">{c.handle} <span className="text-[10px] font-normal tracking-widest">···</span></p>
           <p className="text-[8px] text-[#0c1014]/80">{c.name}</p>
-          <div className="mt-1.5 flex gap-2 whitespace-nowrap text-[7.5px]">
+          <div className="mt-1.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[7.5px]">
             <span><b>{ganz(ig.posts)}</b> Beiträge</span>
             <span><b>{ganz(ig.followers)}</b> Follower</span>
             <span><b>{ganz(ig.following)}</b> Gefolgt</span>
@@ -185,13 +185,13 @@ export function WebsiteMockup({ c }) {
 }
 
 // Die drei Fulfillment-Bausteine wie die echten Skool-Seiten: in Original-
-// groesse (520 x 700 px) gebaut und als Kachel verkleinert, alle gleich gross.
+// groesse (520 x 420 px) gebaut und als Kachel verkleinert, alle gleich gross.
 const SKOOL_RAND = 'border border-[#e4e4e4]';
 
 function SkoolKachel({ children }) {
   return (
-    <div className="aspect-[52/70] overflow-hidden bg-[#f8f7f5]">
-      <div className="pointer-events-none h-[700px] w-[520px] origin-top-left p-4 text-[13px] text-[#202124]" style={{ zoom: 'var(--kachel-zoom)' }} aria-hidden="true">
+    <div className="aspect-[52/42] overflow-hidden bg-[#f8f7f5]">
+      <div className="pointer-events-none h-[420px] w-[520px] origin-top-left p-4 text-[13px] text-[#202124]" style={{ zoom: 'var(--kachel-zoom)' }} aria-hidden="true">
         {children}
       </div>
     </div>
@@ -217,7 +217,7 @@ export function CommunityFeed({ c }) {
         ))}
       </div>
       <div className="mt-3 space-y-3">
-        {beitraege.map((b) => (
+        {beitraege.slice(0, 2).map((b) => (
           <div key={b.titel} className={`rounded-lg bg-white p-4 ${SKOOL_RAND}`}>
             <div className="flex items-center gap-2.5">
               <div className="relative"><Avatar c={c} className="h-9 w-9 text-[12px]" /><span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#4f7df9] text-[9px] font-bold text-white">7</span></div>
@@ -240,26 +240,36 @@ export function CommunityFeed({ c }) {
   );
 }
 
+// Jeder Kurs bekommt ein eigenes Titelbild (Farbverlauf) und eine eigene
+// Beschreibung, wie in einem echten Skool-Classroom
+const KURS_FARBEN = [
+  'from-[#2b2a4c] to-[#6b5ca5]', 'from-[#7a3b2e] to-[#d98b5f]', 'from-[#1f4e4a] to-[#5fa58f]',
+  'from-[#4a2b4c] to-[#c06c9b]', 'from-[#2e3d5c] to-[#6f9bd1]', 'from-[#3a2f12] to-[#c9a24a]',
+];
+const kursText = (kurs, i, letzter) => {
+  if (i === 0) return 'Dein Einstieg: so holst du das Meiste aus der Community';
+  if (letzter) return 'Exklusiv: 1:1-Calls, Bonus-Inhalte und VIP-Austausch';
+  return [`${kurs}: die Grundlagen in 5 Lektionen`, `${kurs} im Alltag: Übungen und Routinen`, `${kurs} vertiefen mit Live-Aufzeichnungen`, `${kurs}: Workbook und Meditationen`][(i - 1) % 4];
+};
+
 export function Classroom({ c }) {
-  const bild = c.bilder?.banner || c.avatar;
   return (
     <SkoolKachel>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-2.5">
         {c.community.kurse.map((kurs, i) => {
           const gesperrt = i === c.community.kurse.length - 1;
           const fortschritt = [100, 64, 30, 12, 0, 0][i] ?? 0;
           return (
             <div key={kurs} className={`overflow-hidden rounded-lg bg-white ${SKOOL_RAND}`}>
-              <div className="relative h-[92px] bg-[#17130f]">
-                <img src={bild} alt="" className="h-full w-full object-cover opacity-60" />
-                <span className="absolute inset-0 flex items-center justify-center px-2 text-center font-display text-[17px] text-white">{kurs}</span>
-                {gesperrt && <span className="absolute right-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">🔒 VIP</span>}
+              <div className={`relative flex h-[70px] items-center justify-center bg-gradient-to-br px-2 ${KURS_FARBEN[i % KURS_FARBEN.length]}`}>
+                <span className="text-center font-display text-[16px] leading-tight text-white">{kurs}</span>
+                {gesperrt && <span className="absolute right-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[9px] text-white">🔒 VIP</span>}
               </div>
-              <div className="p-3">
-                <p className="font-bold">{kurs}</p>
-                <p className="mt-0.5 line-clamp-1 text-[11px] text-[#909090]">{gesperrt ? 'Nur für VIP-Mitglieder' : `Modul ${i + 1} mit ${c.name}`}</p>
-                <div className="mt-2 h-2 rounded-full bg-[#e4e4e4]"><div className="h-2 rounded-full bg-[#2ea043]" style={{ width: `${fortschritt}%` }} /></div>
-                <p className="mt-1 text-[11px] text-[#909090]">{fortschritt} %</p>
+              <div className="p-2.5">
+                <p className="truncate text-[12px] font-bold">{kurs}</p>
+                <p className="mt-0.5 line-clamp-2 h-[28px] text-[10px] leading-[14px] text-[#909090]">{kursText(kurs, i, gesperrt)}</p>
+                <div className="mt-2 h-1.5 rounded-full bg-[#e4e4e4]"><div className="h-1.5 rounded-full bg-[#2ea043]" style={{ width: `${fortschritt}%` }} /></div>
+                <p className="mt-1 text-[10px] text-[#909090]">{fortschritt} %</p>
               </div>
             </div>
           );
@@ -286,7 +296,7 @@ export function Kalender() {
           {Array.from({ length: 35 }, (_, i) => {
             const tag = i - leer + 1;
             return (
-              <div key={i} className="h-[106px] border-b border-r border-[#e4e4e4] p-1">
+              <div key={i} className="h-[56px] border-b border-r border-[#e4e4e4] p-1">
                 {tag >= 1 && tag <= 30 && <span className="text-[#555]">{tag}</span>}
                 {termine[tag] && <span className="mt-1 block rounded bg-[#e8f0fe] px-1 py-0.5 text-[10px] font-semibold leading-tight text-[#1a56db]">{termine[tag]}</span>}
               </div>
