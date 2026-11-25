@@ -125,52 +125,52 @@ function WerIstFilip({ c }) {
   const k = c.kennzahlen;
   const stellen = String(Math.round(p.netto.gesamt)).length;
   const zeilen = [
-    ['Käufer (realistisch)', p.kaeufer, (n) => String(n)],
-    ['Launch-Umsatz brutto', p.brutto, euro],
-    ['– Gebühren & Kosten (10 %)', p.gebuehren, euro],
-    ['Launch-Umsatz netto', p.netto, euro],
+    ['Käufer', p.kaeufer, (n) => String(n)],
+    ['Umsatz brutto', p.brutto, euro],
+    ['– Kosten (10 %)', p.gebuehren, euro],
+    ['Umsatz netto', p.netto, euro],
   ];
   const Zeile = ({ label, wert, fett }) => (
-    <div className={`flex justify-between gap-2 border-b border-black/5 px-2 py-0.5 ${fett ? 'font-bold' : ''}`}><span>{label}</span><span>{wert}</span></div>
+    <div className={`flex justify-between gap-1 border-b border-black/5 px-1.5 py-px ${fett ? 'font-bold' : ''}`}><span>{label}</span><span>{wert}</span></div>
   );
-  const Kopf = ({ children }) => <p className="bg-[#1d2a5a] px-2 py-1 font-bold uppercase tracking-wide text-white">{children}</p>;
+  const Kopf = ({ children }) => <p className="bg-[#1d2a5a] px-1.5 py-0.5 font-bold uppercase text-white">{children}</p>;
+  // Kompakt wie im Figma-Original: Fotos, Belege, unten Text links und Rechner rechts
   return (
-    <Passform breite={400} className="border border-[#9ed8a4] bg-[#ddf5df] p-6">
+    <Passform breite={400} className="border border-[#9ed8a4] bg-[#ddf5df] p-5">
       <h2 className="text-center font-body text-[26px] font-bold tracking-tight">Wer ist Filip?</h2>
-      <p className="mt-2 text-center text-[13px] font-bold leading-snug">Ich kooperiere mit Creatorn &amp; helfe ihnen Angebote effektiv zu skalieren &amp; monetarisieren</p>
-      <div className="mt-6 grid grid-cols-2 gap-5 px-3">
-        <img src={IMAGES.heroPortrait} alt="Filip Sudermann" className="aspect-square w-full object-cover shadow-md" />
-        <img src={IMAGES.aboutPortrait} alt="Filip bei der Arbeit" className="aspect-square w-full object-cover shadow-md" />
+      <p className="mt-1.5 text-center text-[12.5px] font-bold leading-snug">Ich kooperiere mit Creatorn &amp; helfe ihnen Angebote effektiv zu skalieren &amp; monetarisieren</p>
+      <div className="mt-4 grid grid-cols-2 gap-6 px-8">
+        <img src={IMAGES.filipBuehne} alt="Filip Sudermann auf der Bühne" className="aspect-square w-full rounded-md border-[3px] border-white object-cover shadow-md" />
+        <img src={IMAGES.filipStrand} alt="Filip bei der Arbeit am Strand" className="aspect-square w-full rounded-md border-[3px] border-white object-cover shadow-md" />
       </div>
-      <div className="mt-6 grid grid-cols-2 gap-2">{BELEGE.slice(0, 2).map((b) => <Beleg key={b.src} {...b} />)}</div>
-      <p className="mt-2 text-[12px] font-bold">Skool Games gewonnen, mit Phil &amp; Jonas</p>
-      <div className="mt-2 grid grid-cols-[1.35fr_1fr] items-start gap-2">{BELEGE.slice(2).map((b) => <Beleg key={b.src} {...b} />)}</div>
-
-      <div className="mt-6">
-        <p className="mb-2 text-center text-[13px] font-bold">Bis zu {stellen}-stellige Umsätze möglich</p>
-        <div data-export="2-potenzial-rechner" className="overflow-hidden rounded border border-[#1d2a5a]/30 bg-white text-[9.5px]">
-          <Kopf>Reichweite</Kopf>
-          {c.reach.map((r) => <Zeile key={r.platform} label={r.platform} wert={kurz(r.followers)} />)}
-          <Zeile label={`Follower ${k.hauptplattform} (Rechner)`} wert={kurz(p.follower)} fett />
-          <Kopf>Engagement Score · {k.hauptplattform}</Kopf>
-          <Zeile label="Ø Likes pro Post" wert={kurz(k.likes)} />
-          <Zeile label="Ø Kommentare pro Post" wert={k.kommentare.toLocaleString('de-DE', { maximumFractionDigits: 1 })} />
-          <Zeile label="Ø Views pro Post" wert={kurz(k.views)} />
-          <Zeile label="Engagement Rate" wert={`${(p.engagementRate * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 })} %`} />
-          <div className="flex justify-between gap-2 bg-[#e9edf7] px-2 py-1 font-bold"><span>⚡ Score {p.score} / 100</span><span>{p.label}</span></div>
-          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr] gap-1 bg-[#1d2a5a] px-2 py-1 font-bold uppercase text-white">
-            <span>Potenzial</span><span className="text-right">Low ({c.community.price} €)</span><span className="text-right">High ({c.premium[0].price} €)</span><span className="text-right">Gesamt</span>
-          </div>
-          {zeilen.map(([label, werte, format]) => (
-            <div key={label} className="grid grid-cols-[1.5fr_1fr_1fr_1fr] gap-1 border-b border-black/5 px-2 py-0.5">
-              <span>{label}</span><span className="text-right">{format(werte.low)}</span><span className="text-right">{format(werte.high)}</span><span className="text-right font-semibold">{format(werte.gesamt)}</span>
+      <div className="mt-4 grid grid-cols-2 gap-2">{BELEGE.slice(0, 2).map((b) => <Beleg key={b.src} {...b} />)}</div>
+      <p className="mt-1.5 text-[11px] font-bold">Skool Games gewonnen, mit Phil &amp; Jonas</p>
+      <div className="mt-1.5 grid grid-cols-[1.35fr_1fr] items-start gap-2">
+        {BELEGE.slice(2, 3).map((b) => <Beleg key={b.src} {...b} />)}
+        <div className="row-span-2">{BELEGE.slice(3).map((b) => <Beleg key={b.src} {...b} />)}</div>
+        <div className="flex flex-col justify-center gap-2 pt-1">
+          <p className="text-center text-[12px] font-bold leading-snug">Bis zu {stellen}-stellige Umsätze möglich</p>
+          <div data-export="2-potenzial-rechner" className="overflow-hidden rounded border border-[#1d2a5a]/30 bg-white text-[6.5px] leading-[1.35]">
+            <Kopf>Engagement Score · {k.hauptplattform}</Kopf>
+            <Zeile label={`Follower ${k.hauptplattform}`} wert={kurz(p.follower)} />
+            <Zeile label="Ø Likes / Kommentare" wert={`${kurz(k.likes)} / ${k.kommentare.toLocaleString('de-DE', { maximumFractionDigits: 1 })}`} />
+            <Zeile label="Ø Views pro Post" wert={kurz(k.views)} />
+            <Zeile label="Engagement Rate" wert={`${(p.engagementRate * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 })} %`} />
+            <div className="flex justify-between gap-1 whitespace-nowrap bg-[#e9edf7] px-1.5 py-0.5 font-bold"><span>⚡ Score {p.score} / 100</span><span>{p.label.split(' – ')[0]}</span></div>
+            <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-0.5 bg-[#1d2a5a] px-1.5 py-0.5 font-bold uppercase text-white">
+              <span>Potenzial</span><span className="text-right">{c.community.price} €</span><span className="text-right">{c.premium[0].price} €</span><span className="text-right">Gesamt</span>
             </div>
-          ))}
-          <div className="grid grid-cols-2 bg-[#d6f1d6] text-center font-bold">
-            <div className="border-r border-black/10 py-1.5"><p className="text-[8px] font-semibold uppercase">🚀 Launch netto</p><p className="text-[13px]">{euro(p.netto.gesamt)}</p></div>
-            <div className="py-1.5"><p className="text-[8px] font-semibold uppercase">📈 MRR nach Churn</p><p className="text-[13px]">{euro(p.mrr)}</p></div>
+            {zeilen.map(([label, werte, format]) => (
+              <div key={label} className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-0.5 border-b border-black/5 px-1.5 py-px">
+                <span className="truncate">{label}</span><span className="text-right">{format(werte.low)}</span><span className="text-right">{format(werte.high)}</span><span className="text-right font-semibold">{format(werte.gesamt)}</span>
+              </div>
+            ))}
+            <div className="grid grid-cols-2 bg-[#d6f1d6] text-center font-bold">
+              <div className="border-r border-black/10 py-1"><p className="text-[5.5px] uppercase">Launch netto</p><p className="text-[9px]">{euro(p.netto.gesamt)}</p></div>
+              <div className="py-1"><p className="text-[5.5px] uppercase">MRR nach Churn</p><p className="text-[9px]">{euro(p.mrr)}</p></div>
+            </div>
+            <p className="px-1.5 py-0.5 text-[5px] text-black/50">Schätzung nach öffentlichen Daten (Stand {k.stand}), Ø der letzten {k.posts} Posts.</p>
           </div>
-          <p className="px-2 py-1 text-[8px] text-black/50">Schätzung nach öffentlichen Daten (Stand {k.stand}), Ø der letzten {k.posts} Posts ohne angepinnte.</p>
         </div>
       </div>
     </Passform>
