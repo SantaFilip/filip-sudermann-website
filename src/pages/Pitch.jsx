@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Check, X } from 'lucide-react';
 import PageNotFound from '@/lib/PageNotFound';
 import { IMAGES } from '@/lib/links';
@@ -305,6 +305,12 @@ export default function Pitch() {
             <RoadMap unten={Boolean(c.website)} stil={c.roadmapStil} />
           </div>
         </main>
+        {/* Pflichtangaben: auch die Pitch-Seiten brauchen Impressum und Datenschutz */}
+        <footer className="pb-6 text-center text-[12px] text-black/50">
+          <Link to="/impressum" className="hover:underline">Impressum</Link>
+          <span className="mx-2">·</span>
+          <Link to="/datenschutz" className="hover:underline">Datenschutz</Link>
+        </footer>
       </div>
     </div>
   );
