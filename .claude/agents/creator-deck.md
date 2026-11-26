@@ -265,6 +265,8 @@ Bindestrich, sonst der Handle. Felder wie in der Vorlage. Für jedes Feld gilt:
     Zuschauer in Abo-Einkommen verwandelt.
   - **Premium:** für wen die zwei Premium-Angebote sind.
 - **`bilder`:** Pfade aus Schritt 5, sonst Feld weglassen.
+- **`design`:** immer `'neu'`. **`geschlecht`:** `'w'` oder `'m'`, bestimmt
+  den Hintergrund.
 
 Instagram-Kopfbereich: Für nicht eingeloggte Besucher zeigt Instagram eine
 Login-Wand. Den Kopfbereich gibt es deshalb nur über Filips eingeloggten
