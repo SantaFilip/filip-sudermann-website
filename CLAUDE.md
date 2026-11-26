@@ -104,15 +104,40 @@ Deutsch, direkt und ohne Floskeln.
   i.instagram.com, www.tiktok.com, www.youtube.com, Instagram-CDN.
   Instagrams interne API nicht nutzen, die Login-Wand nie umgehen.
 
-## Stand (25.11.2026)
+## Lokale Session mit Chrome (Suche und Reel-Zahlen kostenlos)
+
+- Cloud-Sessions erreichen Filips Chrome nie. Für Instagram über Chrome eine
+  lokale Session in der Desktop-App starten: Umgebung „Dieser Computer“,
+  Ordner `C:\Users\filip\filip-sudermann-website`, dann den aktuellen
+  Branch holen. Remote Control aus der Cloud war am 26.11. für alle Ordner
+  gesperrt (vermutlich App-Version unter Windows).
+- **Creator selbst suchen** nur lokal über Chrome: Instagram-Suche bzw.
+  Hashtags (#manifestation, #seelenarbeit, #spiritualität), deutschsprachige
+  Reels, Profile 10–100K. Höchstens 30 Profile am Tag mit Pausen, nur lesen,
+  nichts liken oder folgen, bei Login-Abfrage abbrechen. Es ist Filips
+  echter Account.
+- **Reel-Zahlen über Chrome statt VidIQ:** im Reels-Tab die letzten 12
+  Reels ohne angepinnte (Views, Likes, Kommentare). Dann kostet ein Deck
+  0 Credits. Profilbild aus dem Profil speichern.
+- `vidiq_instagram_account_discovery` nicht nutzen: liefert trotz Vorgabe
+  keine deutschsprachigen Creator (10 Credits am 26.11. verbrannt).
+- Websuche findet kaum passende Profile; Instagram blockt aus der Cloud nach
+  wenigen Abrufen (429).
+
+## Stand (26.11.2026)
 
 - **Decks:** Neda Rezawi, Jessica Lenz, Nicole Frizler, Anna Kluger, Denise
   Lembrecht. Anna und Denise liegen unter 5.000 €.
 - **Branch:** `claude/admiring-pasteur-rm6vep`. PR SantaFilip/filip-sudermann-website#15
   ist offen; erst nach Merge und Deploy laufen die Decks unter
   filip-sudermann.com.
-- **Tagesrunde:** täglich 15:06 Uhr (Europe/Berlin). Sie baut bis zu 2 Decks
-  aus Handles, die Filip schickt, und sucht nicht selbst.
+- **Tagesrunde (Cloud):** täglich 15:06 Uhr (Europe/Berlin). Sie baut bis zu
+  2 Decks aus Handles, die Filip schickt, und sucht nicht selbst. Suchen kann
+  nur eine lokale Session (siehe oben).
+- **VidIQ:** 30 Credits übrig bis zum Reset am 21.12.2026.
+- **Alle 4 neueren Decks** (Jessica, Nicole, Anna, Denise) im neuen Design.
+  Verschickbar nur Jessica und Nicole; Anna (3.127 €) und Denise (4.542 €)
+  liegen unter 5.000 € und werden nicht angeschrieben.
 - **Outreach v3** für Jessica und Nicole steht (26.11.2026, lokal in
   `export/outreach/`). YouTube-Schlüssel greift. Jessicas Kanal heißt
   @jessica-lenz, Nicoles @nicolespov.
