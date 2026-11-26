@@ -16,4 +16,7 @@ export const SOCIAL_LINKS = {
 export const IMAGES = {
   heroPortrait,
   aboutPortrait,
+  // Fotos fuer die Creator-Pitches (public/pitch/filip)
+  filipBuehne: '/pitch/filip/foto-buehne.webp',
+  filipStrand: '/pitch/filip/foto-strand.webp',
 };

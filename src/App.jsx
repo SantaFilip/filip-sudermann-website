@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import SmoothScroll from './components/SmoothScroll';
@@ -10,6 +11,9 @@ import { ToastProvider } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { MusikProvider } from '@/lib/MusikContext';
 
+// Creator-Pitches nur bei Bedarf laden, damit die Startseite nicht waechst
+const Pitch = lazy(() => import('@/pages/Pitch'));
+
 function App() {
   return (
     <SmoothScroll>
@@ -21,6 +25,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/inspiration-hub" element={<InspirationHub />} />
+              <Route path="/pitch/:slug" element={<Suspense fallback={null}><Pitch /></Suspense>} />
               <Route path="/impressum" element={<Legal doc="impressum" />} />
               <Route path="/datenschutz" element={<Legal doc="datenschutz" />} />
               <Route path="/agb" element={<Legal doc="agb" />} />
