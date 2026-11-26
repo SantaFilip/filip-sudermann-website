@@ -65,15 +65,12 @@ Das Ergebnis beider Prüfungen kommt in den Kopfkommentar der Datendatei.
 Öffentliche Daten holt das Skript in Schritt 1 kostenlos. VidIQ brauchst du nur
 noch für Instagram, dessen öffentliche Seite keine Reel-Zahlen und kein
 Profilbild liefert. `vidiq_balance` aufrufen. Ein Deck braucht:
-- `vidiq_ig_profile` + `vidiq_ig_profile_reels` = 10 Credits
-- `vidiq_tiktok_profile_videos` = 5 Credits, nur wenn TikTok mehr Follower
-  als Instagram hat
-- 1 Banner-Bild = 22 Credits
-- **Summe ≈ 32–37 Credits**
+- `vidiq_ig_profile` + `vidiq_ig_profile_reels` = **10 Credits, sonst nichts**
+- Kein TikTok-Abruf über VidIQ (es zählt nur Instagram), kein KI-Banner,
+  keine VidIQ-Kommentare (Filips Vorgabe, siehe CLAUDE.md).
 
 Reichen die Credits nicht für die Instagram-Abfragen (10), **abbrechen** und
-Filip den Kontostand melden. Reicht es nur nicht für die Bilder, weitermachen
-und die Bilder im Bericht als offen führen.
+Filip den Kontostand melden.
 
 ## 1. Datenpaket ziehen (Pflicht, alles)
 
@@ -291,6 +288,10 @@ als `public/pitch/<slug>/avatar.webp` speichern (Qualität 85). Dann
 `src/pitch/creators/index.js` importieren und in `CREATORS` eintragen.
 
 ## 5. KI-Bild für das Skool-Banner
+
+**Derzeit ausgesetzt** (Free-Plan, Filips Vorgabe): Schritt überspringen,
+`bilder.banner` weglassen, das Template zeigt das Profilbild. Nur ausführen,
+wenn Filip ein Banner ausdrücklich freigibt (22 Credits).
 
 Nur dieses eine Bild wird generiert. Retreat bzw. Mastermind kommen aus den
 Referenzen, Instagram aus dem echten Profil.
