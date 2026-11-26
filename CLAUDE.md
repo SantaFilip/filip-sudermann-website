@@ -146,7 +146,17 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
 ## Stand (26.11.2026)
 
 - **Decks:** Neda Rezawi, Jessica Lenz, Nicole Frizler, Anna Kluger, Denise
-  Lembrecht. Anna und Denise liegen unter 5.000 €.
+  Lembrecht. Anna und Denise liegen unter 5.000 €. Am 26.11. dazu (Suche und
+  Reel-Zahlen über Chrome, 0 Credits, erster echter Lauf des
+  Auto-Live-Workflows): Laura Wacker (@youmoon_de, 46.391 €), Nadine Flamm
+  (@nadine.soulwhisper, 19.133 €), Tanita Romina (@moveyourlove, 13.104 €).
+- **Schon geprüft und raus (26.11., nicht erneut aufrufen):** komplettes
+  System: @akashacircle, @amir_reichart, @paulfunk247, @selbstliebe_robin,
+  @akashachronikmediumjanin_ (Ausbildung mit Community zählt als bezahlte
+  Community). Views ausgeblendet: @elisabeth.mestekaemper,
+  @dualseelenliebe_by_beccy. Zu schwach oder ohne Gesicht:
+  @georgia_birkensee, @alles_nur_bewusstsein. Bestehende Leads:
+  @nati_manifestieren (Natalie Goller), @iam_sylwia.
 - **Live:** PR SantaFilip/filip-sudermann-website#15 ist am 26.11.2026
   gemergt. Alle Decks laufen unter `https://filip-sudermann.com/pitch/<slug>`
   (noindex), Nicole und Jessica geprüft. Branch für Decks weiter
