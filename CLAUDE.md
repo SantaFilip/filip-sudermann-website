@@ -108,7 +108,9 @@ Deutsch, direkt und ohne Floskeln.
   filip-sudermann.com.
 - **Tagesrunde:** täglich 15:06 Uhr (Europe/Berlin). Sie baut bis zu 2 Decks
   aus Handles, die Filip schickt, und sucht nicht selbst.
-- **Offen:** Mails v3 für Jessica und Nicole mit echtem Kommentar-Zitat,
-  sobald der YouTube-Schlüssel eingetragen ist. Größerer VidIQ-Plan für
+- **Outreach v3** für Jessica und Nicole steht (26.11.2026, lokal in
+  `export/outreach/`). YouTube-Schlüssel greift. Jessicas Kanal heißt
+  @jessica-lenz, Nicoles @nicolespov.
+- **Offen:** Größerer VidIQ-Plan für
   10 Decks am Tag: Boost (2.000 Credits) reicht für etwa 6–7, Max (6.000) für
   10.

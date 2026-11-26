@@ -4,7 +4,8 @@
 // nicht abrufbar). Laut Websuche: Ablefy-Shop mit Ausbildungen (z. B.
 // Schumann Resonanz Reader, 390 EUR), woechentliche Sessions, Rauhnacht-
 // Programme, Home Study, Buch. Kein Abo-Community-Angebot gefunden.
-// TikTok und YouTube unter @seeleundmagie: nicht gefunden.
+// TikTok unter @seeleundmagie: nicht gefunden. YouTube (26.11.2026, API):
+// Kanal "Seele und Magie" unter @jessica-lenz, 588 Abos, 4 Videos.
 // Reels (12, keins angepinnt): Likes sind ausgeblendet (VidIQ meldet ueberall
 // 3), daher im Rechner 0. Ø 17,6 Kommentare, Ø 28.092 Views.
 // Staerkstes Stueck: "Weiter funktionieren!" (fuenf Planeten ruecklaeufig)
