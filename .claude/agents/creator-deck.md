@@ -168,13 +168,18 @@ Der Rechner ist `src/pitch/potenzial.js`, eine 1:1-Kopie von Filips Excel
   - Beide innerhalb der Nischen-Referenz unten. Verkauft der Creator
     schon etwas, dessen Preis du gefunden hast, diesen Preis respektieren.
   - Sonst Skool 29–49 €.
-  - **VIP-Programm (High-Ticket) nach Filips Vorgabe vom 26.11.2026:** Preis
-    nach Score über `vipPreis(score)` in `potenzial.js` (Heiß ≥ 70: 2.000 €,
-    Gut ≥ 45: 1.500 €, Mittel ≥ 25: 1.000 €, sonst 500 €), als
-    `premium[0].price` eintragen. Der Rechner deckelt auf höchstens 15
-    VIP-Käufer pro Launch, weil das Programm persönlich und zeitintensiv ist.
-    In Texten „mit höchstens 15 Plätzen“ nennen. Der Rechner-Test prüft den
-    Preis jeder Datendatei.
+  - **VIP-Programm (High-Ticket) nach Filips Vorgabe vom 26.11.2026:**
+    Standard 1.000 €. 2.000 € nur mit Feld `vipHoch: '<Begründung>'`, wenn
+    die Community sehr engagiert und kaufbereit ist (Engagement-Rate ab 3 %)
+    oder der Creator schon Kurse bzw. Programme ab ca. 300 € verkauft. Score
+    unter 25: 500 €. Preis über `vipPreis(score, hoch)` in `potenzial.js`
+    bestimmen und als `premium[0].price` eintragen. Der Rechner deckelt auf
+    höchstens 15 VIP-Käufer pro Launch, weil das Programm persönlich und
+    zeitintensiv ist. In Texten „mit höchstens 15 Plätzen“ nennen. Der
+    Rechner-Test prüft den Preis jeder Datendatei.
+  - **Retreat (`premium[1]`):** Standard 1.000 €. Verlangt der Creator schon
+    einen eigenen Retreat-Preis, diesen nehmen. Das Retreat muss nicht teurer
+    sein als das VIP-Programm.
 
 Nischen-Referenz aus dem Excel (Low Ticket / High Ticket):
 

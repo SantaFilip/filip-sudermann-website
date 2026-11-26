@@ -34,8 +34,10 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
 - **Rechner** `src/pitch/potenzial.js`: Filips Excel „Creator Revenue
   Rechner“. Nur ändern, wenn Filip es vorgibt. Test:
   `node scripts/pitch-rechner-test.mjs`. Abweichung vom Excel seit
-  26.11.2026: höchstens 15 VIP-Käufer pro Launch, VIP-Preis nach Score
-  (`vipPreis`: 2.000 / 1.500 / 1.000 / 500 €). Filip zieht das Excel nach.
+  26.11.2026: höchstens 15 VIP-Käufer pro Launch. VIP und Retreat Standard
+  je 1.000 €; VIP 2.000 € nur mit `vipHoch` (Engagement-Rate ab 3 % oder
+  schon Kurse ab ca. 300 €), Score unter 25: 500 €. Filip zieht das Excel
+  nach.
 - **Agent** `.claude/agents/creator-deck.md`: baut ein Deck vom Handle bis zum
   Push, inklusive Outreach-Mail, Follow-ups und Instagram-DM. Das ist die
   verbindliche Anleitung; dieses Dokument fasst sie nur zusammen.
@@ -152,9 +154,10 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
   Reel-Zahlen über Chrome, 0 Credits, erster echter Lauf des
   Auto-Live-Workflows): Laura Wacker (@youmoon_de), Nadine Flamm
   (@nadine.soulwhisper), Tanita Romina (@moveyourlove).
-- **Neu gerechnet mit VIP-Deckel (26.11.):** Jessica 42.128 €, Laura
-  40.022 €, Nicole 36.091 €, Nadine 31.333 €, Neda 31.320 €, Tanita 30.686 €,
-  Denise 6.894 € (jetzt über 5.000 €), Anna 4.755 € (weiter darunter).
+- **Neu gerechnet mit VIP-Regel (26.11.):** Jessica 42.128 € (VIP 2.000),
+  Nicole 36.091 € (VIP 2.000), Tanita 30.686 € (VIP 2.000), Laura 26.522 €,
+  Nadine 17.833 €, Neda 17.820 €, Denise 6.894 € (VIP 500, jetzt über
+  5.000 €), Anna 4.755 € (weiter darunter).
 - **Schon geprüft und raus (26.11., nicht erneut aufrufen):** komplettes
   System: @akashacircle, @amir_reichart, @paulfunk247, @selbstliebe_robin,
   @akashachronikmediumjanin_ (Ausbildung mit Community zählt als bezahlte

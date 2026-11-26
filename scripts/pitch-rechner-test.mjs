@@ -20,15 +20,14 @@ nah(r.netto.gesamt, (368 * 39 + 15 * 299) * 0.9);
 nah(r.mrr, 12199.2);
 assert.equal(r.label, '🔥 Heiß – sehr kaufbereite Audience');
 
-assert.equal(vipPreis(100), 2000);
-assert.equal(vipPreis(70), 2000);
-assert.equal(vipPreis(45), 1500);
+assert.equal(vipPreis(100), 1000);
+assert.equal(vipPreis(100, true), 2000);
 assert.equal(vipPreis(25), 1000);
-assert.equal(vipPreis(24), 500);
+assert.equal(vipPreis(24, true), 500);
 
 // Jede Datendatei muss den VIP-Preis passend zu ihrem Score haben
 for (const c of CREATORS) {
   const { score } = berechnePotenzial(c);
-  assert.equal(c.premium[0].price, vipPreis(score), `${c.slug}: VIP-Preis ${c.premium[0].price} statt ${vipPreis(score)} (Score ${score})`);
+  assert.equal(c.premium[0].price, vipPreis(score, Boolean(c.vipHoch)), `${c.slug}: VIP-Preis ${c.premium[0].price} statt ${vipPreis(score, Boolean(c.vipHoch))} (Score ${score}, vipHoch ${Boolean(c.vipHoch)})`);
 }
 console.log('Rechner stimmt mit dem Excel ueberein (mit VIP-Deckel und VIP-Preis nach Score).');

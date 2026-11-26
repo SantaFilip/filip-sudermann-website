@@ -16,13 +16,14 @@ export const ANNAHMEN = {
   maxVip: 15,
 };
 
-// VIP-Preis nach Score: gute Metrics bis 2.000 €, schlechte ab 500 €.
-// Stufen wie scoreLabel. In der Datendatei als premium[0].price eintragen.
-export function vipPreis(score) {
-  if (score >= 70) return 2000;
-  if (score >= 45) return 1500;
-  if (score >= 25) return 1000;
-  return 500;
+// VIP-Preis (Filips Vorgabe 26.11.2026): Standard 1.000 €. 2.000 € nur, wenn
+// die Datendatei `vipHoch` mit Begruendung setzt: sehr engagierte, kaufbereite
+// Community (Engagement-Rate ab 3 %) oder der Creator verkauft schon Kurse bzw.
+// Programme ab ca. 300 €. Schwache Metrics (Score unter 25): 500 €.
+// In der Datendatei als premium[0].price eintragen.
+export function vipPreis(score, hoch = false) {
+  if (score < 25) return 500;
+  return hoch ? 2000 : 1000;
 }
 
 // Excel-ROUND: kaufmaennisch, auch bei Gleitkomma-Resten wie 189.4999999

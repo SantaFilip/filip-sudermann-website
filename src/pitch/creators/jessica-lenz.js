@@ -63,6 +63,7 @@ export default {
     online: 18,
   },
   emailLabel: 'E-Mail Newsletter',
+  vipHoch: 'verkauft schon Ausbildungen ab 390 € (Schumann Resonanz Reader) und Home Study',
   premium: [
     { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
