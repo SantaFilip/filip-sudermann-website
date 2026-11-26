@@ -12,7 +12,8 @@ const url = `http://localhost:4173/pitch/${slug}`;
   const browser = await chromium.launch();
   const fehler = [];
   for (const [name, breite] of [['desktop', 2300], ['handy', 390]]) {
-    const seite = await browser.newPage({ viewport: { width: breite, height: 1000 } });
+    // Pixeldichte 2: das Desktop-Bild geht als "Deck Desktop.png" an Filip und muss scharf sein
+    const seite = await browser.newPage({ viewport: { width: breite, height: 1000 }, deviceScaleFactor: 2 });
     seite.on('pageerror', (e) => fehler.push(e.message));
     await seite.goto(url, { waitUntil: 'networkidle' });
     await seite.waitForTimeout(1000);
