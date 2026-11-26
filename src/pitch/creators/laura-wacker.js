@@ -18,7 +18,7 @@
 // Themen: Mond und Astrologie, Rituale, Rauhnaechte und Adventskalender,
 // Manifestation (11.11. "hunderte Moonies manifestieren zusammen"), weibliche
 // Kraft, Selfcare-Produkte.
-// Rechner: 371 + 15 Kaeufer (VIP 2.000 EUR, Score 70), Launch netto 40.022 EUR, MRR 12.299 EUR.
+// Rechner: 371 + 15 Kaeufer (VIP 1.000 EUR, Standard), Launch netto 26.522 EUR, MRR 12.299 EUR.
 export default {
   slug: 'laura-wacker',
   design: 'neu',
@@ -70,7 +70,7 @@ export default {
   },
   emailLabel: 'E-Mail Newsletter / Podcast',
   premium: [
-    { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
+    { title: 'VIP-Programm', price: 1000, unit: '3 Monate' },
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   gruende: [

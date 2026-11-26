@@ -69,6 +69,7 @@ export default {
     online: 4,
   },
   emailLabel: 'E-Mail Newsletter / Podcast',
+  vipHoch: 'verkauft schon Retreats für 2.222 € und 3-monatiges 1:1-Mentoring',
   premium: [
     { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
     { title: 'Mallorca Retreat', price: 2222, unit: '5 Tage' },

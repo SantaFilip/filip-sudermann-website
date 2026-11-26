@@ -76,6 +76,7 @@ export default {
     online: 11,
   },
   emailLabel: 'E-Mail Newsletter / Podcast',
+  vipHoch: 'Engagement-Rate 5,95 % (Ø 1.948 Likes, 150 Kommentare bei 35.300 Followern)',
   premium: [
     { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
