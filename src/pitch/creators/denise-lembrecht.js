@@ -11,6 +11,8 @@
 // Rauhnaechte, keltischer Jahreskreis, Loslassen.
 export default {
   slug: 'denise-lembrecht',
+  design: 'neu',
+  geschlecht: 'w',
   name: 'Denise',
   possessive: 'Denises',
   fullName: 'Denise Lembrecht',

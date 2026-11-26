@@ -14,6 +14,8 @@
 // Manifestation, Fuelle statt Mangel, Ahnenkraft, Frauen.
 export default {
   slug: 'jessica-lenz',
+  design: 'neu',
+  geschlecht: 'w',
   name: 'Jessica',
   possessive: 'Jessicas',
   fullName: 'Jessica Lenz',

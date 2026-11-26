@@ -17,6 +17,8 @@
 // Soulmate, Subliminals.
 export default {
   slug: 'nicole-frizler',
+  design: 'neu',
+  geschlecht: 'w',
   name: 'Nicole',
   possessive: 'Nicoles',
   fullName: 'Nicole Frizler',

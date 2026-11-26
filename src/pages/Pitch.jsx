@@ -451,7 +451,8 @@ export default function Pitch() {
   const { slug } = useParams();
   const [params] = useSearchParams();
   const c = findeCreator(slug);
-  const neu = params.get('design') === 'neu';
+  // Neues Design pro Creator per design: 'neu' in der Datendatei; ?design=neu/alt ueberschreibt
+  const neu = params.get('design') ? params.get('design') === 'neu' : c?.design === 'neu';
   const geschlecht = params.get('geschlecht') || c?.geschlecht || 'w';
   useNurPerLink(c ? `${c.name} × Filip Sudermann` : 'Seite nicht gefunden');
   const vw = useFensterBreite();

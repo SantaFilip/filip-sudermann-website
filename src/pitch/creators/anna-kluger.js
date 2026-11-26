@@ -15,6 +15,8 @@
 // Selbstzweifel, Gluecklichsein.
 export default {
   slug: 'anna-kluger',
+  design: 'neu',
+  geschlecht: 'w',
   name: 'Anna',
   possessive: 'Annas',
   fullName: 'Dr. Anna N. Kluger',

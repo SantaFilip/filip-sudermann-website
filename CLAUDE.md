@@ -72,6 +72,11 @@ Deutsch, direkt und ohne Floskeln.
     Gewinns beim Creator.
 - **Board:** Auf dem Desktop wird das ganze Board auf die Fensterbreite
   skaliert.
+- **Neues Design** (26.11.2026 abgenommen): `design: 'neu'` in der
+  Datendatei. Abgerundete Karten mit Verlauf und weichem Schatten,
+  Serifen-Titel, Hintergrund nach `geschlecht` ('w' Morgenröte mit Hügeln,
+  'm' Berge im Dunst). Neue Decks bekommen es immer. Neda bleibt beim alten.
+  Zum Vergleich: `?design=alt` bzw. `?design=neu&geschlecht=m`.
 
 ## Outreach (siehe Agent, Schritt 6b)
 
