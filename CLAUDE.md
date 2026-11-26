@@ -55,6 +55,10 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
 - Nie jemanden, den Filip schon kontaktiert hat. Die führende Liste ist Filips
   Notion-Datenbank „Alle Leads“. Kontaktdaten nie ins Repo; Outreach-Texte und
   Lead-Listen liegen in `export/`, und das ist gitignored.
+- **Abgleich vor jedem Deck (Pflicht):** Handle und Name gegen Notion „Alle
+  Leads“ prüfen; ist Notion nicht verbunden, gegen Filips CSV-Export
+  `export/leads/alle-leads.csv`. Fehlt beides, kein Deck bauen und Filip
+  fragen. Die Liste existiert nur bei Filip, nie im Repo.
 - Texte im Tonfall und mit den Begriffen des Creators.
 
 ## Deck-Design (von Filip abgenommen, nicht eigenmächtig ändern)
