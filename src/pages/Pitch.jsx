@@ -91,6 +91,10 @@ const Kanal = ({ neu, children }) => (
 // weiche Schatten, Serifen-Titel). Altes Design bleibt Standard.
 const BOX_NEU = {
   gelb: 'rounded-[28px] border border-white/80 bg-gradient-to-b from-[#fffaf1] via-[#fdf1dc] to-[#f7e2bf] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_30px_60px_-24px_rgba(110,70,20,0.45),0_10px_24px_-12px_rgba(110,70,20,0.25)]',
+  // Neutrale Glas-Karten fuer System und Funnel, damit Gelb und Gruen die Akzente bleiben
+  glas: 'rounded-[28px] border border-white/80 bg-gradient-to-b from-white/85 to-white/60 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_30px_60px_-24px_rgba(60,40,80,0.35),0_10px_24px_-12px_rgba(60,40,80,0.18)]',
+  lila: 'rounded-[28px] border border-white/80 bg-gradient-to-b from-[#fcfaff] via-[#f3eefd] to-[#e4dbf8] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_30px_60px_-24px_rgba(70,40,130,0.4),0_10px_24px_-12px_rgba(70,40,130,0.2)]',
+  tuerkis: 'rounded-[28px] border border-white/80 bg-gradient-to-b from-[#f5fdfd] via-[#e3f6f6] to-[#cdeceb] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_30px_60px_-24px_rgba(20,90,95,0.4),0_10px_24px_-12px_rgba(20,90,95,0.2)]',
   gruen: 'rounded-[28px] border border-white/80 bg-gradient-to-b from-[#f6fcf6] via-[#e6f5e8] to-[#cfe8d3] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_30px_60px_-24px_rgba(30,80,45,0.45),0_10px_24px_-12px_rgba(30,80,45,0.25)]',
 };
 const Titel = ({ children }) => (
@@ -110,8 +114,8 @@ const Innen = ({ children, className = '' }) => (
   <div className={`rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/80 ${className}`}>{children}</div>
 );
 
-const Etikett = ({ children, className = '' }) => (
-  <span className={`inline-block rounded-md bg-[#111] px-4 py-2 font-bold text-white ${className}`}>{children}</span>
+const Etikett = ({ neu, children, className = '' }) => (
+  <span className={`inline-block font-bold text-white ${neu ? 'rounded-full bg-gradient-to-b from-[#3a3340] to-[#16121a] px-6 py-2 shadow-[0_8px_20px_-8px_rgba(0,0,0,0.55)] ring-1 ring-white/20' : 'rounded-md bg-[#111] px-4 py-2'} ${className}`}>{children}</span>
 );
 
 function Portfolio({ c, neu }) {
@@ -260,7 +264,20 @@ function WerIstFilip({ c, neu }) {
   );
 }
 
-function BestesSystem({ c }) {
+function BestesSystem({ c, neu }) {
+  if (neu) {
+    return (
+      <Passform breite={460} data-export="3-marketing-system" className={`px-6 py-6 ${BOX_NEU.glas}`}>
+        <Titel>Das <Akzent>Beste</Akzent> System für dich</Titel>
+        <Trenner farbe="#d58a45" />
+        <div className="mt-5"><SystemDiagramm c={c} /></div>
+        <Innen className="mt-6 bg-white/70">
+          <h3 className="font-body text-[12.5px] font-bold uppercase tracking-[0.08em] text-[#7a5a35]">Wieso es besonders effektiv ist</h3>
+          <ul className="mt-3 space-y-4 text-[14px] font-semibold leading-snug text-[#2a2218]">{c.gruende.map((g) => <Punkt key={g} gut neu>{g}</Punkt>)}</ul>
+        </Innen>
+      </Passform>
+    );
+  }
   return (
     <Passform breite={460} data-export="3-marketing-system" className="p-2">
       <h2 className="font-body text-[30px] font-bold tracking-tight">Das <span className="text-[#f2621d]">Beste</span> System für dich</h2>
@@ -271,8 +288,26 @@ function BestesSystem({ c }) {
   );
 }
 
-function Funnel({ c }) {
+function Funnel({ c, neu }) {
   const bausteine = [['Community', CommunityFeed], ['Classroom', Classroom], ['Calendar', Kalender]];
+  if (neu) {
+    // Karte mit 20 px Innenabstand: (560 - 40 - 2 x 8 px) / 3 = 168 px je Kachel
+    return (
+      <Passform breite={560} className={`p-5 ${BOX_NEU.glas}`}>
+        <div className="text-center"><Etikett neu className="text-[16px]">Funnel (Skool)</Etikett></div>
+        <div className="mt-5 overflow-hidden rounded-2xl shadow-[0_18px_40px_-18px_rgba(40,30,60,0.5)] ring-1 ring-black/5" data-export="4-skool-template"><SkoolMockup c={c} /></div>
+        <div className="mt-8 text-center"><Etikett neu className="text-[16px]">Fulfillment (The 3C’s)</Etikett></div>
+        <div className="mt-4 grid grid-cols-3 gap-2" style={{ '--kachel-zoom': 168 / 520 }}>
+          {bausteine.map(([titel, Baustein]) => (
+            <div key={titel}>
+              <p className="mb-1.5 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-[#4a3f55]">{titel}</p>
+              <div className="overflow-hidden rounded-xl bg-white shadow-[0_10px_24px_-12px_rgba(40,30,60,0.45)] ring-1 ring-black/5"><Baustein c={c} /></div>
+            </div>
+          ))}
+        </div>
+      </Passform>
+    );
+  }
   return (
     <Passform breite={560}>
       <div className="text-center"><Etikett className="text-[17px]">Funnel (Skool)</Etikett></div>
@@ -297,10 +332,10 @@ function Funnel({ c }) {
 // Ohne Website-Entwurf steht sie etwa auf halber Hoehe des Skool-Mockups.
 const ROADMAP = ['Marktforschung', 'Marketingkampagne', 'Automatisierung & Aufbau', 'Produktlaunch & Optimierung'];
 
-function Phase({ nr, titel }) {
+function Phase({ nr, titel, neu }) {
   return (
-    <div className="flex h-full items-center gap-2.5 rounded-lg border border-[#d9cdf5] bg-[#f7f4fd] px-3 py-3">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f2621d] text-[14px] font-bold text-white">{nr}</span>
+    <div className={`flex h-full items-center gap-2.5 px-3 py-3 ${neu ? 'rounded-2xl bg-white/85 shadow-[0_8px_20px_-10px_rgba(70,40,130,0.45)] ring-1 ring-white' : 'rounded-lg border border-[#d9cdf5] bg-[#f7f4fd]'}`}>
+      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[14px] font-bold text-white ${neu ? 'bg-gradient-to-b from-[#f08a4b] to-[#d9561a] shadow-[0_3px_8px_-2px_rgba(217,86,26,0.6)]' : 'bg-[#f2621d]'}`}>{nr}</span>
       <span className="text-[16px] font-bold leading-tight">{titel}</span>
     </div>
   );
@@ -310,13 +345,20 @@ const Pfeil = ({ children, className = '' }) => (
   <span className={`flex items-center justify-center text-[22px] font-bold text-[#8b7bc4] ${className}`} aria-hidden="true">{children}</span>
 );
 
-function RoadMap({ unten, stil }) {
+function RoadMap({ unten, stil, neu }) {
   const { t } = useLanguage();
   const anteil = t.profitShare;
   return (
     <Passform breite={stil === 'liste' ? 420 : 520} className={`lg:!self-center ${unten ? 'lg:mt-[240px]' : ''}`}>
-      <div data-export="5-road-map" className="overflow-hidden rounded-md border border-[#e8a0a0] bg-white">
-        <h2 className="border-b border-[#e8a0a0] bg-[#ebe4fa] px-5 py-3 text-center font-body text-[34px] font-bold tracking-tight">Co-op Roadmap</h2>
+      <div data-export="5-road-map" className={neu ? `overflow-hidden ${BOX_NEU.lila}` : 'overflow-hidden rounded-md border border-[#e8a0a0] bg-white'}>
+        {neu ? (
+          <div className="px-5 pt-5">
+            <Titel>Co-op <Akzent>Roadmap</Akzent></Titel>
+            <Trenner farbe="#8b7bc4" />
+          </div>
+        ) : (
+          <h2 className="border-b border-[#e8a0a0] bg-[#ebe4fa] px-5 py-3 text-center font-body text-[34px] font-bold tracking-tight">Co-op Roadmap</h2>
+        )}
         {stil === 'liste' ? (
           <ol className="space-y-5 px-6 py-6">
             {ROADMAP.map((schritt, i) => (
@@ -328,18 +370,18 @@ function RoadMap({ unten, stil }) {
           </ol>
         ) : (
           <div className="grid grid-cols-[1fr_28px_1fr] items-stretch gap-y-1 px-5 py-5">
-            <Phase nr={1} titel={ROADMAP[0]} />
+            <Phase nr={1} titel={ROADMAP[0]} neu={neu} />
             <Pfeil>→</Pfeil>
-            <Phase nr={2} titel={ROADMAP[1]} />
+            <Phase nr={2} titel={ROADMAP[1]} neu={neu} />
             <span />
             <span />
             <Pfeil className="justify-self-start pl-6">↙</Pfeil>
-            <Phase nr={3} titel={ROADMAP[2]} />
+            <Phase nr={3} titel={ROADMAP[2]} neu={neu} />
             <Pfeil>→</Pfeil>
-            <Phase nr={4} titel={ROADMAP[3]} />
+            <Phase nr={4} titel={ROADMAP[3]} neu={neu} />
           </div>
         )}
-        <p className="border-t border-[#e8a0a0] bg-[#f7f4fd] px-5 py-3 text-center text-[13px] font-semibold">
+        <p className={`px-5 py-3 text-center text-[13px] font-semibold ${neu ? 'mx-4 mb-4 rounded-2xl bg-white/60 text-[#3b2f55] ring-1 ring-white/80' : 'border-t border-[#e8a0a0] bg-[#f7f4fd]'}`}>
           Auf {anteil.titleAccent}: {anteil.workload.me} % der Arbeit bei mir, {anteil.share.you} % vom Gewinn bei dir
         </p>
       </div>
@@ -348,11 +390,18 @@ function RoadMap({ unten, stil }) {
 }
 
 // Nur fuer Creator ohne eigene Website
-function Webseite({ c }) {
+function Webseite({ c, neu }) {
   return (
-    <Passform breite={560} data-export="6-personal-brand-website" className="bg-[#e3f7f7] p-5">
-      <h2 className="font-body text-[18px] font-bold tracking-tight">Personal Brand Website</h2>
-      <div className="mt-4"><WebsiteMockup c={c} /></div>
+    <Passform breite={560} data-export="6-personal-brand-website" className={`p-5 ${neu ? BOX_NEU.tuerkis : 'bg-[#e3f7f7]'}`}>
+      {neu ? (
+        <>
+          <Titel>Personal Brand <Akzent farbe="gruen">Website</Akzent></Titel>
+          <Trenner farbe="#3f9c9a" />
+        </>
+      ) : (
+        <h2 className="font-body text-[18px] font-bold tracking-tight">Personal Brand Website</h2>
+      )}
+      <div className={`mt-4 ${neu ? 'overflow-hidden rounded-2xl shadow-[0_18px_40px_-18px_rgba(20,70,75,0.55)] ring-1 ring-black/5' : ''}`}><WebsiteMockup c={c} /></div>
     </Passform>
   );
 }
@@ -425,12 +474,12 @@ export default function Pitch() {
             <Portfolio c={c} neu={neu} />
             <WerIstFilip c={c} neu={neu} />
           </div>
-          <BestesSystem c={c} />
-          <Funnel c={c} />
+          <BestesSystem c={c} neu={neu} />
+          <Funnel c={c} neu={neu} />
           {/* Website-Entwurf und direkt darunter die Road-Map */}
           <div className="flex flex-col gap-12 lg:gap-8">
-            {!c.website && <Webseite c={c} />}
-            <RoadMap unten={Boolean(c.website)} stil={c.roadmapStil} />
+            {!c.website && <Webseite c={c} neu={neu} />}
+            <RoadMap unten={Boolean(c.website)} stil={c.roadmapStil} neu={neu} />
           </div>
         </main>
         {/* Pflichtangaben: auch die Pitch-Seiten brauchen Impressum und Datenschutz */}
