@@ -1,0 +1,63 @@
+# Schaltet neue Creator Decks automatisch live: Ein Push auf einen claude/-Branch,
+# der gegenüber main nur Deck-Dateien ändert, wird nach erfolgreichem Build in
+# main gemergt. Cloudflare Pages baut main, danach läuft das Deck unter
+# https://filip-sudermann.com/pitch/<slug>. Ändert der Branch noch etwas anderes
+# (Template, Website), passiert nichts: Das bleibt ein PR, den Filip selbst merged.
+name: Decks live schalten
+
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['src/pitch/creators/**', 'public/pitch/**']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: decks-live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Nur Deck-Dateien geändert?
+        id: pruefung
+        run: |
+          git fetch origin main
+          geaendert=$(git diff --name-only origin/main...HEAD)
+          echo "Geändert gegenüber main:"; echo "$geaendert"
+          fremd=$(echo "$geaendert" | grep -vE '^(src/pitch/creators/|public/pitch/)' || true)
+          if [ -n "$fremd" ]; then
+            echo "::notice::Kein Auto-Merge, der Branch ändert nicht nur Decks:"
+            echo "$fremd"
+            echo "merge=nein" >> "$GITHUB_OUTPUT"
+          else
+            echo "merge=ja" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.pruefung.outputs.merge == 'ja'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Rechner-Test und Build
+        if: steps.pruefung.outputs.merge == 'ja'
+        run: |
+          npm ci --no-audit --no-fund
+          node scripts/pitch-rechner-test.mjs
+          npm run build
+
+      - name: In main mergen
+        if: steps.pruefung.outputs.merge == 'ja'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout main
+          git merge --no-ff "$GITHUB_SHA" -m "Deck live: $GITHUB_REF_NAME"
+          git push origin main

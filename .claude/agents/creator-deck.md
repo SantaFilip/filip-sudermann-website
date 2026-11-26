@@ -368,13 +368,28 @@ Bio, Impressum der Website.
 - **Instagram-DM:** unter 60 Wörter, Aufhänger, Loom- und Deck-Link, eine
   Frage.
 
-## 7. Abliefern
+## 7. Abliefern (geht automatisch live, kein Merge-Schritt)
 
-Auf den aktuellen Branch committen: Datendatei, `index.js`, Bilder.
-Commit-Nachricht auf Deutsch: „Creator Deck: <Name>“. Dann pushen.
+Auf den aktuellen `claude/`-Branch committen, **nur** Datendatei, `index.js`
+und Bilder (`src/pitch/creators/`, `public/pitch/`). Commit-Nachricht auf
+Deutsch: „Creator Deck: <Name>“. Dann pushen.
+
+Der Workflow `.github/workflows/decks-live.yml` merged den Push nach
+Rechner-Test und Build selbst in `main`, Cloudflare deployt `main`. Er greift
+nur, wenn der Branch gegenüber `main` ausschließlich Deck-Dateien ändert;
+Template- oder Website-Änderungen bleiben ein PR für Filip. Danach:
+
+```bash
+node scripts/pitch-live-check.mjs <slug> 10
+```
+
+Erst bei `LIVE` gilt das Deck als fertig. Outreach (6b) und Bericht nutzen
+immer `https://filip-sudermann.com/pitch/<slug>`, nie den Vorschau-Link. Bei
+`NICHT LIVE`: `gh run list --workflow decks-live.yml --limit 3` ansehen und
+den Grund im Bericht nennen.
 
 Bericht an Filip, kurz und direkt:
-- Pfad `/pitch/<slug>` (live erst nach Merge und Deploy).
+- Live-Link `https://filip-sudermann.com/pitch/<slug>` (mit `pitch-live-check` geprüft).
 - Die ausgefüllte Checkliste aus Schritt 1.
 - Rechner-Ergebnis:
   - Follower gesamt

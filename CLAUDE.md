@@ -17,6 +17,12 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
 - **Website** (React, Vite, Tailwind) unter filip-sudermann.com, Hosting auf
   Cloudflare Pages. Das Projekt ist mit GitHub verbunden: jeder Push auf einen
   Branch baut eine Vorschau, `main` ist live.
+- **Decks gehen ohne Merge-Schritt live:** Ein Push auf einen `claude/`-Branch,
+  der nur `src/pitch/creators/` und `public/pitch/` ändert, wird von
+  `.github/workflows/decks-live.yml` nach Test und Build in `main` gemergt.
+  Ab Erstellung gilt `https://filip-sudermann.com/pitch/<slug>`; prüfen mit
+  `node scripts/pitch-live-check.mjs <slug>`. Filip will keinen separaten
+  Merge machen.
 - **Creator Decks** unter `/pitch/<slug>`: personalisierte Pitch-Seiten, nur
   per Link (noindex, nicht verlinkt, nicht in der Sitemap), mit Impressum- und
   Datenschutz-Link. Sie kosten nichts extra.
@@ -140,8 +146,10 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
 - **Decks:** Neda Rezawi, Jessica Lenz, Nicole Frizler, Anna Kluger, Denise
   Lembrecht. Anna und Denise liegen unter 5.000 €.
 - **Branch:** `claude/admiring-pasteur-rm6vep`. PR SantaFilip/filip-sudermann-website#15
-  ist offen; erst nach Merge und Deploy laufen die Decks unter
-  filip-sudermann.com.
+  bringt `/pitch` und den Auto-Merge-Workflow erstmals auf `main`; dieser
+  eine Merge ist Filips Klick (Claude darf `main` nicht selbst mergen). Bis
+  dahin laufen die Decks nur unter der Vorschau, danach jedes neue Deck
+  automatisch live.
 - **Tagesrunde (Cloud):** täglich 15:06 Uhr (Europe/Berlin). Sie baut bis zu
   2 Decks aus Handles, die Filip schickt, und sucht nicht selbst. Suchen kann
   nur eine lokale Session (siehe oben).
