@@ -1,6 +1,10 @@
-// 1:1 der "Creator Revenue Rechner" (Excel, Blatt "Creator Pitch Kalkulator").
-// Zellbezuege in Klammern. Aenderungen hier nur, wenn sich das Excel aendert;
+// Basis ist der "Creator Revenue Rechner" (Excel, Blatt "Creator Pitch Kalkulator").
+// Zellbezuege in Klammern. Aenderungen hier nur, wenn Filip sie vorgibt;
 // scripts/pitch-rechner-test.mjs prueft gegen das Beispiel im Excel.
+//
+// Abweichung vom Excel seit 26.11.2026 (Filips Vorgabe): Das VIP-Programm ist
+// persoenlich und zeitintensiv, deshalb hoechstens 15 VIP-Kaeufer pro Launch,
+// und der VIP-Preis haengt am Score (vipPreis). Im Excel nachziehen.
 
 // Annahmen (C21:D23), Preise kommen pro Creator aus den Daten
 export const ANNAHMEN = {
@@ -9,7 +13,17 @@ export const ANNAHMEN = {
   churn: 0.15,
   gebuehren: 0.1,
   realismus: 0.7,
+  maxVip: 15,
 };
+
+// VIP-Preis nach Score: gute Metrics bis 2.000 €, schlechte ab 500 €.
+// Stufen wie scoreLabel. In der Datendatei als premium[0].price eintragen.
+export function vipPreis(score) {
+  if (score >= 70) return 2000;
+  if (score >= 45) return 1500;
+  if (score >= 25) return 1000;
+  return 500;
+}
 
 // Excel-ROUND: kaufmaennisch, auch bei Gleitkomma-Resten wie 189.4999999
 const runde = (x) => Math.sign(x) * Math.round(Math.abs(x) + 1e-9);
@@ -40,7 +54,7 @@ export function rechne({ follower, likes, kommentare, views, preisLow, preisHigh
     : 0;
   const faktor = Math.min(1.4, Math.max(0.4, score / 50));
   const kaeuferLow = Math.max(1, runde(follower * a.convLow * faktor * a.realismus)); // C27
-  const kaeuferHigh = Math.max(0, runde(follower * a.convHigh * faktor * a.realismus)); // D27
+  const kaeuferHigh = Math.min(a.maxVip, Math.max(0, runde(follower * a.convHigh * faktor * a.realismus))); // D27, gedeckelt
   const bruttoLow = kaeuferLow * preisLow; // C28
   const bruttoHigh = kaeuferHigh * preisHigh;
   const nettoLow = bruttoLow * (1 - a.gebuehren); // C30

@@ -167,8 +167,14 @@ Der Rechner ist `src/pitch/potenzial.js`, eine 1:1-Kopie von Filips Excel
   - High-Ticket = `premium[0].price`.
   - Beide innerhalb der Nischen-Referenz unten. Verkauft der Creator
     schon etwas, dessen Preis du gefunden hast, diesen Preis respektieren.
-  - Sonst Skool 29–49 € und als High-Ticket ein VIP-Programm für 299 €
-    (Default im Excel).
+  - Sonst Skool 29–49 €.
+  - **VIP-Programm (High-Ticket) nach Filips Vorgabe vom 26.11.2026:** Preis
+    nach Score über `vipPreis(score)` in `potenzial.js` (Heiß ≥ 70: 2.000 €,
+    Gut ≥ 45: 1.500 €, Mittel ≥ 25: 1.000 €, sonst 500 €), als
+    `premium[0].price` eintragen. Der Rechner deckelt auf höchstens 15
+    VIP-Käufer pro Launch, weil das Programm persönlich und zeitintensiv ist.
+    In Texten „mit höchstens 15 Plätzen“ nennen. Der Rechner-Test prüft den
+    Preis jeder Datendatei.
 
 Nischen-Referenz aus dem Excel (Low Ticket / High Ticket):
 

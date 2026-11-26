@@ -64,7 +64,7 @@ export default {
   },
   emailLabel: 'E-Mail Newsletter',
   premium: [
-    { title: 'VIP-Programm', price: 299, unit: '3 Monate' },
+    { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   gruende: [

@@ -31,9 +31,11 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
   - Template: `src/pages/Pitch.jsx`, Mockups in `src/pitch/`
   - Ein Creator = eine Datendatei in `src/pitch/creators/`, eingetragen in
     `index.js`
-- **Rechner** `src/pitch/potenzial.js`: 1:1 Filips Excel „Creator Revenue
-  Rechner“. Nur ändern, wenn sich das Excel ändert. Test:
-  `node scripts/pitch-rechner-test.mjs`.
+- **Rechner** `src/pitch/potenzial.js`: Filips Excel „Creator Revenue
+  Rechner“. Nur ändern, wenn Filip es vorgibt. Test:
+  `node scripts/pitch-rechner-test.mjs`. Abweichung vom Excel seit
+  26.11.2026: höchstens 15 VIP-Käufer pro Launch, VIP-Preis nach Score
+  (`vipPreis`: 2.000 / 1.500 / 1.000 / 500 €). Filip zieht das Excel nach.
 - **Agent** `.claude/agents/creator-deck.md`: baut ein Deck vom Handle bis zum
   Push, inklusive Outreach-Mail, Follow-ups und Instagram-DM. Das ist die
   verbindliche Anleitung; dieses Dokument fasst sie nur zusammen.
@@ -148,8 +150,11 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
 - **Decks:** Neda Rezawi, Jessica Lenz, Nicole Frizler, Anna Kluger, Denise
   Lembrecht. Anna und Denise liegen unter 5.000 €. Am 26.11. dazu (Suche und
   Reel-Zahlen über Chrome, 0 Credits, erster echter Lauf des
-  Auto-Live-Workflows): Laura Wacker (@youmoon_de, 46.391 €), Nadine Flamm
-  (@nadine.soulwhisper, 19.133 €), Tanita Romina (@moveyourlove, 13.104 €).
+  Auto-Live-Workflows): Laura Wacker (@youmoon_de), Nadine Flamm
+  (@nadine.soulwhisper), Tanita Romina (@moveyourlove).
+- **Neu gerechnet mit VIP-Deckel (26.11.):** Jessica 42.128 €, Laura
+  40.022 €, Nicole 36.091 €, Nadine 31.333 €, Neda 31.320 €, Tanita 30.686 €,
+  Denise 6.894 € (jetzt über 5.000 €), Anna 4.755 € (weiter darunter).
 - **Schon geprüft und raus (26.11., nicht erneut aufrufen):** komplettes
   System: @akashacircle, @amir_reichart, @paulfunk247, @selbstliebe_robin,
   @akashachronikmediumjanin_ (Ausbildung mit Community zählt als bezahlte
@@ -170,8 +175,8 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
   nur eine lokale Session (siehe oben).
 - **VidIQ:** 30 Credits übrig bis zum Reset am 21.12.2026.
 - **Alle 4 neueren Decks** (Jessica, Nicole, Anna, Denise) im neuen Design.
-  Verschickbar nur Jessica und Nicole; Anna (3.127 €) und Denise (4.542 €)
-  liegen unter 5.000 € und werden nicht angeschrieben.
+  Anna liegt unter 5.000 € und wird nicht angeschrieben; Denise liegt seit
+  dem VIP-Deckel darüber.
 - **Outreach v3** für Jessica und Nicole steht (26.11.2026, lokal in
   `export/outreach/`). YouTube-Schlüssel greift. Jessicas Kanal heißt
   @jessica-lenz, Nicoles @nicolespov.

@@ -17,7 +17,7 @@
 // ihr Gratis-Audio), z. B. "VOLLMOND 🙏🌝💞".
 // Themen: Seelenpartner und Dualseele, Rueckzuege und On/Off, karmische Liebe,
 // Vollmond und Portaltage, Blockaden energetisch loesen.
-// Rechner: 166 + 55 Kaeufer, Launch netto 19.133 EUR, MRR 4.092 EUR.
+// Rechner: 166 + 15 Kaeufer (VIP 2.000 EUR, Score 100), Launch netto 31.333 EUR, MRR 4.092 EUR.
 export default {
   slug: 'nadine-flamm',
   design: 'neu',
@@ -69,7 +69,7 @@ export default {
   },
   emailLabel: 'E-Mail Newsletter',
   premium: [
-    { title: 'VIP-Programm', price: 299, unit: '3 Monate' },
+    { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   gruende: [

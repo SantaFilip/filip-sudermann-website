@@ -81,7 +81,7 @@ export default {
   emailLabel: 'E-Mail Newsletter / Podcast Higher Self',
   // Erstes Angebot = High-Ticket im Rechner
   premium: [
-    { title: 'VIP-Programm', price: 299, unit: '3 Monate' },
+    { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
     { title: 'Group Retreats', price: 1000, unit: 'Weekend' },
   ],
   // Stufenbasierte Strategie, passend zum Diagramm

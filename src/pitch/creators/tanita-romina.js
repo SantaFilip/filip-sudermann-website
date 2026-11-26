@@ -17,7 +17,7 @@
 // "Ich fühl es 100%. Jedes einzelne Wort davon."
 // Themen: Selbstliebe, Authentizitaet, weibliche Kraft, Fuelle und Erfuellung,
 // Selbstvertrauen und Mut, Meditation, Retreats.
-// Rechner: 105 + 35 Kaeufer, Launch netto 13.104 EUR, MRR 3.481 EUR.
+// Rechner: 105 + 15 Kaeufer (VIP 2.000 EUR, Score 100), Launch netto 30.686 EUR, MRR 3.481 EUR.
 export default {
   slug: 'tanita-romina',
   design: 'neu',
@@ -70,7 +70,7 @@ export default {
   },
   emailLabel: 'E-Mail Newsletter / Podcast',
   premium: [
-    { title: 'VIP-Programm', price: 299, unit: '3 Monate' },
+    { title: 'VIP-Programm', price: 2000, unit: '3 Monate' },
     { title: 'Mallorca Retreat', price: 2222, unit: '5 Tage' },
   ],
   gruende: [
