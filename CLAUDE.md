@@ -22,7 +22,9 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
   `.github/workflows/decks-live.yml` nach Test und Build in `main` gemergt.
   Ab Erstellung gilt `https://filip-sudermann.com/pitch/<slug>`; prüfen mit
   `node scripts/pitch-live-check.mjs <slug>`. Filip will keinen separaten
-  Merge machen.
+  Merge machen: Claude merged und schaltet live, Filip prüft danach das
+  Deck, nimmt den Loom auf und verschickt Mail und DM selbst. Der Branch darf
+  `main` nur mit Deck-Dateien voraus sein, sonst greift der Workflow nicht.
 - **Creator Decks** unter `/pitch/<slug>`: personalisierte Pitch-Seiten, nur
   per Link (noindex, nicht verlinkt, nicht in der Sitemap), mit Impressum- und
   Datenschutz-Link. Sie kosten nichts extra.
@@ -145,11 +147,14 @@ Ergebnis zuerst, dann was Filip als Nächstes tun muss.
 
 - **Decks:** Neda Rezawi, Jessica Lenz, Nicole Frizler, Anna Kluger, Denise
   Lembrecht. Anna und Denise liegen unter 5.000 €.
-- **Branch:** `claude/admiring-pasteur-rm6vep`. PR SantaFilip/filip-sudermann-website#15
-  bringt `/pitch` und den Auto-Merge-Workflow erstmals auf `main`; dieser
-  eine Merge ist Filips Klick (Claude darf `main` nicht selbst mergen). Bis
-  dahin laufen die Decks nur unter der Vorschau, danach jedes neue Deck
-  automatisch live.
+- **Live:** PR SantaFilip/filip-sudermann-website#15 ist am 26.11.2026
+  gemergt. Alle Decks laufen unter `https://filip-sudermann.com/pitch/<slug>`
+  (noindex), Nicole und Jessica geprüft. Branch für Decks weiter
+  `claude/admiring-pasteur-rm6vep`; der Auto-Merge-Workflow ist noch nicht an
+  einem echten Deck getestet, beim ersten neuen Deck `pitch-live-check` genau
+  ansehen.
+- **Verschickfertig:** `fertige-decks/<slug>/` im Projektordner (lokal, nicht
+  im Repo): `Deck Desktop.png` und `Mail und Instagram-DM.txt` mit Live-Link.
 - **Tagesrunde (Cloud):** täglich 15:06 Uhr (Europe/Berlin). Sie baut bis zu
   2 Decks aus Handles, die Filip schickt, und sucht nicht selbst. Suchen kann
   nur eine lokale Session (siehe oben).
